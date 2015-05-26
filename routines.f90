@@ -3,7 +3,7 @@ module routines
 implicit none 
 
 real, dimension(3) :: W10, W20
-real , dimension(9) :: W11
+real , dimension(9) :: W11, W21, W12
 real :: W00                                                    ! matrices for eigenvalues
 real :: omega(64)                                              ! grand potentials (eigen_energies - mu*number_electrons)
 real :: omega_ground                                           ! the lowest grand ensemble energy
@@ -50,7 +50,7 @@ real, intent(in) :: t
 real, intent(in) :: U
 real :: H00, H30, H03
 real, dimension(3,3) :: H10, H01, H20, H02 
-real, dimension(9,9) :: H11
+real, dimension(9,9) :: H11, H21, H12
 integer :: i,j ! counter
 
 !------for lapack------------
@@ -139,6 +139,8 @@ if (INFO /= 0) then
    stop
 end if 
 
+deallocate(WORK)
+
 do i=1,9
    omega(i+7) = W11(i) - mu*2  ! grandpotentials of H11
 end do
@@ -146,8 +148,6 @@ end do
 do i=1,9
    eigenvectors(i+7,8:16) = H11(1:9,i)  ! eigenvectors of H11
 end do
-
-deallocate(WORK)
 
 !------H20 and H02 (only H20 since H02 is the same)------------------------
 
@@ -189,9 +189,70 @@ do i=1,3
    eigenvectors(i+19,19:21) = H10(1:3,i)    ! eigenvectors of H02
 end do 
 
-!-------make H21 and H12------------------
+!-------H21 and H12 (H12 = -H21  (for off diagonal entries))------------------
 
+H21 = 0; H12 = 0
 
+! off diagonal entries of upper matrix
+H21(1,4) = -t; H21(1,5) = t;  H21(1,7) = t;  H21(1,9) = -t
+H21(2,5) = -t; H21(2,6) = t;  H21(2,7) = -t; H21(2,8) = t
+H21(3,4) = t;  H21(3,6) = -t; H21(3,8) = -t; H21(3,9) = t
+H21(4,5) = -t; H21(4,6) = t
+H21(5,8) = t
+H21(6,7) = -t
+H21(7,9) = t
+H21(8,9) = -t
+
+!make it symetric
+do i=1,9
+   do j=1,9
+      if(i>j) then
+         H21(i,j) = H21(j,i)
+      end if
+   end do
+end do
+
+H12 = -H21
+
+! on diagonal entries
+H21(1,1) = E(1) + E(2) + E(3); H21(1,1) = E(1) + E(2) + E(3)
+H21(2,2) = E(1) + E(2) + E(3); H21(2,2) = E(1) + E(2) + E(3)
+H21(3,3) = E(1) + E(2) + E(3); H21(3,3) = E(1) + E(2) + E(3)
+H21(4,4) = 2*E(1) + E(2) + U;  H21(4,4) = 2*E(1) + E(2) + U
+H21(5,5) = E(1) + 2*E(2) + U;  H21(5,5) = E(1) + 2*E(2) + U
+H21(6,6) = 2*E(1) + E(3) + U;  H21(6,6) = 2*E(1) + E(3) + U
+H21(7,7) = E(1) + 2*E(3) + U;  H21(7,7) = E(1) + 2*E(3) + U
+H21(8,8) = 2*E(2) + E(3) + U;  H21(8,8) = 2*E(2) + E(3) + U
+H21(9,9) = E(2) + 2*E(3) + U;  H21(9,9) = E(2) + 2*E(3) + U
+
+!lapack section
+
+LWORK = 30
+allocate(WORK(30))
+
+call ssyev('v','u',9,H21,9,W21,WORK,LWORK,INFO)
+if (INFO /= 0) then
+   write(*,*) 'Problem with Lapack for H1 matrix. Error code:', INFO
+   stop
+end if 
+
+call ssyev('v','u',9,H12,9,W12,WORK,LWORK,INFO)
+if (INFO /= 0) then
+   write(*,*) 'Problem with Lapack for H1 matrix. Error code:', INFO
+   stop
+end if 
+
+deallocate(WORK)
+
+do i=1,9
+   omega(i+22) = W21(i) - mu*3  ! grandpotentials of H21
+   omega(i+31) = W12(i) - mu*3  ! grandpotentials of H12
+end do
+
+do i=1,9
+   eigenvectors(i+22,22:30) = H21(1:9,i)  ! eigenvectors of H21
+   eigenvectors(i+31,31:39) = H12(1:9,i)  ! eigenvectors of H12
+end do
 
 
 end subroutine hamiltonian
