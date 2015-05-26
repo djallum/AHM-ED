@@ -9,18 +9,33 @@ use routines
 
 implicit none
 
+integer, parameter :: npairs = 1
 real, parameter :: t = 1  !hopping term
-real, parameter :: delta = 10 ! width of disorder
+real, parameter :: delta = 10 ! width of disorder 
 real, parameter :: U = 4 ! on-site interactions
+real, parameter :: mu = U/2 ! chemical potential (half filling) 
 real :: E(3) ! site potentials
-integer :: i ! counter
+integer :: pair,i,j ! counter
+integer :: error ! variable for error message
 
 call random_gen_seed()
-call site_potentials(delta,E)
-call make_hamiltonians(E,t,U)
 
-do i=1,9
-   write(*,*), H11(i,:)
-end do
+open(unit=10,file='3citedata1.dat', status='new', action='write',IOSTAT = error) ! open the file that output will be printed to
+if (error/=0) then
+   write(*,*) 'error opening output file. Error number:', error
+end if
+
+pairs: do pair=1,npairs
+
+eigenvectors = 0
+
+call site_potentials(delta,E)
+call hamiltonian(E,t,U,mu)
+
+write(*,*), omega
+
+end do pairs
+
+close(10)
 
 end program main
