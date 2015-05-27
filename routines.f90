@@ -215,15 +215,15 @@ end do
 H12 = -H21
 
 ! on diagonal entries
-H21(1,1) = E(1) + E(2) + E(3); H21(1,1) = E(1) + E(2) + E(3)
-H21(2,2) = E(1) + E(2) + E(3); H21(2,2) = E(1) + E(2) + E(3)
-H21(3,3) = E(1) + E(2) + E(3); H21(3,3) = E(1) + E(2) + E(3)
-H21(4,4) = 2*E(1) + E(2) + U;  H21(4,4) = 2*E(1) + E(2) + U
-H21(5,5) = E(1) + 2*E(2) + U;  H21(5,5) = E(1) + 2*E(2) + U
-H21(6,6) = 2*E(1) + E(3) + U;  H21(6,6) = 2*E(1) + E(3) + U
-H21(7,7) = E(1) + 2*E(3) + U;  H21(7,7) = E(1) + 2*E(3) + U
-H21(8,8) = 2*E(2) + E(3) + U;  H21(8,8) = 2*E(2) + E(3) + U
-H21(9,9) = E(2) + 2*E(3) + U;  H21(9,9) = E(2) + 2*E(3) + U
+H21(1,1) = E(1) + E(2) + E(3); H12(1,1) = E(1) + E(2) + E(3)
+H21(2,2) = E(1) + E(2) + E(3); H12(2,2) = E(1) + E(2) + E(3)
+H21(3,3) = E(1) + E(2) + E(3); H12(3,3) = E(1) + E(2) + E(3)
+H21(4,4) = 2*E(1) + E(2) + U;  H12(4,4) = 2*E(1) + E(2) + U
+H21(5,5) = E(1) + 2*E(2) + U;  H12(5,5) = E(1) + 2*E(2) + U
+H21(6,6) = 2*E(1) + E(3) + U;  H12(6,6) = 2*E(1) + E(3) + U
+H21(7,7) = E(1) + 2*E(3) + U;  H12(7,7) = E(1) + 2*E(3) + U
+H21(8,8) = 2*E(2) + E(3) + U;  H12(8,8) = 2*E(2) + E(3) + U
+H21(9,9) = E(2) + 2*E(3) + U;  H12(9,9) = E(2) + 2*E(3) + U
 
 !lapack section
 
@@ -232,13 +232,13 @@ allocate(WORK(30))
 
 call ssyev('v','u',9,H21,9,W21,WORK,LWORK,INFO)
 if (INFO /= 0) then
-   write(*,*) 'Problem with Lapack for H1 matrix. Error code:', INFO
+   write(*,*) 'Problem with Lapack for H21 matrix. Error code:', INFO
    stop
 end if 
 
 call ssyev('v','u',9,H12,9,W12,WORK,LWORK,INFO)
 if (INFO /= 0) then
-   write(*,*) 'Problem with Lapack for H1 matrix. Error code:', INFO
+   write(*,*) 'Problem with Lapack for H12 matrix. Error code:', INFO
    stop
 end if 
 
@@ -372,7 +372,7 @@ allocate(WORK(10))
 
 call ssyev('v','u',3,H32,3,W32,WORK,LWORK,INFO)
 if (INFO /= 0) then
-   write(*,*) 'Problem with Lapack for H31 matrix. Error code:', INFO
+   write(*,*) 'Problem with Lapack for H32 matrix. Error code:', INFO
    stop
 end if 
 
@@ -392,7 +392,7 @@ end do
 
 H33 = 2*E(1) + 2*E(2) + 2*E(3) + 3*U 
 
-omega(64) = H33 - mu*5
+omega(64) = H33 - mu*6
 
 eigenvectors(64,64) = 1
 
@@ -608,13 +608,20 @@ PES_down(3,58) = 64; phase_PES_down(3,58) = 1
 
 cites: do i=1,3  ! calculating the IPES matrices 
    do j=1,64
-      IPES_down(i,PES_down(i,j)) = j
-      IPES_up(i,PES_up(i,j)) = j
-      phase_IPES_down(i,PES_down(i,j)) = phase_PES_down(i,j)
-      phase_IPES_up(i,PES_up(i,j)) = phase_PES_up(i,j)
+      if (PES_down(i,j) /= 0) then
+         phase_IPES_down(i,PES_down(i,j)) = phase_PES_down(i,j)
+         IPES_down(i,PES_down(i,j)) = j
+      end if
+      if (PES_up(i,j) /= 0) then
+         IPES_up(i,PES_up(i,j)) = j
+         phase_IPES_up(i,PES_up(i,j)) = phase_PES_up(i,j)
+      end if
    end do
 end do cites
 
+do i=1,64   
+write(*,*),i,'=', PES_up(1,i),i,'=', IPES_up(1,i)
+end do
 end subroutine transformations
 
 end module routines

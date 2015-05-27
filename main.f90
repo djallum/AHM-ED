@@ -20,7 +20,7 @@ integer :: error ! variable for error message
 integer :: location(1) ! will store the location in the omega array of the lowest energy
 real, dimension(3,64) :: PES_down_ground, PES_up_ground, IPES_down_ground, IPES_up_ground
 real, dimension(3,128,2) :: LDOS
-real :: inner_product_up(64), inner_product_down(64)
+real :: inner_product_up=0, inner_product_down=0
 real :: IPR(128)
 integer, parameter :: nbins = 200                 ! number of bins for energy bining to get smooth curves
 real, parameter :: frequency_max = 15             ! maximum energy considered in energy bining
@@ -97,19 +97,19 @@ LDOS = 0
 ! calculate the LDOS for all the cites
 do j=1,3
    do i=1,64
-      inner_product_up(i) = (dot_product(PES_up_ground(j,:),eigenvectors(i,:)))**2
-      inner_product_down(i) =  (dot_product(PES_down_ground(j,:),eigenvectors(i,:)))**2
+      inner_product_up = (dot_product(PES_up_ground(j,:),eigenvectors(i,:)))**2
+      inner_product_down =  (dot_product(PES_down_ground(j,:),eigenvectors(i,:)))**2
       LDOS(j,i,1) = omega_ground - omega(i)    ! location of the peak
-      LDOS(j,i,2) = (inner_product_up(i) + inner_product_down(i))*0.5 ! wieght of the peak
+      LDOS(j,i,2) = (inner_product_up + inner_product_down)*0.5 ! weight of the peak
    end do
 end do
 
 do j=1,3
    do i=1,64
-      inner_product_up(i) = (dot_product(IPES_up_ground(j,:),eigenvectors(i,:)))**2
-      inner_product_down(i) =  (dot_product(IPES_down_ground(j,:),eigenvectors(i,:)))**2
+      inner_product_up = (dot_product(IPES_up_ground(j,:),eigenvectors(i,:)))**2
+      inner_product_down =  (dot_product(IPES_down_ground(j,:),eigenvectors(i,:)))**2
       LDOS(j,i+64,1) = omega(i) - omega_ground     !location of the peak
-      LDOS(j,i+64,2) = (inner_product_up(i) + inner_product_down(i))*0.5 !weight of the peak
+      LDOS(j,i+64,2) = (inner_product_up + inner_product_down)*0.5 !weight of the peak
    end do
 end do
 
@@ -127,6 +127,7 @@ end do pairs
 
 sum = DOS(1,2)
 DOS(1,1) = frequency_min
+
 do i=2,nbins
    DOS(i,1) = DOS(i-1,1) + frequency_delta
    sum = sum + DOS(i,2)
