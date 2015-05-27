@@ -20,7 +20,7 @@ integer :: error ! variable for error message
 
 call random_gen_seed()
 
-open(unit=10,file='3citedata1.dat', status='new', action='write',IOSTAT = error) ! open the file that output will be printed to
+open(unit=10,file='3citedata1.dat', status='replace', action='write',IOSTAT = error) ! open the file that output will be printed to
 if (error/=0) then
    write(*,*) 'error opening output file. Error number:', error
 end if
