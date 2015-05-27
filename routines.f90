@@ -270,7 +270,7 @@ H31 = 0
 
 H31(1,1) = 2*E(1) + E(2) + E(3); H31(2,2) = E(1) + 2*E(2) + E(3); H31(3,3) = E(1) + E(2) + 2*E(3) ! on diagonal terms
 
-H31(1,2) = -t; H20(1,3) = t; H20(2,3) = -t   ! off diagonal upper matrix  
+H31(1,2) = -t; H31(1,3) = t; H31(2,3) = -t   ! off diagonal upper matrix  
 
 ! make it symetric
 do i=1,3
