@@ -304,6 +304,8 @@ end do
 
 !------H22 (9x9 matrix)-----------------------------------------
 
+H22 = 0
+
 ! off diagonal entries of upper triangular part of matrix
 H22(1,3) = -t; H22(1,6) = t;  H22(1,7) = t;  H22(1,8) = t
 H22(2,4) = -t; H22(2,5) = t;  H22(2,7) = -t; H22(2,8) = -t
