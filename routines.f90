@@ -400,6 +400,8 @@ end subroutine hamiltonian
 
 subroutine transformations()
 
+integer :: i,j ! counters
+
 PES_up = 0; PES_down = 0
 IPES_up = 0; IPES_down = 0
 phase_PES_up = 0; phase_PES_down = 0
@@ -602,6 +604,16 @@ PES_down(3,50) = 62; phase_PES_down(3,50) = 1
 PES_down(3,52) = 63; phase_PES_down(3,52) = 1
 PES_down(3,55) = 61; phase_PES_down(3,55) = 1
 PES_down(3,58) = 64; phase_PES_down(3,58) = 1
+
+
+cites: do i=1,3  ! calculating the IPES matrices 
+   do j=1,64
+      IPES_down(i,PES_down(i,j)) = j
+      IPES_up(i,PES_up(i,j)) = j
+      phase_IPES_down(i,PES_down(i,j)) = phase_PES_down(i,j)
+      phase_IPES_up(i,PES_up(i,j)) = phase_PES_up(i,j)
+   end do
+end do cites
 
 end subroutine transformations
 
