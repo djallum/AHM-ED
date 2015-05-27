@@ -2,7 +2,7 @@ module routines
 
 implicit none 
 
-real, dimension(3) :: W10, W20, W31
+real, dimension(3) :: W10, W20, W31, W32
 real , dimension(9) :: W11, W21, W12, W22
 real :: W00, W30, W03                                          ! matrices for eigenvalues
 real :: omega(64)                                              ! grand potentials (eigen_energies - mu*number_electrons)
@@ -48,8 +48,8 @@ real, intent(in) :: E(3)
 real, intent(in) :: mu 
 real, intent(in) :: t
 real, intent(in) :: U
-real :: H00, H30, H03
-real, dimension(3,3) :: H10, H01, H20, H31 
+real :: H00, H30, H03, H33
+real, dimension(3,3) :: H10, H01, H20, H31, H32
 real, dimension(9,9) :: H11, H21, H12, H22
 integer :: i,j ! counter
 
@@ -353,7 +353,45 @@ do i=1,9
    eigenvectors(i+48,49:57) = H22(1:9,i)  ! eigenvectors of H11
 end do
 
-!------
+!------H32 and H23 (same)--------------------------
+
+H32 = -t ! all off diagonal entries are -t the on diagonal are replaced in next step
+
+H32(1,1) = 2*E(1) + 2*E(2) + E(3) + 2*U ! on diagonal entries
+H32(2,2) = 2*E(1) + E(2) + 2*E(3) + 2*U 
+H32(3,3) = E(1) + 2*E(2) + 2*E(3) + 2*U 
+
+! lapack portion to solve the eigenvalues and eigenvectors
+
+LWORK = 10
+allocate(WORK(10))
+
+call ssyev('v','u',3,H32,3,W32,WORK,LWORK,INFO)
+if (INFO /= 0) then
+   write(*,*) 'Problem with Lapack for H31 matrix. Error code:', INFO
+   stop
+end if 
+
+deallocate(WORK)
+
+do i=1,3
+   omega(i+57) = W32(i) - mu*5    ! grandpotentials of H20
+   omega(i+60) = W32(i) - mu*5    ! grandpotentials of H02
+end do
+
+do i=1,3
+   eigenvectors(i+57,58:60) = H32(1:3,i)    ! eigenvectors of H20
+   eigenvectors(i+60,61:63) = H32(1:3,i)    ! eigenvectors of H02
+end do 
+
+!---------H33--------------------------------
+
+H33 = 2*E(1) + 2*E(2) + 2*E(3) + 3*U 
+
+omega(64) = H33 - mu*5
+
+eigenvectors(64,64) = 1
+
 end subroutine hamiltonian
 
 end module routines
