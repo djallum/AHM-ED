@@ -17,6 +17,7 @@ real, parameter :: mu = U/2 ! chemical potential (half filling)
 real :: E(3) ! site potentials
 integer :: pair,i,j ! counter
 integer :: error ! variable for error message
+integer :: location(1) ! will store the location in the omega array of the lowest energy
 
 call random_gen_seed()
 
@@ -35,7 +36,14 @@ omega = 0
 call site_potentials(delta,E)
 call hamiltonian(E,t,U,mu)
 
-write(*,*), omega
+!-----find ground state energy------------------------
+
+omega_ground = minval(omega)   ! find the lowest grand ensemble energy
+
+!-----find the corresponding eigenvector----------------
+
+location = minloc(omega)  !find the location of the lowest energy  
+v_ground = eigenvectors(location(1),:) !set v ground to the eigenvector corresponding to the lowest energy
 
 end do pairs
 
