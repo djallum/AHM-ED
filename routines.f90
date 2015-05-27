@@ -185,8 +185,8 @@ do i=1,3
 end do
 
 do i=1,3
-   eigenvectors(i+16,17:19) = H10(1:3,i)    ! eigenvectors of H20
-   eigenvectors(i+19,20:22) = H10(1:3,i)    ! eigenvectors of H02
+   eigenvectors(i+16,17:19) = H20(1:3,i)    ! eigenvectors of H20
+   eigenvectors(i+19,20:22) = H20(1:3,i)    ! eigenvectors of H02
 end do 
 
 !-------H21 and H12 (H12 = -H21  (for off diagonal entries))------------------
