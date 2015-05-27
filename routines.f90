@@ -3,7 +3,7 @@ module routines
 implicit none 
 
 real, dimension(3) :: W10, W20, W31
-real , dimension(9) :: W11, W21, W12
+real , dimension(9) :: W11, W21, W12, W22
 real :: W00, W30, W03                                          ! matrices for eigenvalues
 real :: omega(64)                                              ! grand potentials (eigen_energies - mu*number_electrons)
 real :: omega_ground                                           ! the lowest grand ensemble energy
@@ -50,7 +50,7 @@ real, intent(in) :: t
 real, intent(in) :: U
 real :: H00, H30, H03
 real, dimension(3,3) :: H10, H01, H20, H31 
-real, dimension(9,9) :: H11, H21, H12
+real, dimension(9,9) :: H11, H21, H12, H22
 integer :: i,j ! counter
 
 !------for lapack------------
@@ -127,10 +127,6 @@ H11(4,4) = 2*E(2) + U
 H11(5,5) = E(1) + E(3); H11(6,6) = E(1) + E(3)
 H11(7,7) = E(2) + E(3); H11(8,8) = E(2) + E(3)
 H11(9,9) = 2*E(3) + U
-
-do i=1,9
-   write(*,*), H11(i,:)
-end do
 
 LWORK = 30
 allocate(WORK(30))
@@ -306,6 +302,58 @@ do i=1,3
    eigenvectors(i+45,46:48) = H31(1:3,i)    ! eigenvectors of H02
 end do 
 
+!------H22 (9x9 matrix)-----------------------------------------
+
+! off diagonal entries of upper triangular part of matrix
+H22(1,3) = -t; H22(1,6) = t;  H22(1,7) = t;  H22(1,8) = t
+H22(2,4) = -t; H22(2,5) = t;  H22(2,7) = -t; H22(2,8) = -t
+H22(3,5) = -t; H22(3,7) = t;  H22(3,9) = t
+H22(4,6) = -t; H22(4,7) = -t; H22(4,9) = -t
+H22(5,8) = t;  H22(5,9) = t;
+H22(6,8) = -t; H22(6,9) = -t
+
+!make it symetric
+do i=1,9
+   do j=1,9
+      if(i>j) then
+         H22(i,j) = H22(j,i)
+      end if
+   end do
+end do
+
+! on diagonal entries
+H22(1,1) = 2*E(1) + E(2) + E(3) + U
+H22(2,2) = 2*E(1) + E(2) + E(3) + U
+H22(3,3) = E(1) + 2*E(2) + E(3) + U
+H22(4,4) = E(1) + 2*E(2) + E(3) + U
+H22(5,5) = E(1) + E(2) + 2*E(3) + U 
+H22(6,6) = E(1) + E(2) + 2*E(3) + U  
+H22(7,7) = 2*E(1) + 2*E(2) + 2*U  
+H22(8,8) = 2*E(1) + 2*E(3) + 2*U 
+H22(9,9) = 2*E(2) + 2*E(3) + 2*U
+
+!lapack section
+
+LWORK = 30
+allocate(WORK(30))
+
+call ssyev('v','u',9,H22,9,W22,WORK,LWORK,INFO)
+if (INFO /= 0) then
+   write(*,*) 'Problem with Lapack for H22 matrix. Error code:', INFO
+   stop
+end if 
+
+deallocate(WORK)
+
+do i=1,9
+   omega(i+48) = W22(i) - mu*4  ! grandpotentials of H11
+end do
+
+do i=1,9
+   eigenvectors(i+48,49:57) = H22(1:9,i)  ! eigenvectors of H11
+end do
+
+!------
 end subroutine hamiltonian
 
 end module routines
