@@ -2,9 +2,9 @@ module routines
 
 implicit none 
 
-real, dimension(3) :: W10, W20
+real, dimension(3) :: W10, W20, W31
 real , dimension(9) :: W11, W21, W12
-real :: W00                                                    ! matrices for eigenvalues
+real :: W00, W30, W03                                          ! matrices for eigenvalues
 real :: omega(64)                                              ! grand potentials (eigen_energies - mu*number_electrons)
 real :: omega_ground                                           ! the lowest grand ensemble energy
 real :: eigenvectors(64,64)                                    ! the 16 eigenvectors
@@ -49,7 +49,7 @@ real, intent(in) :: mu
 real, intent(in) :: t
 real, intent(in) :: U
 real :: H00, H30, H03
-real, dimension(3,3) :: H10, H01, H20, H02 
+real, dimension(3,3) :: H10, H01, H20, H31 
 real, dimension(9,9) :: H11, H21, H12
 integer :: i,j ! counter
 
@@ -63,6 +63,8 @@ H00 = 0
 W00 = H00 ! eigenvalues
 
 omega(1) = W00 - mu*0   ! grand potential
+
+eigenvectors(1,1) = 1     ! eigenvector matrix
 
 !-----------H10 and H01 (only H10 since H10 is same)------------------------------
 
@@ -79,7 +81,7 @@ allocate(WORK(10))
 
 call ssyev('v','u',3,H10,3,W10,WORK,LWORK,INFO)
 if (INFO /= 0) then
-   write(*,*) 'Problem with Lapack for H1 matrix. Error code:', INFO
+   write(*,*) 'Problem with Lapack for H10 matrix. Error code:', INFO
    stop
 end if 
 
@@ -185,8 +187,8 @@ do i=1,3
 end do
 
 do i=1,3
-   eigenvectors(i+16,16:18) = H10(1:3,i)    ! eigenvectors of H20
-   eigenvectors(i+19,19:21) = H10(1:3,i)    ! eigenvectors of H02
+   eigenvectors(i+16,17:19) = H10(1:3,i)    ! eigenvectors of H20
+   eigenvectors(i+19,20:22) = H10(1:3,i)    ! eigenvectors of H02
 end do 
 
 !-------H21 and H12 (H12 = -H21  (for off diagonal entries))------------------
@@ -250,10 +252,59 @@ do i=1,9
 end do
 
 do i=1,9
-   eigenvectors(i+22,22:30) = H21(1:9,i)  ! eigenvectors of H21
-   eigenvectors(i+31,31:39) = H12(1:9,i)  ! eigenvectors of H12
+   eigenvectors(i+22,23:31) = H21(1:9,i)  ! eigenvectors of H21
+   eigenvectors(i+31,32:40) = H12(1:9,i)  ! eigenvectors of H12
 end do
 
+!------H30 and H03 (same)--------------------------------------------------
+
+H30 = E(1) + E(2) + E(3)
+
+omega(41) = H30 - 3*mu
+omega(42) = omega(41)
+
+eigenvectors(41,41) = 1
+eigenvectors(42,42) = 1
+
+!------H31 and H13 (they are the same)-------------------------------------------------
+
+H31 = 0
+
+H31(1,1) = 2*E(1) + E(2) + E(3); H31(2,2) = E(1) + 2*E(2) + E(3); H31(3,3) = E(1) + E(2) + 2*E(3) ! on diagonal terms
+
+H31(1,2) = -t; H20(1,3) = t; H20(2,3) = -t   ! off diagonal upper matrix  
+
+! make it symetric
+do i=1,3
+   do j=1,3
+      if(i>j) then
+         H31(i,j) = H31(j,i)
+      end if
+   end do
+end do
+
+! lapack portion to solve the eigenvalues and eigenvectors
+
+LWORK = 10
+allocate(WORK(10))
+
+call ssyev('v','u',3,H31,3,W31,WORK,LWORK,INFO)
+if (INFO /= 0) then
+   write(*,*) 'Problem with Lapack for H31 matrix. Error code:', INFO
+   stop
+end if 
+
+deallocate(WORK)
+
+do i=1,3
+   omega(i+42) = W31(i) - mu*4    ! grandpotentials of H20
+   omega(i+45) = W31(i) - mu*4    ! grandpotentials of H02
+end do
+
+do i=1,3
+   eigenvectors(i+42,43:45) = H31(1:3,i)    ! eigenvectors of H20
+   eigenvectors(i+45,46:48) = H31(1:3,i)    ! eigenvectors of H02
+end do 
 
 end subroutine hamiltonian
 

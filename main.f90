@@ -28,6 +28,9 @@ end if
 pairs: do pair=1,npairs
 
 eigenvectors = 0
+E = 0
+omega_ground = 0
+omega = 0
 
 call site_potentials(delta,E)
 call hamiltonian(E,t,U,mu)
