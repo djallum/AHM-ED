@@ -18,9 +18,11 @@ real :: E(3) ! site potentials
 integer :: pair,i,j ! counter
 integer :: error ! variable for error message
 integer :: location(1) ! will store the location in the omega array of the lowest energy
+real, dimension(3,64) :: PES_down_ground, PES_up_ground, IPES_down_ground, IPES_up_ground
+real, dimension(128,3) :: LDOS
 
 call random_gen_seed()
-
+call transformations()
 open(unit=10,file='3citedata1.dat', status='replace', action='write',IOSTAT = error) ! open the file that output will be printed to
 if (error/=0) then
    write(*,*) 'error opening output file. Error number:', error
