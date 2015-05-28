@@ -108,14 +108,12 @@ end do
 !--------H11---------------------------------------
 
 ! enter the off diagonal terms for the upper half of the matrix
-H11(1,2) = t;  H11(1,3) = -t; H11(1,4) = t;  H11(1,5) = -t
-H11(2,4) = t;  H11(2,5) = t;  H11(2,8) = -t
-H11(3,4) = -t; H11(3,6) = t;  H11(3,7) = -t
-H11(4,7) = t;  H11(4,8) = -t
-H11(5,7) = t;  H11(5,8) = t
-H11(6,8) = t;  H11(6,9) = t 
-H11(7,9) = t
-H11(8,9) = -t
+H11(1,2) = t;  H11(1,6) = -t; H11(1,7) = t;  H11(1,8) = t
+H11(2,3) = t;  H11(2,7) = t;  H11(2,9) = t
+H11(3,4) = -t; H11(3,8) = t;  H11(3,9) = t
+H11(4,5) = t;  H11(4,7) = -t; H11(4,8) = -t
+H11(5,6) = t;  H11(5,7) = -t; H11(5,9) = -t
+H11(6,8) = -t; H11(6,9) = -t 
 
 !make it symetric
 do i=1,9
@@ -127,11 +125,14 @@ do i=1,9
 end do
 
 ! enter the on diagonal terms
-H11(1,1) = 2*E(1) + U
-H11(2,2) = E(1) + E(2); H11(3,3) = E(1) + E(2)
-H11(4,4) = 2*E(2) + U
-H11(5,5) = E(1) + E(3); H11(6,6) = E(1) + E(3)
-H11(7,7) = E(2) + E(3); H11(8,8) = E(2) + E(3)
+H11(1,1) = E(1) + E(2)
+H11(2,2) = E(1) + E(3)
+H11(3,3) = E(2) + E(3)
+H11(4,4) = E(1) + E(2)
+H11(5,5) = E(1) + E(3)
+H11(6,6) = E(2) + E(3)
+H11(7,7) = 2*E(1) + U
+H11(8,8) = 2*E(2) + U
 H11(9,9) = 2*E(3) + U
 
 LWORK = 30
@@ -350,11 +351,11 @@ end if
 deallocate(WORK)
 
 do i=1,9
-   omega(i+48) = W22(i) - mu*4  ! grandpotentials of H11
+   omega(i+48) = W22(i) - mu*4  ! grandpotentials of H22
 end do
 
 do i=1,9
-   eigenvectors(i+48,49:57) = H22(1:9,i)  ! eigenvectors of H11
+   eigenvectors(i+48,49:57) = H22(1:9,i)  ! eigenvectors of H22
 end do
 
 !------H32 and H23 (same)--------------------------
@@ -379,13 +380,13 @@ end if
 deallocate(WORK)
 
 do i=1,3
-   omega(i+57) = W32(i) - mu*5    ! grandpotentials of H20
-   omega(i+60) = W32(i) - mu*5    ! grandpotentials of H02
+   omega(i+57) = W32(i) - mu*5    ! grandpotentials of H32
+   omega(i+60) = W32(i) - mu*5    ! grandpotentials of H23
 end do
 
 do i=1,3
-   eigenvectors(i+57,58:60) = H32(1:3,i)    ! eigenvectors of H20
-   eigenvectors(i+60,61:63) = H32(1:3,i)    ! eigenvectors of H02
+   eigenvectors(i+57,58:60) = H32(1:3,i)    ! eigenvectors of H32
+   eigenvectors(i+60,61:63) = H32(1:3,i)    ! eigenvectors of H23
 end do 
 
 !---------H33--------------------------------

@@ -10,7 +10,7 @@ use routines
 implicit none
 
 integer, parameter :: npairs = 100000
-real, parameter :: t = 0  !hopping term
+real, parameter :: t = 1  !hopping term
 real, parameter :: delta = 12 ! width of disorder 
 real, parameter :: U = 0 ! on-site interactions
 real, parameter :: mu = U/2 ! chemical potential (half filling) 
@@ -22,16 +22,16 @@ real, dimension(3,64) :: PES_down_ground=0, PES_up_ground=0, IPES_down_ground=0,
 real, dimension(3,128,2) :: LDOS=0
 real :: inner_product_up=0, inner_product_down=0
 real :: IPR(128)=0
-integer, parameter :: nbins = 500                 ! number of bins for energy bining to get smooth curves
-real, parameter :: frequency_max = 20             ! maximum energy considered in energy bining
-real, parameter :: frequency_min = -20            ! lowest energy considered in energy bining
+integer, parameter :: nbins = 200                 ! number of bins for energy bining to get smooth curves
+real, parameter :: frequency_max = 15             ! maximum energy considered in energy bining
+real, parameter :: frequency_min = -15            ! lowest energy considered in energy bining
 real :: frequency_delta=0                         ! step size between different energy bins
 integer :: bin=0                                    ! index for the bin number the peak goes in
 real, dimension(nbins,2) :: DOS=0                        ! array that stores the DOS peaks and all the energy bin frequencies 
 real, dimension(nbins) :: GIPR_num=0, GIPR_den=0, GIPR=0     ! arrays that store the numerator and denominator and the GIPR
 real :: sum=0
 
-frequency_delta = (frequency_max - frequency_min)/nbins
+frequency_delta = (frequency_max - frequency_min)/nbins   ! calculating the step size between bins for the energy bining process
 
 call random_gen_seed()
 call transformations()
