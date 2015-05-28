@@ -19,7 +19,7 @@ use routines
 implicit none
 
 integer, parameter :: nsites = 2                  ! number of sites (this must be set to two)
-integer, parameter :: npairs=1000000              ! number of pairs in the ensemble
+integer, parameter :: npairs=1000000             ! number of pairs in the ensemble
 real, parameter :: t=-1                           ! hopping
 real, parameter :: U=4                            ! on-site interaction
 real, parameter :: mu=U/2                         ! chemical potential (half-filling)
@@ -27,30 +27,30 @@ real, parameter :: delta =12                      ! width of the disorder
 integer, parameter :: nbins = 500                 ! number of bins for energy bining to get smooth curves
 real, parameter :: frequency_max = 15             ! maximum energy considered in energy bining
 real, parameter :: frequency_min = -15            ! lowest energy considered in energy bining
-real :: frequency_delta                           ! step size between different energy bins
-integer :: bin                                    ! index for the bin number the peak goes in
-real, dimension(nbins,2) :: DOS                        ! array that stores the DOS peaks and all the energy bin frequencies 
-real, dimension(nbins) :: GIPR_num, GIPR_den, GIPR     ! arrays that store the numerator and denominator and the GIPR
-real :: sum                                       ! used to sum the DOS and normalize it
-real :: E(nsites)                                 ! stores the random site potentials
-real :: H0,H1(2,2),H2(2,2),H3,H4,H5(4,4),H6(2,2),H7(2,2),H8    ! hamiltonian sub matrices
-real :: W0,W1(2),W2(2),W3,W4,W5(4),W6(2),W7(2),W8              ! matrices for eigenvalues
-real :: omega(16)                                              ! grand potentials (eigen_energies - mu*number_electrons)
-real :: omega_ground                                           ! the lowest grand ensemble energy
-real :: eigenvector(16,16)                                     ! the 16 eigenvectors
-real :: v_ground(16)                                           ! the ground state eigenvector
-integer :: location(1)                                         ! will store the location in the omega array of the lowest energy
-integer :: PES_up(2,16), PES_down(2,16)                 ! matrices that operate on eigenstate for photo emmisions (up2 mean remove up spin from cite 2 etc.)
-integer :: IPES_up(2,16),IPES_down(2,16)                ! matrices for inverse photo emmisions (up mean add spin up electron)
-integer :: phase_PES_up(2,16), phase_PES_down(2,16)     ! matrices to hold -1 or 1 for anticomutation
-integer :: phase_IPES_up(2,16), phase_IPES_down(2,16)   ! matrices to hold -1 or 1 for anticomutation
-real :: LDOS1(32,2), LDOS2(32,2)
-real :: PES_up_ground(16), PES_down_ground(16), IPES_up_ground(16), IPES_down_ground(16) ! vectors afterPES and IPES matrices have operatated on v_ground
-real :: IPR(32)
-real :: inner_product_up(16), inner_product_down(16)
-integer :: error             ! to store error messages
+real :: frequency_delta=0                           ! step size between different energy bins
+integer :: bin=0                                    ! index for the bin number the peak goes in
+real, dimension(nbins,2) :: DOS=0                        ! array that stores the DOS peaks and all the energy bin frequencies 
+real, dimension(nbins) :: GIPR_num=0, GIPR_den=0, GIPR=0     ! arrays that store the numerator and denominator and the GIPR
+real :: sum=0                                       ! used to sum the DOS and normalize it
+real :: E(nsites)=0                                 ! stores the random site potentials
+real :: H0=0,H1(2,2)=0,H2(2,2)=0,H3=0,H4=0,H5(4,4)=0,H6(2,2)=0,H7(2,2)=0,H8=0    ! hamiltonian sub matrices
+real :: W0=0,W1(2)=0,W2(2)=0,W3=0,W4=0,W5(4)=0,W6(2)=0,W7(2)=0,W8=0              ! matrices for eigenvalues
+real :: omega(16)=0                                              ! grand potentials (eigen_energies - mu*number_electrons)
+real :: omega_ground=0                                           ! the lowest grand ensemble energy
+real :: eigenvector(16,16)=0                                     ! the 16 eigenvectors
+real :: v_ground(16)=0                                           ! the ground state eigenvector
+integer :: location(1)=0                                         ! will store the location in the omega array of the lowest energy
+integer :: PES_up(2,16)=0, PES_down(2,16)=0                 ! matrices that operate on eigenstate for photo emmisions (up2 mean remove up spin from cite 2 etc.)
+integer :: IPES_up(2,16)=0,IPES_down(2,16)=0                ! matrices for inverse photo emmisions (up mean add spin up electron)
+integer :: phase_PES_up(2,16)=0, phase_PES_down(2,16)=0     ! matrices to hold -1 or 1 for anticomutation
+integer :: phase_IPES_up(2,16)=0, phase_IPES_down(2,16)=0   ! matrices to hold -1 or 1 for anticomutation
+real :: LDOS1(32,2)=0, LDOS2(32,2)=0
+real :: PES_up_ground(16)=0, PES_down_ground(16)=0, IPES_up_ground(16)=0, IPES_down_ground(16)=0 ! vectors afterPES and IPES matrices have operatated on v_ground
+real :: IPR(32)=0
+real :: inner_product_up(16)=0, inner_product_down(16)=0
+integer :: error=0             ! to store error messages
 integer :: i,j !counters
-real :: temp
+real :: temp=0
 !-----(for lapack)----------------
 integer :: INFO = 0       ! varible that error message is stored in (zero means success)
 integer :: LWORK = 16
@@ -309,7 +309,7 @@ do i=1,16
 end do
 
 do i=1,32
-   bin = floor(LDOS2(i,1)/frequency_delta) +nbins/2 !find the bin number for energy bining
+   bin = floor(LDOS2(i,1)/frequency_delta) + nbins/2 !find the bin number for energy bining
    DOS(bin,2) = DOS(bin,2) + (LDOS1(i,2) + LDOS2(i,2))*0.5
    if ((LDOS1(i,2) + LDOS2(i,2))**2 /= 0) then
       IPR(i) = (LDOS1(i,2)**2 + LDOS2(i,2)**2)/((LDOS1(i,2) + LDOS2(i,2))**2) !calculated for each transition but not weighted with DOS
@@ -319,7 +319,7 @@ do i=1,32
 end do
 end do
 
-sum = DOS(nbins/2,2)
+sum = DOS(1,2)
 DOS(1,1) = frequency_min
 do i=2,nbins
    DOS(i,1) = DOS(i-1,1) + frequency_delta
