@@ -2,15 +2,15 @@ module routines
 
 implicit none 
 
-real, dimension(3) :: W10, W20, W31, W32
-real , dimension(9) :: W11, W21, W12, W22
-real :: W00, W30, W03                                          ! matrices for eigenvalues
-real :: omega(64)                                              ! grand potentials (eigen_energies - mu*number_electrons)
-real :: omega_ground                                           ! the lowest grand ensemble energy
-real :: eigenvectors(64,64)                                    ! the 16 eigenvectors
-real :: v_ground(64)                                           ! the ground state eigenvector
-integer, dimension(3,64) :: PES_down, PES_up, IPES_down, IPES_up  !matrices for PES and IPES 
-integer, dimension(3,64) :: phase_PES_down, phase_PES_up, phase_IPES_down, phase_IPES_up  !do get anticommutation sign right
+real, dimension(3) :: W10=0, W20=0, W31=0, W32=0
+real , dimension(9) :: W11=0, W21=0, W12=0, W22=0
+real :: W00=0, W30=0, W03=0                                          ! matrices for eigenvalues
+real :: omega(64)=0                                              ! grand potentials (eigen_energies - mu*number_electrons)
+real :: omega_ground=0                                           ! the lowest grand ensemble energy
+real :: eigenvectors(64,64)=0                                    ! the 16 eigenvectors
+real :: v_ground(64)=0                                           ! the ground state eigenvector
+integer, dimension(3,64) :: PES_down=0, PES_up=0, IPES_down=0, IPES_up=0  !matrices for PES and IPES 
+integer, dimension(3,64) :: phase_PES_down=0, phase_PES_up=0, phase_IPES_down=0, phase_IPES_up=0  !do get anticommutation sign right
 
 contains 
 
@@ -39,7 +39,7 @@ integer :: i ! counter
 
 do i=1,3
    call random_number(random)
-   E(i) = random - 0.5          !centering the random numbers about 0
+   E(i) = delta*(random - 0.5)          !centering the random numbers about 0
 end do
 
 end subroutine site_potentials
@@ -60,11 +60,17 @@ integer :: INFO = 0
 integer :: LWORK
 integer, allocatable, dimension(:) :: WORK
 
+!--------zero variables for each loop---------------
+
+W10=0; W20=0; W31=0; W32=0; W11=0; W21=0; W12=0; W22=0
+H10=0; H20=0; H31=0; H32=0; H11=0; H21=0; H12=0; H22=0
+
+!--------zero electron state-----------------------------
 H00 = 0
 
 W00 = H00 ! eigenvalues
 
-omega(1) = W00 - mu*0   ! grand potential
+omega(1) = W00 - mu*0     ! grand potential
 
 eigenvectors(1,1) = 1     ! eigenvector matrix
 
@@ -101,8 +107,6 @@ end do
 
 !--------H11---------------------------------------
 
-H11 = 0
-
 ! enter the off diagonal terms for the upper half of the matrix
 H11(1,2) = t;  H11(1,3) = -t; H11(1,4) = t;  H11(1,5) = -t
 H11(2,4) = t;  H11(2,5) = t;  H11(2,8) = -t
@@ -135,7 +139,7 @@ allocate(WORK(30))
 
 call ssyev('v','u',9,H11,9,W11,WORK,LWORK,INFO)
 if (INFO /= 0) then
-   write(*,*) 'Problem with Lapack for H1 matrix. Error code:', INFO
+   write(*,*) 'Problem with Lapack for H11 matrix. Error code:', INFO
    stop
 end if 
 
@@ -266,8 +270,6 @@ eigenvectors(42,42) = 1
 
 !------H31 and H13 (they are the same)-------------------------------------------------
 
-H31 = 0
-
 H31(1,1) = 2*E(1) + E(2) + E(3); H31(2,2) = E(1) + 2*E(2) + E(3); H31(3,3) = E(1) + E(2) + 2*E(3) ! on diagonal terms
 
 H31(1,2) = -t; H31(1,3) = t; H31(2,3) = -t   ! off diagonal upper matrix  
@@ -295,18 +297,16 @@ end if
 deallocate(WORK)
 
 do i=1,3
-   omega(i+42) = W31(i) - mu*4    ! grandpotentials of H20
-   omega(i+45) = W31(i) - mu*4    ! grandpotentials of H02
+   omega(i+42) = W31(i) - mu*4    ! grandpotentials of H31
+   omega(i+45) = W31(i) - mu*4    ! grandpotentials of H13
 end do
 
 do i=1,3
-   eigenvectors(i+42,43:45) = H31(1:3,i)    ! eigenvectors of H20
-   eigenvectors(i+45,46:48) = H31(1:3,i)    ! eigenvectors of H02
+   eigenvectors(i+42,43:45) = H31(1:3,i)    ! eigenvectors of H31
+   eigenvectors(i+45,46:48) = H31(1:3,i)    ! eigenvectors of H13
 end do 
 
 !------H22 (9x9 matrix)-----------------------------------------
-
-H22 = 0
 
 ! off diagonal entries of upper triangular part of matrix
 H22(1,3) = -t; H22(1,6) = t;  H22(1,7) = t;  H22(1,8) = t
@@ -619,9 +619,6 @@ cites: do i=1,3  ! calculating the IPES matrices
    end do
 end do cites
 
-do i=1,64   
-write(*,*),i,'=', PES_up(1,i),i,'=', IPES_up(1,i)
-end do
 end subroutine transformations
 
 end module routines
