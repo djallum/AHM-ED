@@ -156,8 +156,6 @@ end do
 
 !------H20 and H02 (only H20 since H02 is the same)------------------------
 
-H20 = 0
-
 H20(1,1) = E(1) + E(2); H20(2,2) = E(1) + E(3); H20(3,3) = E(2) + E(3) ! on diagonal terms
 
 H20(1,2) = t; H20(1,3) = -t; H20(2,3) = t   ! off diagonal upper matrix  
@@ -178,7 +176,7 @@ allocate(WORK(10))
 
 call ssyev('v','u',3,H20,3,W20,WORK,LWORK,INFO)
 if (INFO /= 0) then
-   write(*,*) 'Problem with Lapack for H1 matrix. Error code:', INFO
+   write(*,*) 'Problem with Lapack for H20 matrix. Error code:', INFO
    stop
 end if 
 
@@ -194,11 +192,11 @@ do i=1,3
    eigenvectors(i+19,20:22) = H20(1:3,i)    ! eigenvectors of H02
 end do 
 
-!-------H21 and H12 (H12 = -H21  (for off diagonal entries))------------------
+!-------H21 and H12------------------
 
 H21 = 0; H12 = 0
 
-! off diagonal entries of upper matrix
+! off diagonal entries of upper matrix of H21
 H21(1,4) = -t; H21(1,5) = t;  H21(1,7) = t;  H21(1,9) = -t
 H21(2,5) = -t; H21(2,6) = t;  H21(2,7) = -t; H21(2,8) = t
 H21(3,4) = t;  H21(3,6) = -t; H21(3,8) = -t; H21(3,9) = t
@@ -208,18 +206,27 @@ H21(6,7) = -t
 H21(7,9) = t
 H21(8,9) = -t
 
-!make it symetric
+! off diagonal entries of upper matrix of H12
+H12(1,4) = t;  H12(1,5) = -t; H12(1,7) = -t; H12(1,9) = -t
+H12(2,5) = t;  H12(2,6) = -t; H12(2,7) = t;  H12(2,8) = -t
+H12(3,4) = -t; H12(3,6) = t;  H12(3,8) = t;  H12(3,9) = -t
+H12(4,5) = -t; H12(4,6) = t
+H12(5,8) = t
+H12(6,7) = -t
+H12(7,9) = t
+H12(8,9) = -t
+
+!make them symetric
 do i=1,9
    do j=1,9
       if(i>j) then
          H21(i,j) = H21(j,i)
+         H12(i,j) = H12(j,i)
       end if
    end do
 end do
 
-H12 = -H21
-
-! on diagonal entries
+! on diagonal entries are same for both
 H21(1,1) = E(1) + E(2) + E(3); H12(1,1) = E(1) + E(2) + E(3)
 H21(2,2) = E(1) + E(2) + E(3); H12(2,2) = E(1) + E(2) + E(3)
 H21(3,3) = E(1) + E(2) + E(3); H12(3,3) = E(1) + E(2) + E(3)
