@@ -209,7 +209,7 @@ H21(7,9) = t
 H21(8,9) = -t
 
 ! off diagonal entries of upper matrix of H12
-H12(1,4) = t;  H12(1,5) = -t; H12(1,7) = -t; H12(1,9) = -t
+H12(1,4) = t;  H12(1,5) = -t; H12(1,7) = -t; H12(1,9) = t
 H12(2,5) = t;  H12(2,6) = -t; H12(2,7) = t;  H12(2,8) = -t
 H12(3,4) = -t; H12(3,6) = t;  H12(3,8) = t;  H12(3,9) = -t
 H12(4,5) = -t; H12(4,6) = t
@@ -617,7 +617,7 @@ PES_down(3,55) = 61; phase_PES_down(3,55) = 1
 PES_down(3,58) = 64; phase_PES_down(3,58) = 1
 
 
-cites: do i=1,3  ! calculating the IPES matrices 
+sites: do i=1,3  ! calculating the IPES matrices 
    do j=1,64
       if (PES_down(i,j) /= 0) then
          phase_IPES_down(i,PES_down(i,j)) = phase_PES_down(i,j)
@@ -628,7 +628,7 @@ cites: do i=1,3  ! calculating the IPES matrices
          phase_IPES_up(i,PES_up(i,j)) = phase_PES_up(i,j)
       end if
    end do
-end do cites
+end do sites
 
 end subroutine transformations
 
