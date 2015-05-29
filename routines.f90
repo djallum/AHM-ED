@@ -16,6 +16,8 @@ contains
 
 subroutine random_gen_seed()
 
+implicit none
+
 integer :: seed_size, clock, i
 integer, allocatable, dimension(:) :: seed
 
@@ -23,14 +25,14 @@ call random_seed(size=seed_size)
 allocate(seed(seed_size))
 call system_clock(count = clock)
 seed=clock + 37*(/(i-1,i=1,seed_size)/)
-
 call random_seed(put=seed)
-
 deallocate(seed)
 
 end subroutine random_gen_seed
 
 subroutine site_potentials(delta,E)
+
+implicit none
 
 real, intent(in) :: delta
 real, intent(out) :: E(2)
@@ -46,12 +48,14 @@ end subroutine site_potentials
 
 subroutine hamiltonian(E,t,U,mu)
 
+implicit none
+
 real, intent(in) :: E(3)
 real, intent(in) :: mu 
 real, intent(in) :: t
 real, intent(in) :: U
 real :: H00, H30, H03, H33
-real, dimension(3,3) :: H10, H01, H20, H31, H32
+real, dimension(3,3) :: H10, H20, H31, H32
 real, dimension(9,9) :: H11, H21, H12, H22
 integer :: i,j ! counter
 
@@ -93,6 +97,7 @@ if (INFO /= 0) then
    stop
 end if 
 
+
 deallocate(WORK)
 
 do i=1,3
@@ -125,12 +130,9 @@ do i=1,9
 end do
 
 ! enter the on diagonal terms
-H11(1,1) = E(1) + E(2)
-H11(2,2) = E(1) + E(3)
-H11(3,3) = E(2) + E(3)
-H11(4,4) = E(1) + E(2)
-H11(5,5) = E(1) + E(3)
-H11(6,6) = E(2) + E(3)
+H11(1,1) = E(1) + E(2); H11(4,4) = E(1) + E(2)
+H11(2,2) = E(1) + E(3); H11(5,5) = E(1) + E(3)
+H11(3,3) = E(2) + E(3); H11(6,6) = E(2) + E(3)
 H11(7,7) = 2*E(1) + U
 H11(8,8) = 2*E(2) + U
 H11(9,9) = 2*E(3) + U
@@ -238,7 +240,6 @@ H21(8,8) = 2*E(2) + E(3) + U;  H12(8,8) = 2*E(2) + E(3) + U
 H21(9,9) = E(2) + 2*E(3) + U;  H12(9,9) = E(2) + 2*E(3) + U
 
 !lapack section
-
 LWORK = 30
 allocate(WORK(30))
 
@@ -273,8 +274,8 @@ H30 = E(1) + E(2) + E(3)
 omega(41) = H30 - 3*mu
 omega(42) = omega(41)
 
-eigenvectors(41,41) = 1
-eigenvectors(42,42) = 1
+eigenvectors(41,41) = 1         ! eigenvectors of H30
+eigenvectors(42,42) = 1         ! eigenvectors of H03
 
 !------H31 and H13 (they are the same)-------------------------------------------------
 
@@ -407,6 +408,8 @@ eigenvectors(64,64) = 1
 end subroutine hamiltonian
 
 subroutine transformations()
+
+implicit none
 
 integer :: i,j ! counters
 
@@ -569,8 +572,8 @@ PES_up(3,27) = 44; phase_PES_up(3,27) = 1
 PES_up(3,33) = 54; phase_PES_up(3,33) = -1
 PES_up(3,34) = 53; phase_PES_up(3,34) = -1
 PES_up(3,35) = 50; phase_PES_up(3,35) = 1
-PES_up(3,36) = 49; phase_PES_up(3,36) = 1
-PES_up(3,37) = 52; phase_PES_up(3,37) = -1
+PES_up(3,36) = 52; phase_PES_up(3,36) = 1
+PES_up(3,37) = 56; phase_PES_up(3,37) = -1
 PES_up(3,39) = 57; phase_PES_up(3,39) = -1 
 PES_up(3,42) = 48; phase_PES_up(3,42) = -1
 PES_up(3,46) = 62; phase_PES_up(3,46) = -1 
