@@ -9,10 +9,10 @@ use routines
 
 implicit none
 
-integer, parameter :: npairs = 100000
+integer, parameter :: npairs = 1000000
 real, parameter :: t = 0  !hopping term
-real, parameter :: delta = 12 ! width of disorder 
-real, parameter :: U = 1 ! on-site interactions
+real, parameter :: delta = 6 ! width of disorder 
+real, parameter :: U = 4 ! on-site interactions
 real, parameter :: mu = U/2 ! chemical potential (half filling) 
 real :: E(3)=0 ! site potentials
 integer :: pair=0,i=0,j=0, k=0 ! counter
@@ -22,9 +22,9 @@ real, dimension(3,64) :: PES_down_ground=0, PES_up_ground=0, IPES_down_ground=0,
 real, dimension(3,128,2) :: LDOS=0
 real :: inner_product_up=0, inner_product_down=0
 real :: IPR(128)=0
-integer, parameter :: nbins = 200                 ! number of bins for energy bining to get smooth curves
-real, parameter :: frequency_max = 8             ! maximum energy considered in energy bining
-real, parameter :: frequency_min = -8            ! lowest energy considered in energy bining
+integer, parameter :: nbins = 1000                 ! number of bins for energy bining to get smooth curves
+real, parameter :: frequency_max = 5             ! maximum energy considered in energy bining
+real, parameter :: frequency_min = -5            ! lowest energy considered in energy bining
 real :: frequency_delta=0                         ! step size between different energy bins
 integer :: bin=0                                    ! index for the bin number the peak goes in
 real, dimension(nbins,2) :: DOS=0                        ! array that stores the DOS peaks and all the energy bin frequencies 
@@ -45,8 +45,8 @@ pairs: do pair=1,npairs
 
 eigenvectors = 0
 E = 0
-omega_ground = 0
-omega = 0
+Gpotential_ground = 0
+Gpotential = 0
 LDOS = 0
 IPR = 0
 
@@ -55,11 +55,11 @@ call hamiltonian(E,t,U,mu)
 
 !-----find ground state energy------------------------
 
-omega_ground = minval(omega)   ! find the lowest grand ensemble energy
+Gpotential_ground = minval(Gpotential)   ! find the lowest grand ensemble energy
 
 !-----find the corresponding eigenvector----------------
 
-location = minloc(omega)  !find the location of the lowest energy  
+location = minloc(Gpotential)  !find the location of the lowest energy  
 v_ground = eigenvectors(location(1),:) !set v ground to the eigenvector corresponding to the lowest energy
 
 !multiply ground state vector by the matrices
@@ -93,7 +93,7 @@ do j=1,3
    do i=1,64
       inner_product_up = (dot_product(PES_up_ground(j,:),eigenvectors(i,:)))**2
       inner_product_down =  (dot_product(PES_down_ground(j,:),eigenvectors(i,:)))**2
-      LDOS(j,i,1) = omega_ground - omega(i)    ! location of the peak
+      LDOS(j,i,1) = Gpotential_ground - Gpotential(i)    ! location of the peak
       LDOS(j,i,2) = (inner_product_up + inner_product_down)*0.5 ! weight of the peak
    end do
 end do
@@ -102,7 +102,7 @@ do j=1,3
    do i=1,64
       inner_product_up = (dot_product(IPES_up_ground(j,:),eigenvectors(i,:)))**2
       inner_product_down =  (dot_product(IPES_down_ground(j,:),eigenvectors(i,:)))**2
-      LDOS(j,i+64,1) = omega(i) - omega_ground     !location of the peak
+      LDOS(j,i+64,1) = Gpotential(i) - Gpotential_ground     !location of the peak
       LDOS(j,i+64,2) = (inner_product_up + inner_product_down)*0.5 !weight of the peak
    end do
 end do
