@@ -7,7 +7,7 @@ real , dimension(9) :: W11=0, W21=0, W12=0, W22=0
 real :: W00=0, W30=0, W03=0                                          ! matrices for eigenvalues
 real :: omega(64)=0                                              ! grand potentials (eigen_energies - mu*number_electrons)
 real :: omega_ground=0                                           ! the lowest grand ensemble energy
-real :: eigenvectors(64,64)=0                                    ! the 16 eigenvectors
+real :: eigenvectors(64,64)=0                                    ! the 64 eigenvectors
 real :: v_ground(64)=0                                           ! the ground state eigenvector
 integer, dimension(3,64) :: PES_down=0, PES_up=0, IPES_down=0, IPES_up=0  !matrices for PES and IPES 
 integer, dimension(3,64) :: phase_PES_down=0, phase_PES_up=0, phase_IPES_down=0, phase_IPES_up=0  !do get anticommutation sign right
@@ -24,7 +24,8 @@ integer, allocatable, dimension(:) :: seed
 call random_seed(size=seed_size)
 allocate(seed(seed_size))
 call system_clock(count = clock)
-seed=clock + 37*(/(i-1,i=1,seed_size)/)
+!seed=clock + 37*(/(i-1,i=1,seed_size)/)
+seed = 3
 call random_seed(put=seed)
 deallocate(seed)
 
@@ -96,7 +97,6 @@ if (INFO /= 0) then
    write(*,*) 'Problem with Lapack for H10 matrix. Error code:', INFO
    stop
 end if 
-
 
 deallocate(WORK)
 
@@ -279,7 +279,7 @@ eigenvectors(42,42) = 1         ! eigenvectors of H03
 
 !------H31 and H13 (they are the same)-------------------------------------------------
 
-H31(1,1) = 2*E(1) + E(2) + E(3); H31(2,2) = E(1) + 2*E(2) + E(3); H31(3,3) = E(1) + E(2) + 2*E(3) ! on diagonal terms
+H31(1,1) = 2*E(1) + E(2) + E(3) + U; H31(2,2) = E(1) + 2*E(2) + E(3) + U; H31(3,3) = E(1) + E(2) + 2*E(3) + U ! on diagonal terms
 
 H31(1,2) = -t; H31(1,3) = t; H31(2,3) = -t   ! off diagonal upper matrix  
 
@@ -617,15 +617,15 @@ PES_down(3,55) = 61; phase_PES_down(3,55) = 1
 PES_down(3,58) = 64; phase_PES_down(3,58) = 1
 
 
-sites: do i=1,3  ! calculating the IPES matrices 
-   do j=1,64
-      if (PES_down(i,j) /= 0) then
-         phase_IPES_down(i,PES_down(i,j)) = phase_PES_down(i,j)
-         IPES_down(i,PES_down(i,j)) = j
+sites: do j=1,3  ! calculating the IPES matrices 
+   do i=1,64
+      if (PES_down(j,i) /= 0) then
+         phase_IPES_down(j,PES_down(j,i)) = phase_PES_down(j,i)
+         IPES_down(j,PES_down(j,i)) = i
       end if
-      if (PES_up(i,j) /= 0) then
-         IPES_up(i,PES_up(i,j)) = j
-         phase_IPES_up(i,PES_up(i,j)) = phase_PES_up(i,j)
+      if (PES_up(j,i) /= 0) then
+         IPES_up(j,PES_up(j,i)) = i
+         phase_IPES_up(j,PES_up(j,i)) = phase_PES_up(j,i)
       end if
    end do
 end do sites
