@@ -4,11 +4,11 @@ implicit none
 
 real, dimension(3) :: W10=0, W20=0, W31=0, W32=0
 real , dimension(9) :: W11=0, W21=0, W12=0, W22=0
-real :: W00=0, W30=0, W03=0                                      ! matrices for eigenvalues
-real :: Gpotential(64)=0                                         ! grand potentials (eigenenergies - mu*number electrons)
-real :: Gpotential_ground=0                                           ! the lowest grand ensemble energy
-real :: eigenvectors(64,64)=0                                    ! the 64 eigenvectors
-real :: v_ground(64)=0                                           ! the ground state eigenvector
+real :: W30=0, W03=0                             ! matrices for eigenvalues
+real :: Grand_potential(64)=0                    ! grand potentials (eigenenergies - mu*number electrons)
+real :: Grand_potential_ground=0                 ! the lowest grand ensemble energy
+real :: eigenvectors(64,64)=0                    ! the 64 eigenvectors
+real :: v_ground(64)=0                           ! the ground state eigenvector
 integer, dimension(3,64) :: PES_down=0, PES_up=0, IPES_down=0, IPES_up=0  !matrices for PES and IPES 
 integer, dimension(3,64) :: phase_PES_down=0, phase_PES_up=0, phase_IPES_down=0, phase_IPES_up=0  !do get anticommutation sign right
 
@@ -35,13 +35,13 @@ subroutine site_potentials(delta,E)
 implicit none
 
 real, intent(in) :: delta
-real, intent(out) :: E(2)
+real, intent(out) :: E(3)
 real :: random
 integer :: i ! counter
 
 do i=1,3
-   call random_number(random)
-   E(i) = delta*(random - 0.5)          !centering the random numbers about 0
+   call random_number(random)           ! gives a random number between 0 and 1
+   E(i) = delta*(random - 0.5)          ! centers the random numbers about 0
 end do
 
 end subroutine site_potentials
@@ -72,17 +72,15 @@ H10=0; H20=0; H31=0; H32=0; H11=0; H21=0; H12=0; H22=0
 !--------zero electron state-----------------------------
 H00 = 0
 
-W00 = H00 ! eigenvalues
-
-Gpotential(1) = W00 - mu*0     ! grand potential
+Grand_potential(1) = H00 - mu*0     ! grand potential
 
 eigenvectors(1,1) = 1     ! eigenvector matrix
 
-!-----------H10 and H01 (only H10 since H10 is same)------------------------------
+!-----------H10 and H01 (only H10 since H01 is same)------------------------------
 
-H10 = t !the off-diagonal terms (the ones on diagonal are replaced in next step)
+H10 = t !the off-diagonal terms (the ones on the main diagonal are replaced in next step)
 
-! do the on diagoanl terms (replace the ts that were there)
+! enter the term on the main diagoanl
 do i=1,3
    H10(i,i) = E(i)
 end do
@@ -100,8 +98,8 @@ end if
 deallocate(WORK)
 
 do i=1,3
-   Gpotential(i+1) = W10(i) - mu*1  ! grandpotentials of H10
-   Gpotential(i+4) = W10(i) - mu*1  ! grandpotentials of H01
+   Grand_potential(i+1) = W10(i) - mu*1  ! grandpotentials of H10
+   Grand_potential(i+4) = W10(i) - mu*1  ! grandpotentials of H01
 end do
 
 do i=1,3
@@ -148,7 +146,7 @@ end if
 deallocate(WORK)
 
 do i=1,9
-   Gpotential(i+7) = W11(i) - mu*2  ! grandpotentials of H11
+   Grand_potential(i+7) = W11(i) - mu*2  ! grandpotentials of H11
 end do
 
 do i=1,9
@@ -184,8 +182,8 @@ end if
 deallocate(WORK)
 
 do i=1,3
-   Gpotential(i+16) = W20(i) - mu*2    ! grandpotentials of H20
-   Gpotential(i+19) = W20(i) - mu*2    ! grandpotentials of H02
+   Grand_potential(i+16) = W20(i) - mu*2    ! grandpotentials of H20
+   Grand_potential(i+19) = W20(i) - mu*2    ! grandpotentials of H02
 end do
 
 do i=1,3
@@ -257,8 +255,8 @@ end if
 deallocate(WORK)
 
 do i=1,9
-   Gpotential(i+22) = W21(i) - mu*3  ! grandpotentials of H21
-   Gpotential(i+31) = W12(i) - mu*3  ! grandpotentials of H12
+   Grand_potential(i+22) = W21(i) - mu*3  ! grandpotentials of H21
+   Grand_potential(i+31) = W12(i) - mu*3  ! grandpotentials of H12
 end do
 
 do i=1,9
@@ -270,8 +268,8 @@ end do
 
 H30 = E(1) + E(2) + E(3)
 
-Gpotential(41) = H30 - 3*mu
-Gpotential(42) = H30 - 3*mu
+Grand_potential(41) = H30 - 3*mu
+Grand_potential(42) = H30 - 3*mu
 
 eigenvectors(41,41) = 1         ! eigenvectors of H30
 eigenvectors(42,42) = 1         ! eigenvectors of H03
@@ -305,8 +303,8 @@ end if
 deallocate(WORK)
 
 do i=1,3
-   Gpotential(i+42) = W31(i) - mu*4    ! grandpotentials of H31
-   Gpotential(i+45) = W31(i) - mu*4    ! grandpotentials of H13
+   Grand_potential(i+42) = W31(i) - mu*4    ! grandpotentials of H31
+   Grand_potential(i+45) = W31(i) - mu*4    ! grandpotentials of H13
 end do
 
 do i=1,3
@@ -358,7 +356,7 @@ end if
 deallocate(WORK)
 
 do i=1,9
-   Gpotential(i+48) = W22(i) - mu*4  ! grandpotentials of H22
+   Grand_potential(i+48) = W22(i) - mu*4  ! grandpotentials of H22
 end do
 
 do i=1,9
@@ -387,8 +385,8 @@ end if
 deallocate(WORK)
 
 do i=1,3
-   Gpotential(i+57) = W32(i) - mu*5    ! grandpotentials of H32
-   Gpotential(i+60) = W32(i) - mu*5    ! grandpotentials of H23
+   Grand_potential(i+57) = W32(i) - mu*5    ! grandpotentials of H32
+   Grand_potential(i+60) = W32(i) - mu*5    ! grandpotentials of H23
 end do
 
 do i=1,3
@@ -400,7 +398,7 @@ end do
 
 H33 = 2*E(1) + 2*E(2) + 2*E(3) + 3*U 
 
-Gpotential(64) = H33 - mu*6
+Grand_potential(64) = H33 - mu*6
 
 eigenvectors(64,64) = 1
 
