@@ -52,10 +52,10 @@ real, intent(in) :: mu
 real, intent(in) :: t
 real, intent(in) :: U
 real :: H00, W00, H40, W40
-real, dimension(4,4) :: H10, W10, H30, H03
-real, dimension(6,6) :: H20, W20
+real, dimension(4,4) :: H10, W10, H30, H03, H41, W41
+real, dimension(6,6) :: H20, W20, H42, W42
 real, dimension(16,16) :: H11, W11, H31, W31, H13, W13
-real, dimension(24,24) :: H21, W21, H12, W12
+real, dimension(24,24) :: H21, W21, H12, W12, H32, W32, H23, W23
 real, dimension(36,36) :: H22, W22
 integer :: i,j ! counter
 
@@ -398,13 +398,13 @@ end if
 deallocate(WORK)
 
 do i=1,16
-   Grand_potential(i+94) = W31(i) - mu*4  ! grand potentials of H31
-   Grand_potential(i+110) = W13(i) - mu*4  ! grand potentials of H13
+   Grand_potential(i+95) = W31(i) - mu*4  ! grand potentials of H31
+   Grand_potential(i+111) = W13(i) - mu*4  ! grand potentials of H13
 end do
 
 do i=1,16
-   eigenvectors(i+94,95:110) = H31(1:16,i)    ! eigenvectors of H31
-   eigenvectors(i+110,111:126) = H13(1:16,i)    ! eigenvectors of H13
+   eigenvectors(i+95,96:111) = H31(1:16,i)    ! eigenvectors of H31
+   eigenvectors(i+111,112:127) = H13(1:16,i)    ! eigenvectors of H13
 end do 
 
 !-----------------------H22---------------------------------------------
@@ -465,7 +465,7 @@ end do
 LWORK = 108
 allocate(WORK(108))
 
-call ssyev('v','u',4,H22,4,W22,WORK,LWORK,INFO)
+call ssyev('v','u',36,H22,36,W22,WORK,LWORK,INFO)
 if (INFO /= 0) then
    write(*,*) 'Problem with Lapack for H22 matrix. Error code:', INFO
    stop
@@ -474,13 +474,177 @@ end if
 deallocate(WORK)
 
 do i=1,36
-   Grand_potential(i+126) = W22(i) - mu*4  ! grand potentials of H22
+   Grand_potential(i+127) = W22(i) - mu*4  ! grand potentials of H22
 end do
 
 do i=1,36
-   eigenvectors(i+126,127:162) = H22(1:36,i)    ! eigenvectors of H22
+   eigenvectors(i+127,128:163) = H22(1:36,i)    ! eigenvectors of H22
+end do 
+
+!-------------H41 & H14 (same)-------------------------------------
+
+H41(1,2) = -t; H41(1,3) = t; H41(1,4) = -t
+H41(2,3) = t; H41(2,4) = t
+H41(3,4) = -t
+
+H41(1,1) = 2*E(1) + E(2) + E(3) + E(4) + U; H41(2,2) = E(1) + 2*E(2) + E(3) + E(4) + U
+H41(3,3) = E(1) + E(2) + 2*E(3) + E(4) + U; H41(4,4) = E(1) + E(2) + E(3) + 2*E(4) + U
+
+! make it symetric
+do i=1,4
+   do j=1,4
+      if(i>j) then
+         H41(i,j) = H41(j,i)
+      end if
+   end do
+end do
+
+! solve the eigenvalues and eigenvectors
+LWORK = 12
+allocate(WORK(12))
+
+call ssyev('v','u',4,H41,4,W41,WORK,LWORK,INFO)
+if (INFO /= 0) then
+   write(*,*) 'Problem with Lapack for H41 matrix. Error code:', INFO
+   stop
+end if 
+
+deallocate(WORK)
+
+do i=1,4
+   Grand_potential(i+163) = W41(i) - mu*5  ! grand potentials of H41
+   Grand_potential(i+167) = W41(i) - mu*5  ! grand potentials of H14
+end do
+
+do i=1,4
+   eigenvectors(i+163,164:167) = H41(1:4,i)    ! eigenvectors of H41
+   eigenvectors(i+167,168:171) = H41(1:4,i)    ! eigenvectors of H14
+end do 
+
+!--------------H32 & H23----------------------------------
+
+H32(1,4) = -t; H32(1,7) = t; H32(1,12) = -t; H32(1,13) = -t; H32(1,14) = t; H32(1,17) = t; H32(1,20) = -t
+H32(2,5) = -t; H32(2,9) = t; H32(2,10) = -t; H32(2,14) = -t; H32(2,16) = t; H32(2,17) = -t; H32(2,19) = t
+H32(3,6) = -t; H32(3,8) = t; H32(3,11) = -t; H32(3,13) = t; H32(3,16) = -t; H32(3,19) = -t; H32(3,20) = t
+H32(4,7) = -t; H32(4,11) = t; H32(4,13) = -t; H32(4,15) = t; H32(4,18) = t; H32(4,23) = -t
+H32(5,8) = -t; H32(5,10) = t; H32(5,15) = -t; H32(5,16) = t; H32(5,18) = -t; H32(5,22) = t
+H32(6,9) = -t; H32(6,12) = t; H32(6,13) = t; H32(6,16) = -t; H32(6,22) = -t; H32(6,23) = t
+H32(7,10) = -t; H32(7,14) = -t; H32(7,15) = t; H32(7,21) = t; H32(7,24) = -t
+H32(8,11) = -t; H32(8,15) = -t; H32(8,19) = t; H32(8,21) = -t; H32(8,22) = t
+H32(9,12) = -t; H32(9,14) = t; H32(9,19) = -t; H32(9,22) = -t; H32(9,24) = t
+H32(10,17) = -t; H32(10,18) = t; H32(10,21) = t; H32(10,24) = -t
+H32(11,18) = -t; H32(11,20) = t; H32(11,21) = -t; H32(11,23) = t
+H32(12,17) = t; H32(12,20) = -t; H32(12,23) = -t; H32(12,24) = t
+H32(13,14) = -t; H32(13,15) = -t; H32(13,16) = t
+H32(14,15) = -t; H32(14,19) = t
+H32(15,22) = t
+H32(16,17) = -t; H32(17,18) = -t
+H32(17,18) = -t; H32(17,20) = t
+H32(18,23) = t
+H32(19,20) = -t; H32(19,21) = -t
+H32(20,21) = -t
+H32(21,24) = t
+H32(22,23) = -t; H32(22,24) = -t
+H32(23,24) = -t
+
+H32(1,1) = 2*E(1) + E(2) + E(3) + E(4) + U; H32(4,4) = E(1) + 2*E(2) + E(3) + E(4) + U
+H32(7,7) = E(1) + E(2) + 2*E(3) + E(4) + U; H32(10,10) = E(1) + E(2) + E(3) + 2*E(4) + U
+H32(13,13) = 2*E(1) + 2*E(2) + E(3) + 2*U; H32(14,14) = 2*E(1) + E(2) + 2*E(3) + 2*U; H32(15,15) = E(1) + 2*E(2) + 2*E(3) + 2*U
+H32(16,16) = 2*E(1) + 2*E(2) + E(4) + 2*U; H32(17,17) = 2*E(1) + E(2) + 2*E(4) + 2*U; H32(18,18) = E(1) + 2*E(2) + 2*E(4) + 2*U
+H32(19,19) = 2*E(1) + 2*E(3) + E(4) + 2*U; H32(20,20) = 2*E(1) + E(3) + 2*E(4) + 2*U; H32(21,21) = E(1) + 2*E(3) + 2*E(4) + 2*U
+H32(22,22) = 2*E(2) + 2*E(3) + E(4) + 2*U; H32(23,23) = 2*E(2) + E(3) + 2*E(4) + 2*U; H32(24,24) = E(2) + 2*E(3) + 2*E(4) + 2*U
+
+do i=1,10,3
+   H32(i+1,i+1) = H32(i,i)
+   H32(i+2,i+2) = H32(i,i)
+end do
+
+! make it symetric and do changes to upper right and lower left quadrants of H12 matrix
+do i=1,24
+   do j=1,24
+      if(i>12 .and. j<12) then
+         H23(i,j) = -H32(i,j)
+      end if
+      if(i<12 .and. j>12) then
+         H23(i,j) = -H32(i,j)
+      end if
+      if(i>j) then
+         H32(i,j) = H32(j,i)
+         H23(i,j) = H23(j,i)
+      end if
+   end do
+end do
+
+! solve the eigenvalues and eigenvectors
+LWORK = 75
+allocate(WORK(75))
+
+call ssyev('v','u',24,H32,24,W32,WORK,LWORK,INFO)
+if (INFO /= 0) then
+   write(*,*) 'Problem with Lapack for H32 matrix. Error code:', INFO
+   stop
+end if 
+
+call ssyev('v','u',24,H23,24,W23,WORK,LWORK,INFO)
+if (INFO /= 0) then
+   write(*,*) 'Problem with Lapack for H23 matrix. Error code:', INFO
+   stop
+end if
+
+deallocate(WORK)
+
+do i=1,24
+   Grand_potential(i+171) = W32(i) - mu*5  ! grand potentials of H32
+   Grand_potential(i+195) = W23(i) - mu*5  ! grand potentials of H23
+end do
+
+do i=1,24
+   eigenvectors(i+171,172:195) = H32(1:24,i)    ! eigenvectors of H32
+   eigenvectors(i+195,196:219) = H23(1:24,i)    ! eigenvectors of H23
+end do 
+
+!----------------------H42 & H24 (same)------------------------------------------
+
+H42(1,2) = -t; H42(1,3) = t; H32(1,4) = -t; H32(1,5) = t
+H42(2,3) = -t; H32(2,4) = -t; H32(2,6) = t
+H42(3,5) = -t; H42(3,6) = t
+H42(4,5) = -t; H42(4,6) = -t
+H42(5,6) = -t
+
+H42(1,1) = 2*E(1) + 2*E(2) + E(3) + E(4) + 2*U; H42(2,2) = 2*E(1) + E(2) + 2*E(3) + E(4) + 2*U
+H42(3,3) = 2*E(1) + E(2) + E(3) + 2*E(4) + 2*U; H42(4,4) = E(1) + 2*E(2) + 2*E(3) + E(4) + 2*U
+H42(5,5) = E(1) + 2*E(2) + E(3) + 2*E(4) + 2*U; H42(6,6) = E(1) + E(2) + 2*E(3) + 2*E(4) + 2*U
+
+! make it symetric
+do i=1,6
+   do j=1,6
+      if(i>j) then
+         H42(i,j) = H42(j,i)
+      end if
+   end do
+end do
+
+! solve the eigenvalues and eigenvectors
+LWORK = 18
+allocate(WORK(18))
+
+call ssyev('v','u',6,H42,6,W42,WORK,LWORK,INFO)
+if (INFO /= 0) then
+   write(*,*) 'Problem with Lapack for H42 matrix. Error code:', INFO
+   stop
+end if 
+
+deallocate(WORK)
+
+do i=1,6
+   Grand_potential(i+219) = W42(i) - mu*6  ! grand potentials of H42
+   Grand_potential(i+225) = W42(i) - mu*6  ! grand potentials of H24
+end do
+
+do i=1,6
+   eigenvectors(i+219,220:225) = H42(1:6,i)    ! eigenvectors of H42
+   eigenvectors(i+225,226:231) = H42(1:6,i)    ! eigenvectors of H24
 end do 
 
 end subroutine hamiltonian
 end module routines
-
