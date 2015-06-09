@@ -52,11 +52,13 @@ real, intent(in) :: mu
 real, intent(in) :: t
 real, intent(in) :: U
 real :: H00, W00, H40, W40, H44
-real, dimension(4,4) :: H10, W10, H30, W30, H41, W41, H43, W43
-real, dimension(6,6) :: H20, W20, H42, W42
-real, dimension(16,16) :: H11, W11, H31, W31, H13, W13, H33, W33
-real, dimension(24,24) :: H21, W21, H12, W12, H32, W32, H23, W23
-real, dimension(36,36) :: H22, W22
+real :: W10(4), W30(4), W41(4), W43(4), W20(6), W42(6), W11(16), W31(16), W13(16)
+real :: W33(16), W21(24), W12(24), W32(24), W23(24), W22(36)
+real, dimension(4,4) :: H10, H30, H41, H43
+real, dimension(6,6) :: H20, H42
+real, dimension(16,16) :: H11, H31, H13, H33
+real, dimension(24,24) :: H21, H12,  H32,  H23
+real, dimension(36,36) :: H22
 integer :: i,j ! counter
 
 !------for lapack------------
@@ -159,7 +161,7 @@ H11(8,10) = t;   H11(8,11) = -t;  H11(8,14) = -t; H11(8,15) = -t
 H11(9,11) = t;   H11(9,14) = t;   H11(9,16) = t
 H11(10,12) = t;  H11(10,14) = -t; H11(10,16) = -t
 H11(11,15) = t;  H11(11,16) = t
-H11(12,15) = -t: H11(12,16) = -t
+H11(12,15) = -t; H11(12,16) = -t
 
 H11(1,1) = E(1) + E(2); H11(2,2) = E(1) + E(2)
 H11(3,3) = E(1) + E(3); H11(4,4) = E(1) + E(3)
@@ -180,8 +182,8 @@ do i=1,16
 end do
 
 ! solve the eigenvalues and eigenvectors
-LWORK = 48
-allocate(WORK(48))
+LWORK = 50
+allocate(WORK(50))
 
 call ssyev('v','u',16,H11,16,W11,WORK,LWORK,INFO)
 if (INFO /= 0) then
@@ -244,7 +246,7 @@ end do
 H21(1,4) = t;    H21(1,8) = -t;   H21(1,11) = t;   H21(1,13) = -t; H21(1,14) = t;  H21(1,16) = t;  H21(1,20) = -t
 H21(2,5) = t;    H21(2,7) = -t;   H21(2,12) = t;   H21(2,14) = -t; H21(2,15) = t;  H21(2,16) = -t; H21(2,19) = t
 H21(3,6) = t;    H21(3,9) = -t;   H21(3,10) = t;   H21(3,13) = t;  H21(3,15) = -t; H21(3,19) = -t; H21(3,20) = t
-H21(4,7) = t;    H21(4,10) = -t;  H21(4,13) = -t;  H21(4,14) = t;  H21(4,18) = t   H21(4,22) = -t
+H21(4,7) = t;    H21(4,10) = -t;  H21(4,13) = -t;  H21(4,14) = t;  H21(4,18) = t;  H21(4,22) = -t
 H21(5,8) = t;    H21(5,12) = -t;  H21(5,14) = -t;  H21(5,17) = t;  H21(5,18) =-t;  H21(5,21) = t
 H21(6,9) = t;    H21(6,11) = -t;  H21(6,13) = t;   H21(6,17) = -t; H21(6,21) = -t; H21(6,22) = t
 H21(7,10) = t;   H21(7,15) = -t;  H21(7,16) = t;   H21(7,18) = t;  H21(7,24) = -t
@@ -339,7 +341,7 @@ eigenvectors(95,95) = 1  ! eigenvector of H04
 
 H31(1,5) = t; H31(1,6) = -t; H31(1,7) = t; H31(1,10) = t; H31(1,13) = -t; H31(1,16) = t
 H31(2,7) = -t; H31(2,8) = -t; H31(2,9) = t; H31(2,10) = -t; H31(2,12) = t; H31(2,15) = -t
-H31(3,6) = t; H31(3,9) = -t; H31(3.11) = t; H31(3,12) = -t; H31(3,13) = t; H31(3,14) = t
+H31(3,6) = t; H31(3,9) = -t; H31(3,11) = t; H31(3,12) = -t; H31(3,13) = t; H31(3,14) = t
 H31(4,5) = -t; H31(4,8) = t; H31(4,11) = -t; H31(4,14) = -t; H31(4,15) = t; H31(4,16) = -t
 H31(5,6) = -t; H31(5,7) = t; H31(5,8) = t; H31(5,11) = -t
 H31(6,7) = -t; H31(6,9) = t; H31(6,14) = -t
@@ -740,7 +742,7 @@ H44 =  2*E(2) + 2*E(2) + 2*E(3) + 2*E(4) + 4*U
 
 Grand_potential(256) = H44 - mu*8     ! grand potentials of H44
 
-eigenvalues(256,256) = 1              ! eigenvectors of H44
+eigenvectors(256,256) = 1              ! eigenvectors of H44
 
 end subroutine hamiltonian
 
