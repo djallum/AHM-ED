@@ -51,10 +51,10 @@ real, intent(in) :: E(4)
 real, intent(in) :: mu 
 real, intent(in) :: t
 real, intent(in) :: U
-real :: H00, W00, H40, W40
-real, dimension(4,4) :: H10, W10, H30, H03, H41, W41
+real :: H00, W00, H40, W40, H44
+real, dimension(4,4) :: H10, W10, H30, W30, H41, W41, H43, W43
 real, dimension(6,6) :: H20, W20, H42, W42
-real, dimension(16,16) :: H11, W11, H31, W31, H13, W13
+real, dimension(16,16) :: H11, W11, H31, W31, H13, W13, H33, W33
 real, dimension(24,24) :: H21, W21, H12, W12, H32, W32, H23, W23
 real, dimension(36,36) :: H22, W22
 integer :: i,j ! counter
@@ -63,11 +63,6 @@ integer :: i,j ! counter
 integer :: INFO = 0
 integer :: LWORK
 integer, allocatable, dimension(:) :: WORK
-
-!----------zero variables for each loop---------------------------------------
-
-H00=0; H10=0; H20=0; H11=0; H21=0; H12=0
-W00=0; W10=0; H20=0; W11=0; W21=0; W12=0
 
 !-------------zero electron states---------------------------------------------
 
@@ -646,5 +641,107 @@ do i=1,6
    eigenvectors(i+225,226:231) = H42(1:6,i)    ! eigenvectors of H24
 end do 
 
+!---------------------------H33-----------------------------------------
+
+H33(1,3) = -t; H33(1,6) = t; H33(1,7) = -t; H33(1,10) = t; H33(1,13) = t; H33(1,14) = t
+H33(2,4) = -t; H33(2,5) = t; H33(2,8) = -t; H33(2,9) = t; H33(2,13) = -t; H33(2,14) = -t
+H33(3,5) = -t; H33(3,7) = -t; H33(3,12) = t; H33(3,13) = t; H33(3,15) = t
+H33(4,6) = -t; H33(4,8) = -t; H33(4,11) = t; H33(4,13) = -t; H33(4,15) = -t
+H33(5,9) = -t; H33(5,12) = t; H33(5,14) = t; H33(5,15) = t
+H33(6,10) = -t; H33(6,11) = t; H33(6,14) = -t; H33(6,15) = -t
+H33(7,9) = -t; H33(7,11) = -t; H33(7,13) = t; H33(7,16) = t
+H33(8,10) = -t; H33(8,12) = -t; H33(8,13) = -t; H33(8,16) = -t
+H33(9,11) = -t; H33(9,14) = t; H33(9,16) = t
+H33(10,12) = -t; H33(10,14) = -t; H33(10,16) = -t
+H33(11,15) = t; H33(11,16) = t
+H33(12,15) = -t; H33(12,16) = -t
+
+H33(1,1) = 2*E(1) + 2*E(2) + E(3) + E(4) + 2*U; H33(2,2) = 2*E(1) + 2*E(2) + E(3) + E(4) + 2*U
+H33(3,3) = 2*E(1) + E(2) + 2*E(3) + E(4) + 2*U; H33(4,4) = 2*E(1) + E(2) + 2*E(3) + E(4) + 2*U
+H33(5,5) = 2*E(1) + E(2) + E(3) + 2*E(4) + 2*U; H33(6,6) = 2*E(1) + E(2) + E(3) + 2*E(4) + 2*U
+H33(7,7) = E(1) + 2*E(2) + 2*E(3) + E(4) + 2*U; H33(8,8) = E(1) + 2*E(2) + 2*E(3) + E(4) + 2*U
+H33(9,9) = E(1) + 2*E(2) + E(3) + 2*E(4) + 2*U; H33(10,10) = E(1) + 2*E(2) + E(3) + 2*E(4) + 2*U
+H33(11,11) = E(1) + E(2) + 2*E(3) + 2*E(4) + 2*U; H33(12,12) = E(1) + E(2) + 2*E(3) + 2*E(4) + 2*U
+H33(13,13) =  2*E(1) + 2*E(2) + 2*E(3) + 3*U; H33(14,14) =  2*E(1) + 2*E(2) + 2*E(4) + 3*U
+H33(15,15) =  2*E(1) + 2*E(3) + 2*E(4) + 3*U; H33(16,16) =  2*E(2) + 2*E(3) + 2*E(4) + 3*U
+
+! make it symetric
+do i=1,16
+   do j=1,16
+      if(i>j) then
+         H33(i,j) = H33(j,i)
+      end if
+   end do
+end do
+
+! solve the eigenvalues and eigenvectors
+LWORK = 48
+allocate(WORK(48))
+
+call ssyev('v','u',16,H33,16,W33,WORK,LWORK,INFO)
+if (INFO /= 0) then
+   write(*,*) 'Problem with Lapack for H33 matrix. Error code:', INFO
+   stop
+end if 
+
+deallocate(WORK)
+
+do i=1,16
+   Grand_potential(i+231) = W33(i) - mu*6  ! grand potentials of H33
+end do
+
+do i=1,16
+   eigenvectors(i+231,232:247) = H33(1:16,i)    ! eigenvectors of H33
+end do 
+
+!--------------------H43 & H34 (same)--------------------------
+
+H43(1,2) = -t; H43(1,3) = t; H43(1,4) = -t
+H43(2,3) = -t; H43(2,4) = t
+H43(3,4) = -t
+
+H43(1,1) = 2*E(1) + 2*E(2) + 2*E(3) + E(4) + 3*U; H43(2,2) = 2*E(1) + 2*E(2) + E(3) + 2*E(4) + 3*U
+H43(1,1) = 2*E(1) + E(2) + 2*E(3) + 2*E(4) + 3*U; H43(2,2) = E(1) + 2*E(2) + 2*E(3) + 2*E(4) + 3*U
+
+! make it symetric
+do i=1,4
+   do j=1,4
+      if(i>j) then
+         H43(i,j) = H43(j,i)
+      end if
+   end do
+end do
+
+! solve the eigenvalues and eigenvectors
+LWORK = 15
+allocate(WORK(15))
+
+call ssyev('v','u',4,H43,4,W43,WORK,LWORK,INFO)
+if (INFO /= 0) then
+   write(*,*) 'Problem with Lapack for H43 matrix. Error code:', INFO
+   stop
+end if 
+
+deallocate(WORK)
+
+do i=1,4
+   Grand_potential(i+247) = W43(i) - mu*7  ! grand potentials of H43
+   Grand_potential(i+251) = W43(i) - mu*7  ! grand potentials of H34
+end do
+
+do i=1,4
+   eigenvectors(i+247,248:251) = H43(1:4,i)    ! eigenvectors of H43
+   eigenvectors(i+251,252:255) = H43(1:4,i)    ! eigenvectors of H34
+end do 
+
+!------------H44--------------------------
+
+H44 =  2*E(2) + 2*E(2) + 2*E(3) + 2*E(4) + 4*U
+
+Grand_potential(256) = H44 - mu*8     ! grand potentials of H44
+
+eigenvalues(256,256) = 1              ! eigenvectors of H44
+
 end subroutine hamiltonian
+
 end module routines
