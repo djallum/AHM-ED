@@ -51,11 +51,12 @@ real, intent(in) :: E(4)
 real, intent(in) :: mu 
 real, intent(in) :: t
 real, intent(in) :: U
-real :: H00, W00
+real :: H00, W00, H40, W40
 real, dimension(4,4) :: H10, W10, H30, H03
 real, dimension(6,6) :: H20, W20
-real, dimension(16,16) :: H11, W11
+real, dimension(16,16) :: H11, W11, H31, W31, H13, W13
 real, dimension(24,24) :: H21, W21, H12, W12
+real, dimension(36,36) :: H22, W22
 integer :: i,j ! counter
 
 !------for lapack------------
@@ -284,8 +285,8 @@ H12 = H21 ! not exactly but will make modifications in the next step
 
 
 ! make it symetric and do changes to upper right and lower left quadrants of H12 matrix
-do i=1,4
-   do j=1,4
+do i=1,24
+   do j=1,24
       if(i>12 .and. j<12) then
          H12(i,j) = -H21(i,j)
       end if
@@ -299,5 +300,113 @@ do i=1,4
    end do
 end do
 
+! solve the eigenvalues and eigenvectors
+LWORK = 75
+allocate(WORK(75))
+
+call ssyev('v','u',24,H21,24,W21,WORK,LWORK,INFO)
+if (INFO /= 0) then
+   write(*,*) 'Problem with Lapack for H21 matrix. Error code:', INFO
+   stop
+end if 
+
+call ssyev('v','u',24,H12,24,W12,WORK,LWORK,INFO)
+if (INFO /= 0) then
+   write(*,*) 'Problem with Lapack for H12 matrix. Error code:', INFO
+   stop
+end if
+
+deallocate(WORK)
+
+do i=1,24
+   Grand_potential(i+45) = W21(i) - mu*3  ! grand potentials of H21
+   Grand_potential(i+69) = W12(i) - mu*3  ! grand potentials of H12
+end do
+
+do i=1,24
+   eigenvectors(i+45,46:69) = H21(1:24,i)    ! eigenvectors of H21
+   eigenvectors(i+69,70:93) = H12(1:24,i)    ! eigenvectors of H12
+end do 
+
+!----------------H40 & H04 (same)------------------------------------
+
+H40 = E(1) + E(2) + E(3) + E(4)
+
+W40 = H40
+
+Grand_potential(94) = W40 - 4*mu   ! grand potential of H40
+Grand_potential(95) = W40 - 4*mu   ! grand potential of H04
+
+eigenvectors(94,94) = 1  ! eigenvector of H40
+eigenvectors(95,95) = 1  ! eigenvector of H04
+
+!---------------H31 & H13------------------------------------------
+
+H31(1,5) = t; H31(1,6) = -t; H31(1,7) = t; H31(1,10) = t; H31(1,13) = -t; H31(1,16) = t
+H31(2,7) = -t; H31(2,8) = -t; H31(2,9) = t; H31(2,10) = -t; H31(2,12) = t; H31(2,15) = -t
+H31(3,6) = t; H31(3,9) = -t; H31(3.11) = t; H31(3,12) = -t; H31(3,13) = t; H31(3,14) = t
+H31(4,5) = -t; H31(4,8) = t; H31(4,11) = -t; H31(4,14) = -t; H31(4,15) = t; H31(4,16) = -t
+H31(5,6) = -t; H31(5,7) = t; H31(5,8) = t; H31(5,11) = -t
+H31(6,7) = -t; H31(6,9) = t; H31(6,14) = -t
+H31(7,12) = t; H31(7,15) = -t
+H31(8,9) = -t; H31(8,10) = t; H31(8,11) = t
+H31(9,10) = -t; H31(9,14) = t
+H31(10,13) = t; H31(10,16) = -t
+H31(11,12) = -t; H31(11,13) = t
+H31(12,13) = -t; H31(12,15) = t
+H31(13,16) = t
+H31(14,15) = -t; H31(14,16) = t
+H31(15,16) = -t
+
+H31(1,1) = E(1) + E(2) + E(3) + E(4); H31(2,2) = H31(1,1); H31(3,3) = H31(1,1); H31(4,4) = H31(1,1)
+H31(5,5) = 2*E(1) + E(2) + E(3) + U; H31(6,6) = E(1) + 2*E(2) + E(3) + U; H31(7,7) = E(1) + E(2) + 2*E(3) + U
+H31(8,8) = 2*E(1) + E(2) + E(4) + U; H31(9,9) = E(1) + 2*E(2) + E(4) + U; H31(10,10) = E(1) + E(2) + 2*E(4) + U
+H31(11,11) = 2*E(1) + E(3) + E(4) + U; H31(12,12) = E(1) + 2*E(3) + E(4) + U; H31(13,13) = E(1) + E(3) + 2*E(4) + U
+H31(14,14) = 2*E(2) + E(3) + E(4) + U; H31(15,15) = E(2) + 2*E(3) + E(4) + U; H31(16,16) = E(2) + E(3) + 2*E(4) + U
+
+H13 = H31
+
+! make it symetric and do changes to first four rows of H13
+do i=1,16
+   do j=1,16
+      if(i>5 .and. i/=j) then
+         H13(i,j) = -H31(i,j)
+      end if
+      if(i>j) then
+         H31(i,j) = H31(j,i)
+         H13(i,j) = H13(j,i)
+      end if
+   end do
+end do
+
+! solve the eigenvalues and eigenvectors
+LWORK = 48
+allocate(WORK(48))
+
+call ssyev('v','u',16,H31,16,W31,WORK,LWORK,INFO)
+if (INFO /= 0) then
+   write(*,*) 'Problem with Lapack for H31 matrix. Error code:', INFO
+   stop
+end if 
+
+call ssyev('v','u',16,H13,16,W13,WORK,LWORK,INFO)
+if (INFO /= 0) then
+   write(*,*) 'Problem with Lapack for H13 matrix. Error code:', INFO
+   stop
+end if
+
+deallocate(WORK)
+
+do i=1,16
+   Grand_potential(i+94) = W31(i) - mu*4  ! grand potentials of H31
+   Grand_potential(i+110) = W13(i) - mu*4  ! grand potentials of H13
+end do
+
+do i=1,16
+   eigenvectors(i+94,95:110) = H31(1:16,i)    ! eigenvectors of H31
+   eigenvectors(i+110,111:126) = H13(1:16,i)    ! eigenvectors of H13
+end do 
+
+!-------------------H22---------------------------------------------
 end subroutine hamiltonian
 end module routines
