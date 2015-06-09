@@ -54,11 +54,11 @@ real, intent(in) :: U
 real :: H00, W00, H40, W40, H44
 real :: W10(4), W30(4), W41(4), W43(4), W20(6), W42(6), W11(16), W31(16), W13(16)
 real :: W33(16), W21(24), W12(24), W32(24), W23(24), W22(36)
-real, dimension(4,4) :: H10, H30, H41, H43
-real, dimension(6,6) :: H20, H42
-real, dimension(16,16) :: H11, H31, H13, H33
-real, dimension(24,24) :: H21, H12,  H32,  H23
-real, dimension(36,36) :: H22
+real, dimension(4,4) :: H10=0, H30=0, H41=0, H43=0
+real, dimension(6,6) :: H20=0, H42=0
+real, dimension(16,16) :: H11=0, H31=0, H13=0, H33=0
+real, dimension(24,24) :: H21=0, H12=0, H32=0, H23=0
+real, dimension(36,36) :: H22=0
 integer :: i,j ! counter
 
 !------for lapack------------
@@ -181,6 +181,9 @@ do i=1,16
    end do
 end do
 
+do i=1,16
+   write(*,'(16F7.2)') (H11(i,j), j=1,16)
+end do
 ! solve the eigenvalues and eigenvectors
 LWORK = 50
 allocate(WORK(50))
