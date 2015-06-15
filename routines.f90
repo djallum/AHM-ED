@@ -1,5 +1,7 @@
 module routines
 
+! file before debugging has begun
+
 implicit none
 
 real :: Grand_potential(256)=0                    ! grand potentials (eigenenergies - mu*number electrons)
