@@ -18,8 +18,8 @@ real, dimension(4,512,2) :: LDOS=0
 real :: inner_product_up=0, inner_product_down=0
 real :: IPR(512)=0
 integer, parameter :: nbins = 200                  ! number of bins for energy bining to get smooth curves
-real, parameter :: frequency_max = 10               ! maximum energy considered in energy bining
-real, parameter :: frequency_min = -10              ! lowest energy considered in energy bining
+real, parameter :: frequency_max = 30               ! maximum energy considered in energy bining
+real, parameter :: frequency_min = -30              ! lowest energy considered in energy bining
 real :: frequency_delta=0                          ! step size between different energy bins
 integer :: bin=0                                   ! index for the bin number the peak goes in
 real, dimension(nbins,2) :: DOS=0                            ! array that stores the DOS peaks and all the energy bin frequencies 
@@ -106,7 +106,8 @@ do i=1,512
    bin = floor(LDOS(2,i,1)/frequency_delta) + nbins/2                !find the bin number for energy bining
    DOS(bin,2) = DOS(bin,2) + (LDOS(1,i,2) + LDOS(2,i,2) + LDOS(3,i,2) + LDOS(4,i,2))/4.0
    if ((LDOS(1,i,2) + LDOS(2,i,2) + LDOS(3,i,2) + LDOS(4,i,2)) /= 0) then
-      IPR(i) = (LDOS(1,i,2)**2 + LDOS(2,i,2)**2 + LDOS(3,i,2)**2 + LDOS(4,i,2)**2)/((LDOS(1,i,2) + LDOS(2,i,2) + LDOS(3,i,2) + LDOS(4,i,2))**2) !for each transition not weighted with DOS
+      IPR(i) = (LDOS(1,i,2)**2 + LDOS(2,i,2)**2 + LDOS(3,i,2)**2 + LDOS(4,i,2)**2) 
+      IPR(i) = IPR(i)/((LDOS(1,i,2) + LDOS(2,i,2) + LDOS(3,i,2) + LDOS(4,i,2))**2)
       GIPR_num(bin) = GIPR_num(bin) + IPR(i)*(LDOS(1,i,2) + LDOS(2,i,2) + LDOS(3,i,2) + LDOS(4,i,2))/4.0  ! numerator of the weighted GIPR
       GIPR_den(bin) = GIPR_den(bin) + (LDOS(1,i,2) + LDOS(2,i,2) + LDOS(3,i,2) + LDOS(4,i,2))/4.0         ! denominator of the weighted GIPR
    end if
