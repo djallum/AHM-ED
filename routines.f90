@@ -558,6 +558,8 @@ do i=1,10,3
    H32(i+2,i+2) = H32(i,i)
 end do
 
+H23 = H32
+
 ! make it symetric and do changes to upper right and lower left quadrants of H12 matrix
 do i=1,24
    do j=1,24
