@@ -1,13 +1,11 @@
 module routines
 
-! file before debugging has begun
-
 implicit none
 
-real :: Grand_potential(256)=0                    ! grand potentials (eigenenergies - mu*number electrons)
-real :: Grand_potential_ground=0                 ! the lowest grand ensemble energy
-real :: eigenvectors(256,256)=0                    ! the 64 eigenvectors
-real :: v_ground(256)=0                           ! the ground state eigenvector
+double precision :: Grand_potential(256)=0                    ! grand potentials (eigenenergies - mu*number electrons)
+double precision :: Grand_potential_ground=0                 ! the lowest grand ensemble energy
+double precision :: eigenvectors(256,256)=0                    ! the 64 eigenvectors
+double precision :: v_ground(256)=0                           ! the ground state eigenvector
 integer, dimension(4,256) :: PES_down=0, PES_up=0, IPES_down=0, IPES_up=0  !matrices for PES and IPES 
 integer, dimension(4,256) :: phase_PES_down=0, phase_PES_up=0, phase_IPES_down=0, phase_IPES_up=0  !do get anticommutation sign right
 
@@ -15,17 +13,17 @@ contains
 
 subroutine random_gen_seed()
 
-implicit none
+  implicit none
 
-integer :: seed_size, clock, i
-integer, allocatable, dimension(:) :: seed
+  integer :: seed_size, clock, i
+  integer, allocatable, dimension(:) :: seed
 
-call random_seed(size=seed_size)
-allocate(seed(seed_size))
-call system_clock(count = clock)
-seed=clock + 37*(/(i-1,i=1,seed_size)/)
-call random_seed(put=seed)
-deallocate(seed)
+  call random_seed(size=seed_size)
+  allocate(seed(seed_size))
+  call system_clock(count = clock)
+  seed=clock + 37*(/(i-1,i=1,seed_size)/)
+  call random_seed(put=seed)
+  deallocate(seed)
 
 end subroutine random_gen_seed
 
@@ -34,7 +32,7 @@ subroutine site_potentials(delta,E)
 implicit none
 
 real, intent(in) :: delta
-real, intent(out) :: E(4)
+double precision, intent(out) :: E(4)
 real :: random
 integer :: i ! counter
 
@@ -49,24 +47,24 @@ subroutine hamiltonian(E,t,U,mu)
 
 implicit none
 
-real, intent(in) :: E(4)
+double precision, intent(in) :: E(4)
 real, intent(in) :: mu 
 real, intent(in) :: t
 real, intent(in) :: U
-real :: H00, W00, H40, W40, H44
-real :: W10(4), W30(4), W41(4), W43(4), W20(6), W42(6), W11(16), W31(16), W13(16)
-real :: W33(16), W21(24), W12(24), W32(24), W23(24), W22(36)
-real, dimension(4,4) :: H10=0, H30=0, H41=0, H43=0
-real, dimension(6,6) :: H20=0, H42=0
-real, dimension(16,16) :: H11=0, H31=0, H13=0, H33=0
-real, dimension(24,24) :: H21=0, H12=0, H32=0, H23=0
-real, dimension(36,36) :: H22=0
+double precision :: H00, W00, H40, W40, H44
+double precision :: W10(4), W30(4), W41(4), W43(4), W20(6), W42(6), W11(16), W31(16), W13(16)
+double precision :: W33(16), W21(24), W12(24), W32(24), W23(24), W22(36)
+double precision, dimension(4,4) :: H10=0, H30=0, H41=0, H43=0
+double precision, dimension(6,6) :: H20=0, H42=0
+double precision, dimension(16,16) :: H11=0, H31=0, H13=0, H33=0
+double precision, dimension(24,24) :: H21=0, H12=0, H32=0, H23=0
+double precision, dimension(36,36) :: H22=0
 integer :: i,j ! counter
 
 !------for lapack------------
 integer :: INFO = 0
 integer :: LWORK
-integer, allocatable, dimension(:) :: WORK
+double precision, allocatable, dimension(:) :: WORK
 
 !-------------zero electron states---------------------------------------------
 
@@ -88,7 +86,7 @@ end do
 LWORK = 12
 allocate(WORK(12))
 
-call ssyev('v','u',4,H10,4,W10,WORK,LWORK,INFO)
+call dsyev('v','u',4,H10,4,W10,WORK,LWORK,INFO)
 if (INFO /= 0) then
    write(*,*) 'Problem with Lapack for H10 matrix. Error code:', INFO
    stop
@@ -132,7 +130,7 @@ end do
 LWORK = 18
 allocate(WORK(18))
 
-call ssyev('v','u',6,H20,6,W20,WORK,LWORK,INFO)
+call dsyev('v','u',6,H20,6,W20,WORK,LWORK,INFO)
 if (INFO /= 0) then
    write(*,*) 'Problem with Lapack for H20 matrix. Error code:', INFO
    stop
@@ -187,7 +185,7 @@ end do
 LWORK = 50
 allocate(WORK(50))
 
-call ssyev('v','u',16,H11,16,W11,WORK,LWORK,INFO)
+call dsyev('v','u',16,H11,16,W11,WORK,LWORK,INFO)
 if (INFO /= 0) then
    write(*,*) 'Problem with Lapack for H11 matrix. Error code:', INFO
    stop
@@ -225,7 +223,7 @@ end do
 LWORK = 12
 allocate(WORK(12))
 
-call ssyev('v','u',4,H30,4,W30,WORK,LWORK,INFO)
+call dsyev('v','u',4,H30,4,W30,WORK,LWORK,INFO)
 if (INFO /= 0) then
    write(*,*) 'Problem with Lapack for H30 matrix. Error code:', INFO
    stop
@@ -303,13 +301,13 @@ end do
 LWORK = 75
 allocate(WORK(75))
 
-call ssyev('v','u',24,H21,24,W21,WORK,LWORK,INFO)
+call dsyev('v','u',24,H21,24,W21,WORK,LWORK,INFO)
 if (INFO /= 0) then
    write(*,*) 'Problem with Lapack for H21 matrix. Error code:', INFO
    stop
 end if 
 
-call ssyev('v','u',24,H12,24,W12,WORK,LWORK,INFO)
+call dsyev('v','u',24,H12,24,W12,WORK,LWORK,INFO)
 if (INFO /= 0) then
    write(*,*) 'Problem with Lapack for H12 matrix. Error code:', INFO
    stop
@@ -382,13 +380,13 @@ end do
 LWORK = 48
 allocate(WORK(48))
 
-call ssyev('v','u',16,H31,16,W31,WORK,LWORK,INFO)
+call dsyev('v','u',16,H31,16,W31,WORK,LWORK,INFO)
 if (INFO /= 0) then
    write(*,*) 'Problem with Lapack for H31 matrix. Error code:', INFO
    stop
 end if 
 
-call ssyev('v','u',16,H13,16,W13,WORK,LWORK,INFO)
+call dsyev('v','u',16,H13,16,W13,WORK,LWORK,INFO)
 if (INFO /= 0) then
    write(*,*) 'Problem with Lapack for H13 matrix. Error code:', INFO
    stop
@@ -464,7 +462,7 @@ end do
 LWORK = 108
 allocate(WORK(108))
 
-call ssyev('v','u',36,H22,36,W22,WORK,LWORK,INFO)
+call dsyev('v','u',36,H22,36,W22,WORK,LWORK,INFO)
 if (INFO /= 0) then
    write(*,*) 'Problem with Lapack for H22 matrix. Error code:', INFO
    stop
@@ -502,7 +500,7 @@ end do
 LWORK = 12
 allocate(WORK(12))
 
-call ssyev('v','u',4,H41,4,W41,WORK,LWORK,INFO)
+call dsyev('v','u',4,H41,4,W41,WORK,LWORK,INFO)
 if (INFO /= 0) then
    write(*,*) 'Problem with Lapack for H41 matrix. Error code:', INFO
    stop
@@ -580,13 +578,13 @@ end do
 LWORK = 75
 allocate(WORK(75))
 
-call ssyev('v','u',24,H32,24,W32,WORK,LWORK,INFO)
+call dsyev('v','u',24,H32,24,W32,WORK,LWORK,INFO)
 if (INFO /= 0) then
    write(*,*) 'Problem with Lapack for H32 matrix. Error code:', INFO
    stop
 end if 
 
-call ssyev('v','u',24,H23,24,W23,WORK,LWORK,INFO)
+call dsyev('v','u',24,H23,24,W23,WORK,LWORK,INFO)
 if (INFO /= 0) then
    write(*,*) 'Problem with Lapack for H23 matrix. Error code:', INFO
    stop
@@ -629,7 +627,7 @@ end do
 LWORK = 18
 allocate(WORK(18))
 
-call ssyev('v','u',6,H42,6,W42,WORK,LWORK,INFO)
+call dsyev('v','u',6,H42,6,W42,WORK,LWORK,INFO)
 if (INFO /= 0) then
    write(*,*) 'Problem with Lapack for H42 matrix. Error code:', INFO
    stop
@@ -684,7 +682,7 @@ end do
 LWORK = 48
 allocate(WORK(48))
 
-call ssyev('v','u',16,H33,16,W33,WORK,LWORK,INFO)
+call dsyev('v','u',16,H33,16,W33,WORK,LWORK,INFO)
 if (INFO /= 0) then
    write(*,*) 'Problem with Lapack for H33 matrix. Error code:', INFO
    stop
@@ -722,7 +720,7 @@ end do
 LWORK = 15
 allocate(WORK(15))
 
-call ssyev('v','u',4,H43,4,W43,WORK,LWORK,INFO)
+call dsyev('v','u',4,H43,4,W43,WORK,LWORK,INFO)
 if (INFO /= 0) then
    write(*,*) 'Problem with Lapack for H43 matrix. Error code:', INFO
    stop
