@@ -32,7 +32,7 @@ frequency_delta = (frequency_max - frequency_min)/nbins   ! calculating the step
 call random_gen_seed()
 call transformations()
 
-open(unit=10,file='4citedata.dat', status='replace', action='write',IOSTAT = error) ! open the file that DOS and GIPR will be printed to
+open(unit=10,file='4site_data.dat', status='replace', action='write',IOSTAT = error) ! open the file that DOS and GIPR will be printed to
 if (error/=0) then
    write(*,*) 'error opening output file. Error number:', error
 end if
