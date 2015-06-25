@@ -2,12 +2,16 @@ module routines
 
 implicit none
 
-double precision :: Grand_potential(256)=0                    ! grand potentials (eigenenergies - mu*number electrons)
-double precision :: Grand_potential_ground=0                 ! the lowest grand ensemble energy
-double precision :: eigenvectors(256,256)=0                    ! the 64 eigenvectors
-double precision :: v_ground(256)=0                           ! the ground state eigenvector
+
+integer, parameter :: sp = kind(1.0)    !single precison kind
+integer, parameter :: dp = kind(1.0d0)  !double precision kind
+real(dp) :: Grand_potential(256)=0.0_dp                    ! grand potentials (eigenenergies - mu*number electrons)
+real(dp) :: Grand_potential_ground=0.0_dp                 ! the lowest grand ensemble energy
+real(dp) :: eigenvectors(256,256)=0.0_dp                    ! the 64 eigenvectors
+real(dp) :: v_ground(256)=0.0_dp                           ! the ground state eigenvector
 integer, dimension(4,256) :: PES_down=0, PES_up=0, IPES_down=0, IPES_up=0  !matrices for PES and IPES 
 integer, dimension(4,256) :: phase_PES_down=0, phase_PES_up=0, phase_IPES_down=0, phase_IPES_up=0  !do get anticommutation sign right
+real(dp) :: test11(16)
 
 contains
 
@@ -31,14 +35,14 @@ subroutine site_potentials(delta,E)
 
 implicit none
 
-real, intent(in) :: delta
-double precision, intent(out) :: E(4)
+real(dp), intent(in) :: delta
+real(dp), intent(out) :: E(4)
 real :: random
 integer :: i ! counter
 
 do i=1,4
    call random_number(random)           ! gives a random number between 0 and 1
-   E(i) = delta*(random - 0.5)          ! centers the random numbers about 0
+   E(i) = delta*(random - 0.5_dp)          ! centers the random numbers about 0
 end do
 
 end subroutine site_potentials
@@ -47,37 +51,43 @@ subroutine hamiltonian(E,t,U,mu)
 
 implicit none
 
-double precision, intent(in) :: E(4)
-real, intent(in) :: mu 
-real, intent(in) :: t
-real, intent(in) :: U
-double precision :: H00, W00, H40, W40, H44
-double precision :: W10(4), W30(4), W41(4), W43(4), W20(6), W42(6), W11(16), W31(16), W13(16)
-double precision :: W33(16), W21(24), W12(24), W32(24), W23(24), W22(36)
-double precision, dimension(4,4) :: H10=0, H30=0, H41=0, H43=0
-double precision, dimension(6,6) :: H20=0, H42=0
-double precision, dimension(16,16) :: H11=0, H31=0, H13=0, H33=0
-double precision, dimension(24,24) :: H21=0, H12=0, H32=0, H23=0
-double precision, dimension(36,36) :: H22=0
+real(dp), intent(in) :: E(4)
+real(dp), intent(in) :: mu 
+real(dp), intent(in) :: t
+real(dp), intent(in) :: U
+real(dp) :: H00=0.0_dp, W00=0.0_dp, H40=0.0_dp, W40=0.0_dp, H44=0.0_dp
+real(dp) :: W10(4)=0.0_dp, W30(4)=0.0_dp, W41(4)=0.0_dp, W43(4)=0.0_dp, W20(6)=0.0_dp, W42(6)=0.0_dp, W11(16)=0.0_dp, W31(16)=0.0_dp
+real(dp) :: W33(16)=0.0_dp, W21(24)=0.0_dp, W12(24)=0.0_dp, W32(24)=0.0_dp, W23(24)=0.0_dp, W22(36)=0.0_dp, W13(16)=0.0_dp
+real(dp), dimension(4,4) :: H10=0.0_dp, H30=0.0_dp, H41=0.0_dp, H43=0.0_dp
+real(dp), dimension(6,6) :: H20=0.0_dp, H42=0.0_dp
+real(dp), dimension(16,16) :: H11=0.0_dp, H31=0.0_dp, H13=0.0_dp, H33=0.0_dp
+real(dp), dimension(24,24) :: H21=0.0_dp, H12=0.0_dp, H32=0.0_dp, H23=0.0_dp
+real(dp), dimension(36,36) :: H22=0.0_dp
 integer :: i,j ! counter
 
 !------for lapack------------
 integer :: INFO = 0
 integer :: LWORK
-double precision, allocatable, dimension(:) :: WORK
+real(dp), allocatable, dimension(:) :: WORK
+
+!-------------zero all the matrices---------------------------------------------
+H10=0.0_dp; H30=0.0_dp; H41=0.0_dp; H43=0.0_dp
+H20=0.0_dp; H42=0.0_dp; H22=0.0_dp
+H11=0.0_dp; H31=0.0_dp; H13=0.0_dp; H33=0.0_dp
+H21=0.0_dp; H12=0.0_dp; H32=0.0_dp; H23=0.0_dp
 
 !-------------zero electron states---------------------------------------------
 
 W00=H00
 
-eigenvectors(1,1) = 1
+eigenvectors(1,1) = 1.0_dp
 
 Grand_potential(1) = W00 - mu*0
 
 !-------one electron states (H10 & H01 are same)--------------------------
 
 H10 = t        ! all off main diagonal terms are t (main diagonal terms are replaced in next step)
-
+H10 = 0.0_dp
 do i=1,4
    H10(i,i) = E(i)      ! main diagonal terms
 end do
@@ -195,6 +205,7 @@ deallocate(WORK)
 
 do i=1,16
    Grand_potential(i+21) = W11(i) - mu*2  ! grand potentials of H11
+   test11(i) = W11(i) - mu*2
 end do
 
 do i=1,16
@@ -206,7 +217,7 @@ end do
 H30(1,2) = t; H30(1,3) = -t; H30(1,4) = t
 H30(2,3) = t; H30(2,4) = -t;
 H30(3,4) = t
-
+H30=0
 H30(1,1) = E(1) + E(2) + E(3); H30(2,2) = E(1) + E(2) + E(4)
 H30(3,3) = E(1) + E(3) + E(4); H30(4,4) = E(2) + E(3) + E(4)
 
