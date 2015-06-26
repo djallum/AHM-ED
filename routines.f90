@@ -87,7 +87,7 @@ Grand_potential(1) = W00 - mu*0
 !-------one electron states (H10 & H01 are same)--------------------------
 
 H10 = t        ! all off main diagonal terms are t (main diagonal terms are replaced in next step)
-H10 = 0.0_dp
+
 do i=1,4
    H10(i,i) = E(i)      ! main diagonal terms
 end do
