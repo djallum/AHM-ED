@@ -39,10 +39,10 @@ end if
 
 pairs: do pair=1,npairs
 
-  v_ground(256)=0.0_dp; eigenvectors(256,256)=0.0_dp; Grand_potential_ground=0.0_dp; Grand_potential(256)=0.0_dp
+  v_ground(256)=0.0_dp; eigenvectors(256,256)=0.0_dp; grand_potential_ground=0.0_dp; grand_potential(256)=0.0_dp
   eigenvectors = 0.0_dp
-  Grand_potential_ground = 0.0_dp
-  Grand_potential = 0.0_dp
+  grand_potential_ground = 0.0_dp
+  grand_potential = 0.0_dp
   LDOS = 0.0_dp
   inner_product_up=0.0_dp
   inner_product_down=0.0_dp
@@ -53,11 +53,11 @@ call hamiltonian(E,t,U,mu)
 
 !-----find ground state energy------------------------
 
-Grand_potential_ground = minval(Grand_potential)   ! find the lowest grand ensemble energy
+grand_potential_ground = minval(grand_potential)   ! find the lowest grand ensemble energy
 
 !-----find the corresponding eigenvector----------------
 
-location = minloc(Grand_potential)          ! find the location of the lowest energy  
+location = minloc(grand_potential)          ! find the location of the lowest energy  
 v_ground = eigenvectors(location(1),:)      ! set v ground to the eigenvector corresponding to the lowest energy
 
 !multiply ground state vector by the matrices
@@ -91,7 +91,7 @@ do j=1,4
    do i=1,256
       inner_product_up = (dot_product(PES_up_ground(j,:),eigenvectors(i,:)))**2
       inner_product_down =  (dot_product(PES_down_ground(j,:),eigenvectors(i,:)))**2
-      LDOS(j,i,1) = Grand_potential_ground - Grand_potential(i)           ! location of the peak
+      LDOS(j,i,1) = grand_potential_ground - grand_potential(i)           ! location of the peak
       LDOS(j,i,2) = (inner_product_up + inner_product_down)*0.5_dp           ! weight of the peak (average up and down spin components)
    end do
 end do
@@ -100,7 +100,7 @@ do j=1,4
    do i=1,256
       inner_product_up = (dot_product(IPES_up_ground(j,:),eigenvectors(i,:)))**2
       inner_product_down =  (dot_product(IPES_down_ground(j,:),eigenvectors(i,:)))**2
-      LDOS(j,i+256,1) = Grand_potential(i) - Grand_potential_ground        ! location of the peak
+      LDOS(j,i+256,1) = grand_potential(i) - grand_potential_ground        ! location of the peak
       LDOS(j,i+256,2) = (inner_product_up + inner_product_down)*0.5_dp        ! weight of the peak
    end do
 end do
