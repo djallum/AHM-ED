@@ -85,8 +85,12 @@ grand_potential(1) = W00 - mu*0
 
 !-------one electron states (H10 & H01 are same)--------------------------
 
+<<<<<<< HEAD
 H10(1,2) = t; H10(1,3) = t; 
 H10(2,4) = t; H10(3,4) = t;
+=======
+H10 = t        ! all off main diagonal terms are t (main diagonal terms are replaced in next step)
+>>>>>>> origin/master
 
 do i=1,4
    H10(i,i) = E(i)      ! main diagonal terms
