@@ -7,7 +7,7 @@ implicit none
 integer, parameter :: npairs=10000
 real(dp) :: t = 0.0_dp             ! hopping term
 real(dp), parameter :: delta = 12.0_dp         ! width of disorder for the site potentials 
-real(dp), parameter :: U = 4.0_dp             ! on-site interactions
+real(dp), parameter :: U = 2.0_dp             ! on-site interactions
 real(dp), parameter :: mu=U/2         ! chemical potential (half filling) 
 real(dp) :: E(4)=0.0_dp           ! site potentials
 integer :: pair=0,i=0,j=0, k=0       ! counters
@@ -38,7 +38,7 @@ if (error/=0) then
 end if
 
 pairs: do pair=1,npairs
-
+  
   v_ground(256)=0.0_dp; eigenvectors(256,256)=0.0_dp; grand_potential_ground=0.0_dp; grand_potential(256)=0.0_dp
   eigenvectors = 0.0_dp
   grand_potential_ground = 0.0_dp
