@@ -4,10 +4,10 @@ use routines
 
 implicit none
 
-integer, parameter :: npairs=10000
-real(dp) :: t = 0.0_dp             ! hopping term
-real(dp), parameter :: delta = 12.0_dp         ! width of disorder for the site potentials 
-real(dp), parameter :: U = 2.0_dp             ! on-site interactions
+integer, parameter :: npairs= 10000
+real(dp) :: t = -1.0_dp             ! hopping term
+real(dp), parameter :: delta = 4.5_dp         ! width of disorder for the site potentials 
+real(dp), parameter :: U = 4.0_dp             ! on-site interactions
 real(dp), parameter :: mu=U/2         ! chemical potential (half filling) 
 real(dp) :: E(4)=0.0_dp           ! site potentials
 integer :: pair=0,i=0,j=0, k=0       ! counters
@@ -17,7 +17,7 @@ real(dp), dimension(4,256) :: PES_down_ground=0.0_dp, PES_up_ground=0.0_dp, IPES
 real(dp), dimension(4,512,2) :: LDOS=0.0_dp
 real(dp) :: inner_product_up=0.0_dp, inner_product_down=0.0_dp
 real(dp) :: IPR(512)=0.0_dp
-integer, parameter :: nbins = 200                  ! number of bins for energy bining to get smooth curves
+integer, parameter :: nbins = 500                  ! number of bins for energy bining to get smooth curves
 real, parameter :: frequency_max = 10               ! maximum energy considered in energy bining
 real, parameter :: frequency_min = -10              ! lowest energy considered in energy bining
 real(dp) :: frequency_delta=0.0_dp                          ! step size between different energy bins
