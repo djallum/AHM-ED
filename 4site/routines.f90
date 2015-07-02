@@ -46,7 +46,7 @@ subroutine site_potentials(delta,E)
 
 end subroutine site_potentials
 
-subroutine hamiltonian(E,t,U,mu,eps)
+subroutine hamiltonian(E,t,U,mu)
 
 implicit none
 
@@ -54,7 +54,6 @@ real(dp), intent(in) :: E(4)
 real(dp), intent(in) :: mu 
 real(dp), intent(in) :: t
 real(dp), intent(in) :: U
-real(dp), intent(out) :: eps(4)
 real(dp) :: H00=0.0_dp, W00=0.0_dp, H40=0.0_dp, W40=0.0_dp, H44=0.0_dp
 real(dp) :: W10(4)=0.0_dp, W30(4)=0.0_dp, W41(4)=0.0_dp, W43(4)=0.0_dp, W20(6)=0.0_dp, W42(6)=0.0_dp, W11(16)=0.0_dp, W31(16)=0.0_dp
 real(dp) :: W33(16)=0.0_dp, W21(24)=0.0_dp, W12(24)=0.0_dp, W32(24)=0.0_dp, W23(24)=0.0_dp, W22(36)=0.0_dp, W13(16)=0.0_dp
@@ -93,6 +92,15 @@ do i=1,4
    H10(i,i) = E(i)      ! main diagonal terms
 end do
 
+! make it symetric
+do i=1,4
+   do j=1,4
+      if(i>j) then
+         H10(i,j) = H10(j,i)
+      end if
+   end do
+end do
+
 ! solve the eigenvalues and eigenvectors
 LWORK = 12
 allocate(WORK(12))
@@ -108,7 +116,6 @@ deallocate(WORK)
 do i=1,4
    grand_potential(i+1) = W10(i) - mu*1  ! grand potentials of H10
    grand_potential(i+5) = W10(i) - mu*1  ! grand potentials of H01
-   eps(i) = W10(i)
 end do
 
 do i=1,4
@@ -216,16 +223,43 @@ do i=1,16
    eigenvectors(i+21,22:37) = H11(1:16,i)    ! eigenvectors of H11
 end do 
 
-!-------------H30 & H03 (same as H10)-----------------------------------
+!-------------H30 & H03 (same)-----------------------------------
+
+H30(1,2) = t; H30(1,4) = t; 
+H30(2,3) = t; H30(3,4) = t;
+
+H30(1,1) = E(1) + E(2) + E(3); H30(2,2) = E(1) + E(2) + E(4)
+H30(3,3) = E(1) + E(3) + E(4); H30(4,4) = E(2) + E(3) + E(4)
+
+! make it symetric
+do i=1,4
+   do j=1,4
+      if(i>j) then
+         H30(i,j) = H30(j,i)
+      end if
+   end do
+end do
+
+! solve the eigenvalues and eigenvectors
+LWORK = 12
+allocate(WORK(12))
+
+call dsyev('v','u',4,H30,4,W30,WORK,LWORK,INFO)
+if (INFO /= 0) then
+   write(*,*) 'Problem with Lapack for H30 matrix. Error code:', INFO
+   stop
+end if 
+
+deallocate(WORK)
 
 do i=1,4
-   grand_potential(i+37) = W10(i) - mu*3  ! grand potentials of H30
-   grand_potential(i+41) = W10(i) - mu*3  ! grand potentials of H03
+   grand_potential(i+37) = W30(i) - mu*3  ! grand potentials of H30
+   grand_potential(i+41) = W30(i) - mu*3  ! grand potentials of H03
 end do
 
 do i=1,4
-   eigenvectors(i+37,38:41) = H10(1:4,i)    ! eigenvectors of H30
-   eigenvectors(i+41,42:45) = H10(1:4,i)    ! eigenvectors of H03
+   eigenvectors(i+37,38:41) = H30(1:4,i)    ! eigenvectors of H30
+   eigenvectors(i+41,42:45) = H30(1:4,i)    ! eigenvectors of H03
 end do 
 
 !---------------------H21 & H12--------------------------------------------
@@ -683,16 +717,44 @@ do i=1,16
    eigenvectors(i+231,232:247) = H33(1:16,i)    ! eigenvectors of H33
 end do 
 
-!--------------------H43 & H34 (same as H41)--------------------------
+!--------------------H43 & H34 (same)--------------------------
+
+H43(1,2) = -t; H43(1,4) = -t
+H43(2,3) = -t
+H43(3,4) = -t
+
+H43(1,1) = 2*E(1) + 2*E(2) + 2*E(3) + E(4) + 3*U; H43(2,2) = 2*E(1) + 2*E(2) + E(3) + 2*E(4) + 3*U
+H43(3,3) = 2*E(1) + E(2) + 2*E(3) + 2*E(4) + 3*U; H43(4,4) = E(1) + 2*E(2) + 2*E(3) + 2*E(4) + 3*U
+
+! make it symetric
+do i=1,4
+   do j=1,4
+      if(i>j) then
+         H43(i,j) = H43(j,i)
+      end if
+   end do
+end do
+
+! solve the eigenvalues and eigenvectors
+LWORK = 15
+allocate(WORK(15))
+
+call dsyev('v','u',4,H43,4,W43,WORK,LWORK,INFO)
+if (INFO /= 0) then
+   write(*,*) 'Problem with Lapack for H43 matrix. Error code:', INFO
+   stop
+end if 
+
+deallocate(WORK)
 
 do i=1,4
-   grand_potential(i+247) = W41(i) - mu*7  ! grand potentials of H43
-   grand_potential(i+251) = W41(i) - mu*7  ! grand potentials of H34
+   grand_potential(i+247) = W43(i) - mu*7  ! grand potentials of H43
+   grand_potential(i+251) = W43(i) - mu*7  ! grand potentials of H34
 end do
 
 do i=1,4
-   eigenvectors(i+247,248:251) = H41(1:4,i)    ! eigenvectors of H43
-   eigenvectors(i+251,252:255) = H41(1:4,i)    ! eigenvectors of H34
+   eigenvectors(i+247,248:251) = H43(1:4,i)    ! eigenvectors of H43
+   eigenvectors(i+251,252:255) = H43(1:4,i)    ! eigenvectors of H34
 end do 
 
 !------------H44--------------------------

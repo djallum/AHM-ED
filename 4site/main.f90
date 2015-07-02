@@ -4,10 +4,10 @@ use routines
 
 implicit none
 
-integer, parameter :: npairs= 10000
-real(dp) :: t = -1.0_dp             ! hopping term
-real(dp), parameter :: delta = 4.5_dp         ! width of disorder for the site potentials 
-real(dp), parameter :: U = 4.0_dp             ! on-site interactions
+integer, parameter :: npairs=5000
+real(dp) :: t = 0.0_dp             ! hopping term
+real(dp), parameter :: delta = 12.0_dp         ! width of disorder for the site potentials 
+real(dp), parameter :: U = 0.0_dp             ! on-site interactions
 real(dp), parameter :: mu=U/2         ! chemical potential (half filling) 
 real(dp) :: E(4)=0.0_dp           ! site potentials
 integer :: pair=0,i=0,j=0, k=0       ! counters
@@ -17,7 +17,7 @@ real(dp), dimension(4,256) :: PES_down_ground=0.0_dp, PES_up_ground=0.0_dp, IPES
 real(dp), dimension(4,512,2) :: LDOS=0.0_dp
 real(dp) :: inner_product_up=0.0_dp, inner_product_down=0.0_dp
 real(dp) :: IPR(512)=0.0_dp
-integer, parameter :: nbins = 500                  ! number of bins for energy bining to get smooth curves
+integer, parameter :: nbins = 200                  ! number of bins for energy bining to get smooth curves
 real, parameter :: frequency_max = 10               ! maximum energy considered in energy bining
 real, parameter :: frequency_min = -10              ! lowest energy considered in energy bining
 real(dp) :: frequency_delta=0.0_dp                          ! step size between different energy bins
@@ -25,6 +25,7 @@ integer :: bin=0                                   ! index for the bin number th
 real(dp), dimension(nbins,2) :: DOS=0.0_dp                            ! array that stores the DOS peaks and all the energy bin frequencies 
 real(dp), dimension(nbins) :: GIPR_num=0.0_dp, GIPR_den=0.0_dp, GIPR=0.0_dp     ! arrays that store the numerator and denominator and the GIPR
 real(dp) :: sum=0.0_dp
+real(dp) :: eps(4)=0.0_dp
 
 frequency_delta = (frequency_max - frequency_min)/nbins   ! calculating the step size between bins for the energy bining process
 
@@ -38,7 +39,7 @@ if (error/=0) then
 end if
 
 pairs: do pair=1,npairs
-  
+ 
   v_ground(256)=0.0_dp; eigenvectors(256,256)=0.0_dp; grand_potential_ground=0.0_dp; grand_potential(256)=0.0_dp
   eigenvectors = 0.0_dp
   grand_potential_ground = 0.0_dp
@@ -106,7 +107,7 @@ do j=1,4
 end do
 
 do i=1,512
-   bin = floor(LDOS(2,i,1)/frequency_delta) + nbins/2                !find the bin number for energy bining
+   bin = floor(LDOS(2,i,1)/frequency_delta) + nbins/2  +1              !find the bin number for energy bining
    DOS(bin,2) = DOS(bin,2) + (LDOS(1,i,2) + LDOS(2,i,2) + LDOS(3,i,2) + LDOS(4,i,2))/4.0_dp
     if ((LDOS(1,i,2) + LDOS(2,i,2) + LDOS(3,i,2) + LDOS(4,i,2)) /= 0) then
       IPR(i) = (LDOS(1,i,2)**2 + LDOS(2,i,2)**2 + LDOS(3,i,2)**2 + LDOS(4,i,2)**2) 
@@ -115,8 +116,6 @@ do i=1,512
    end if
 end do
 
-end do pairs
-
 sum = DOS(1,2)
 DOS(1,1) = frequency_min
 
@@ -124,6 +123,27 @@ do i=2,nbins                                    ! calculate sum to normalize the
    DOS(i,1) = DOS(i-1,1) + frequency_delta
    sum = sum + DOS(i,2)
 end do
+
+goto 100
+!check : do i=1,nbins
+!   if (abs(DOS(i,1)) > 6 .and. DOS(i,2) > 0.01) then
+      write(*,*) "-------------------------------------------"
+      do j=1,nbins
+         if(DOS(j,2) > 0.01) then
+           write(*,*), DOS(j,1), DOS(j,2)
+         end if
+      end do
+      write(*,*) "location:", location(1)
+      write(*,*) "sites:", E
+      write(*,*) "potential:", grand_potential_ground
+      write(*,*) "single particle energies:", eps
+!      exit check
+!   end if
+!end do check
+DOS = 0
+100 continue
+
+end do pairs
 
 do i=1,nbins
    GIPR(i) = GIPR_num(i)/GIPR_den(i)
