@@ -1,1 +1,2 @@
 # 4site
+The excel file labeled 4site\_next.xlsx containes the hamiltonians assuming there is nearest and next nearest neighbour hoping. The one called 4site\_nearest2 is assuming there is only nearest neighbour hoping and the crystal is arragended as a box ( 1 can jump to 4 and 2 and can't to 2 and vise versa). The file called 4site\_nearest.xlsx is if the lattice is arranged linearly (1 can't hop to 3 and 2 can't hop to 4). The later is the one the program uses. 
