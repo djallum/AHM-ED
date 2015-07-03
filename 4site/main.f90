@@ -4,9 +4,9 @@ use routines
 
 implicit none
 
-integer, parameter :: npairs=5000
-real(dp) :: t = 0.0_dp             ! hopping term
-real(dp), parameter :: delta = 12.0_dp         ! width of disorder for the site potentials 
+integer, parameter :: npairs=1
+real(dp) :: t = -1.0_dp             ! hopping term
+real(dp), parameter :: delta = 6.0_dp         ! width of disorder for the site potentials 
 real(dp), parameter :: U = 0.0_dp             ! on-site interactions
 real(dp), parameter :: mu=U/2         ! chemical potential (half filling) 
 real(dp) :: E(4)=0.0_dp           ! site potentials
@@ -17,7 +17,7 @@ real(dp), dimension(4,256) :: PES_down_ground=0.0_dp, PES_up_ground=0.0_dp, IPES
 real(dp), dimension(4,512,2) :: LDOS=0.0_dp
 real(dp) :: inner_product_up=0.0_dp, inner_product_down=0.0_dp
 real(dp) :: IPR(512)=0.0_dp
-integer, parameter :: nbins = 200                  ! number of bins for energy bining to get smooth curves
+integer, parameter :: nbins = 300                  ! number of bins for energy bining to get smooth curves
 real, parameter :: frequency_max = 10               ! maximum energy considered in energy bining
 real, parameter :: frequency_min = -10              ! lowest energy considered in energy bining
 real(dp) :: frequency_delta=0.0_dp                          ! step size between different energy bins
@@ -38,6 +38,12 @@ if (error/=0) then
    write(*,*) 'error opening output file. Error number:', error
 end if
 
+! write informartion about the code to the output
+write(10,*) "#created by main.f90 with subroutines in routines.f90"
+write(10,*) "#"
+write(10,*) "#parameters: U=",U,"t=",t,"W=",delta,"nbins=",nbins
+write(10,*) "#"
+write(10,*) "   #Frequency                    DOS                                          GIPR" 
 pairs: do pair=1,npairs
  
   v_ground(256)=0.0_dp; eigenvectors(256,256)=0.0_dp; grand_potential_ground=0.0_dp; grand_potential(256)=0.0_dp
@@ -50,7 +56,7 @@ pairs: do pair=1,npairs
   PES_down_ground=0.0_dp; PES_up_ground=0.0_dp; IPES_down_ground=0.0_dp; IPES_up_ground=0.0_dp
 
 call site_potentials(delta,E)
-call hamiltonian(E,t,U,mu)
+call hamiltonian(E,t,U,mu,eps)
 
 !-----find ground state energy------------------------
 
