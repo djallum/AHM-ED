@@ -270,7 +270,7 @@ H21(3,6) = t;    H21(3,10) = t;   H21(3,15) = -t; H21(3,19) = -t
 H21(4,7) = t;    H21(4,13) = -t;  H21(4,22) = -t
 H21(5,8) = t;    H21(5,17) = t;   H21(5,21) = t
 H21(6,9) = t;    H21(6,13) = t;   H21(6,17) = -t;  H21(6,21) = -t; H21(6,22) = t
-H21(7,10) = t;   H21(7,16) = t;   H21(7,18) = t
+H21(7,10) = t;   H21(7,16) = t;   H21(7,15) = -t; H21(7,18) = t; H21(7,24) = -t
 H21(8,11) = t;   H21(8,16) = -t;  H21(8,18) = -t
 H21(9,12) = t;   H21(9,15) = t;  H21(9,24) = t
 H21(10,20) = t;  H21(10,22) = t
@@ -765,6 +765,7 @@ grand_potential(256) = H44 - mu*8     ! grand potentials of H44
 
 eigenvectors(256,256) = 1              ! eigenvectors of H44
 
+close (99)
 end subroutine hamiltonian
 
 subroutine transformations()
