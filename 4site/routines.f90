@@ -303,10 +303,10 @@ H12 = H21 ! not exactly but will make modifications in the next step
 ! make it symetric and do changes to upper right and lower left quadrants of H12 matrix
 do i=1,24
    do j=1,24
-      if(i>12 .and. j<12) then
+      if(i>12 .and. j<13) then
          H12(i,j) = -H21(i,j)
       end if
-      if(i<12 .and. j>12) then
+      if(i<13 .and. j>12) then
          H12(i,j) = -H21(i,j)
       end if
       if(i>j) then
