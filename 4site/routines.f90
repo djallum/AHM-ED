@@ -1220,7 +1220,7 @@ PES_down(2,46) = 136; phase_PES_down(2,46) = -1
 PES_down(2,48) = 137; phase_PES_down(2,48) = -1
 PES_down(2,49) = 142; phase_PES_down(2,49) = -1
 PES_down(2,51) = 143; phase_PES_down(2,51) = -1
-PES_down(2,52) = 120; phase_PES_down(2,52) = 1
+PES_down(2,52) = 129; phase_PES_down(2,52) = 1
 PES_down(2,53) = 130; phase_PES_down(2,53) = 1
 PES_down(2,54) = 133; phase_PES_down(2,54) = 1
 PES_down(2,55) = 152; phase_PES_down(2,55) = 1
@@ -1275,7 +1275,7 @@ PES_down(2,147) = 196; phase_PES_down(2,147) = 1
 PES_down(2,148) = 204; phase_PES_down(2,148) = -1
 PES_down(2,149) = 202; phase_PES_down(2,149) = -1
 PES_down(2,150) = 207; phase_PES_down(2,150) = -1
-PES_down(2,151) = 200; phase_PES_down(2,151) = -1
+PES_down(2,151) = 205; phase_PES_down(2,151) = -1
 PES_down(2,154) = 217; phase_PES_down(2,154) = -1
 PES_down(2,156) = 218; phase_PES_down(2,156) = -1
 PES_down(2,159) = 209; phase_PES_down(2,159) = 1
@@ -1541,7 +1541,7 @@ PES_down(3,160) = 215; phase_PES_down(3,160) = 1
 PES_down(3,162) = 218; phase_PES_down(3,162) = 1
 PES_down(3,164) = 221; phase_PES_down(3,164) = -1
 PES_down(3,165) = 223; phase_PES_down(3,165) = -1
-PES_down(3,167) = 224; phase_PES_down(3,167) = 1
+PES_down(3,167) = 225; phase_PES_down(3,167) = 1
 PES_down(3,172) = 234; phase_PES_down(3,172) = -1
 PES_down(3,174) = 235; phase_PES_down(3,174) = -1
 PES_down(3,175) = 238; phase_PES_down(3,175) = -1
