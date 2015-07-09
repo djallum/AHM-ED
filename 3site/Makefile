@@ -23,15 +23,13 @@ all: $(MAIN)
 	@echo compiled executable: $(MAIN)
 
 main.e: $(OBJS)
-	$(CC) -o $(MAIN) $(OBJS) $(LIBS)
+	$(CC) $(OBJS) -o $(MAIN) $(CFLAGS) $(LIBS)
 
-routines.o: routines.f90
-	$(CC) $(CFLAGS) routines.f90 -c
-
-main.o: main.f90
-	$(CC) $(CFLAGS) main.f90 -c
+%.o: %.f90
+	@-rm -f $<~
+	$(CC) -c $< -o $@ $(CFLAGS) $(LIBS)
 
 .PHONY: clean
 clean:
-	$(RM) *.o
+	$(RM) *.o *.mod *~
 
