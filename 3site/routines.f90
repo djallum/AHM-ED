@@ -1,10 +1,10 @@
 module routines
 
-implicit none 
+  implicit none 
 
-real, dimension(3) :: W10=0, W20=0, W31=0, W32=0
-real , dimension(9) :: W11=0, W21=0, W12=0, W22=0
-real :: W30=0, W03=0                             ! matrices for eigenvalues
+  real, dimension(3) :: W10=0, W20=0, W31=0, W32=0
+  real , dimension(9) :: W11=0, W21=0, W12=0, W22=0
+  real :: W30=0, W03=0                             ! matrices for eigenvalues
 real :: Grand_potential(64)=0                    ! grand potentials (eigenenergies - mu*number electrons)
 real :: Grand_potential_ground=0                 ! the lowest grand ensemble energy
 real :: eigenvectors(64,64)=0                    ! the 64 eigenvectors
