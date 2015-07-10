@@ -1,6 +1,7 @@
 program MAIN
   
   !The following are modules (other files) that are used. The modules themselves contain the subroutines and functions.
+
   !-------------------------------
   use timemachine
   use Hilbert_space_routines
@@ -13,7 +14,7 @@ program MAIN
   integer :: i,j     ! counters for loops
   integer :: iconfig
   integer :: n
-  integer :: n_up,n_dn,ne  !  number of up, down, and total electrons
+  integer :: n_up,n_dn,ne                  !  number of up, down, and total electrons
   real (real_kind) :: GroundStateEnergy
   real (real_kind), allocatable :: GroundStateVec(:)
   !---------- Time machine ----------
@@ -27,18 +28,18 @@ program MAIN
   time1_ = 0.0
   time2_ = 0.0
   time3_ = 0.0
-  call random_gen()
-  call read_parameters()                                    ! in the parameter module
-  call evaluate_parameters()                                ! in the parameter module
+  call random_gen()                                         ! in module found in random_generator.f90
+  call read_parameters()                                    ! in the parameter module found in parameters.f90 will read parameters from file input.dat
+  call evaluate_parameters()                                ! in the parameter module found in parameters.f90 will calculate the dependant parameters
   call make_hilbert_space(pars%nx,pars%ny,pars%lattice)     ! makes ordered list of fock states and lookup arrays for when states with n electrons begin. 
   !call print_hilbert_space() 
-  call print_parameters()                                   ! in the parameter module
-!!$  n_dn = nint(pars%nsite/3*2.5)
-!!$  n_up = nint(pars%nsite/3*2.5)
-  n_dn=9; n_up=9
-!!$
-  call num_states(n_up,n_dn,n)    ! calculates the total number of fock states possible with n_dn and n_up electrons.
-  allocate(GroundStateVec(n))
+  call print_parameters()                                   ! in the parameter module found in parameters.f90
+  !!$  n_dn = nint(pars%nsite/3*2.5)
+  !!$  n_up = nint(pars%nsite/3*2.5)
+  n_dn=2; n_up=2                   ! specify that there are 2 up electrons and 2 down electrons
+  !!$
+  call num_states(n_up,n_dn,n)    ! calculates the total number of fock states possible with n_dn and n_up electrons(in )
+  allocate(GroundStateVec(n))      
   print *,"# number of sites:",pars%nsite
   print *,"# number of up/dn electrons, number of states:",n_up,n_dn,n
   call make_h_index(pars%lattice)  ! Index of the columns of the Hamiltonian, stored in h_index.  

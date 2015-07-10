@@ -5,8 +5,8 @@ module parameters
 
   type :: list_parameters
      !########## INPUT ##########
-     ! Lattice
-     integer :: nx, ny, lattice
+     ! Lattice Structure
+     integer :: nx, ny, lattice   !nx is number of horizontal sites and ny is number of veriticle sites. Lattice specifies the type of structure. See subroutine make_hindex in hilbert space routines for the different types.
      ! Hamiltonian
      real :: t                   ! nearest neighbor hopping term
      real :: t1                  ! 2nd nearest neighbor hopping term
@@ -19,7 +19,7 @@ module parameters
      real :: Vimp                ! Impurity potential for alloy sites
      ! configuration
      integer :: iconfig          ! Amount of iterations to do (the ensemble)?
-     ! Output filename
+     ! Output filenames
      character (len=32) :: file1,file2
 
      !########## DEPENDENT ##########
@@ -29,7 +29,7 @@ module parameters
   end type list_parameters
 
   type :: dependent_parameters
-     integer :: n
+     integer :: n        ! total number of electrons
      integer :: ne
      integer :: sz
      integer :: nonzero
@@ -45,23 +45,24 @@ module parameters
 contains
 
   subroutine read_parameters()
-    allocate(pars%U(1))
-    open(100,file="input.dat",status="old")
-    read(100,*) pars%nx,pars%ny,pars%lattice
-    read(100,*) pars%t,pars%t1,pars%U(1),pars%V,pars%mu,pars%delta
-    read(100,*) pars%iconfig
-    read(100,*) pars%Nimp,pars%Vimp
+    allocate(pars%U(1))                          ! make the variable U be an array of length 1.
+    open(100,file="input.dat",status="old")      ! open the input file called input.dat
+    read(100,*) pars%nx,pars%ny,pars%lattice     ! read the x and y dimension of the lattice and the shape
+    read(100,*) pars%t,pars%t1,pars%U(1),pars%V,pars%mu,pars%delta  ! read all the parameters needed to make the lattice
+    read(100,*) pars%iconfig                     ! the amount of configurations you want to do. Used in calculation of the size of the ensemble.
+    read(100,*) pars%Nimp,pars%Vimp              ! 
     close(100)
-    if ((pars%lattice==1).and.(pars%nx/=4)) then
+    if ((pars%lattice==1).and.(pars%nx/=4)) then             ! check if it was a valid lattice type
        print *,"Warning: MUST use a 4x3 lattice for 12 sites (cannot use 3x4)"
        STOP
     end if
     ! Lanczos
     ! Filename
-    pars%file1 = ""
+    pars%file1 = ""      ! make the file names contain and empty string. There name will be assignend in evaluate_parameters subroutine
     pars%file2 = ""
     ! Lattice type
     !call choose_lattice(pars%lattice)
+    !call choose_lattice(-1) ! linear lattice
     !call choose_lattice(0) ! square/rectangular
     !call choose_lattice(2) ! 10-site
     !call choose_lattice(1) ! 12-site
@@ -69,32 +70,33 @@ contains
   end subroutine read_parameters
 
   !---------- Evaluate dependent parameters ----------
+
   subroutine evaluate_parameters()
     integer :: ict
     real(kind=8) :: U_tmp
 
-    U_tmp=pars%U(1)                          ! % sign means the element called U from the variable pars. (Pars is of type list parameter which is a user defined
-    if (pars%lattice<3) then                 ! data type). The type is defined at the top of this file.
-       pars%nsite = pars%nx * pars%ny
+    U_tmp=pars%U(1)                          ! % sign means the element called U from the variable pars. (Pars is of type list parameter which is a user defined data type). The type is defined at the top of this file.
+    if (pars%lattice<3) then                 ! if lattice < 3 then it is a single band hubbard model
+       pars%nsite = pars%nx * pars%ny        ! the number of sites is equal to the x dimension times the y dimension (it's a square)
+       deallocate(pars%U)                    ! deallocate the array U so that the size can be respecified. Previous value is stored as U_temp
+       allocate(pars%U(pars%nsite),pars%Ei(pars%nsite)) ! allocate the array U (on-site interactions) and Ei(site potentials) to be of size nsite.
+       pars%U(:) = U_tmp                     ! set all the values in the array U equal to the value specified in the input file
+    else if (pars%lattice==3) then           ! if this is true then it is a three band hubbard model so it will need 3 times as many sites
+       pars%nsite = pars%nx * pars%ny * 3    
        deallocate(pars%U)
-       allocate(pars%U(pars%nsite),pars%Ei(pars%nsite))    
-       pars%U(:) = U_tmp
-    else if (pars%lattice==3) then
-       pars%nsite = pars%nx * pars%ny * 3
-       deallocate(pars%U)
-       allocate(pars%U(pars%nsite),pars%Ei(pars%nsite))
+       allocate(pars%U(pars%nsite),pars%Ei(pars%nsite))  ! reallocate everything to the proper size of the 3 band hubbard model
        do ict=0,pars%nx*pars%ny-1
-          pars%U(ict*3+1) = U_tmp
-          pars%U(ict*3+2) = 0d0
+          pars%U(ict*3+1) = U_tmp      ! every third onsite interaction energy is equal to that specified in the input file
+          pars%U(ict*3+2) = 0d0        ! the rest are all equal to zero
           pars%U(ict*3+3) = 0d0
        end do
     end if
-    print *,"U: ",U_tmp
+    print *,"U: ",U_tmp                ! print the values that you calculated to the screen to make sure the new value is same as the inputed one.
     print *,"U: ",pars%U
 
-    if (pars%delta.eq.0) pars%iconfig = 1
-    pars%ensemble = pars%nsite * pars%iconfig
-    call filename_parameter()
+    if (pars%delta.eq.0) pars%iconfig = 1  ! if there is no disorder (delta=0) then all configurations will be the same so only need to do 1.
+    pars%ensemble = pars%nsite * pars%iconfig  ! the size of the ensemble is the number of sites times the amount of configurations you want to do.
+    call filename_parameter()      ! assign file names based on what the input values into the program are.
 
   end subroutine evaluate_parameters
 

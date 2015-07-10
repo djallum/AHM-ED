@@ -1,12 +1,18 @@
 module local_routines
+
   use math_setup
   use parameters
   use Hilbert_space_routines
+
   implicit none
+
   real (real_kind) :: GroundStateEnergy
   real (real_kind), allocatable :: GroundStateVec(:),ExcitedStateVec(:)
+
 contains
+
   !*******************************************************  
+
   subroutine read_groundstate(input_file,n_up,n_dn,n)
     integer, intent (out) :: n_up,n_dn
     integer, intent (out) :: n
@@ -36,6 +42,7 @@ contains
   end subroutine read_groundstate
 
 !*******************************************************  
+
   subroutine get_final_numbers(spectrum_case,n_up,n_dn,n_up_final,n_dn_final)
     integer :: spectrum_case,n_up,n_dn,n_up_final,n_dn_final    
 
@@ -82,12 +89,16 @@ contains
 end module local_routines
 
 !*******************************************************  
+
 program MAIN
+
   use local_routines
   use timemachine
   use simple_lanczos
   use simple_recursion_routines
+
   implicit none
+
   integer :: i,j,iconfig
   integer :: n_up,n_dn,n  !  up, down, and total number of states (ground state)
   integer :: n_up_final,n_dn_final,n_final  !  up, down, and total number of states (final state)
@@ -110,7 +121,7 @@ program MAIN
   call random_gen()
   call read_parameters()
   call evaluate_parameters()
-  call make_hilbert_space(pars%nx,pars%ny)
+  call make_hilbert_space(pars%nx,pars%ny,pars%lattice)
   !call print_hilbert_space()
   call make_h_index(pars%lattice)  ! Index of the columns of the Hamiltonian, stored in h_index.  
   ! This is where the details of the lattice are stored.
@@ -146,8 +157,8 @@ program MAIN
   !---------------------
   ! Finalize everything
   !---------------------
-  call filename_parameter()
-  call print_spectrum(pars%file2)
+  call filename_parameter()      ! parameters module in parameters.f90 
+  call print_spectrum(pars%file2)  !
   call cleanup_hilbert_space()
   STOP
 200 format(:,"# ne=",i3,1x,"sz=",i4,1x,"n=",i7,1x,"(",i8,")",1x, &

@@ -10,7 +10,7 @@ obja += simple_recursion.o
 objg  = $(obja) Zgroundstate_driver.o
 objs  = $(obja) Zspectrum_driver.o
 
-libs  = /usr/lib/liblapack.so.3
+libs  = -llapack
 opts  = -O2 
 #opts +=	-fbounds-check # check bounds
 #opts += -fno-range-check # turn off range checking so that "complement=254" doesn't cause an overflow error

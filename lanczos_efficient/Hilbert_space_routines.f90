@@ -6,13 +6,15 @@ module Hilbert_space_routines
   !
   use math_setup
   use parameters
+
   implicit none
+  
   integer, private :: nsite_, max_electrons_, total_states_  ! variables end with underscore to indicate they are in subroutine.
   integer, allocatable, private :: nstates_(:), states_(:), block_(:)
   integer, allocatable, private :: h_index_(:,:)   ! index of neighbours of lattice sites.
   integer, private :: n_up_,n_dn_  ! number of up/down electrons
   integer, private :: n_           ! total number of states for a given n_up_, n_dn_
-  integer, private :: nx_,ny_,lattice_
+  integer, private :: nx_,ny_,lattice_    ! x and y dimension of the lattice (measured in sites) and the integer that specifies lattice shape.
   integer, private, parameter :: nbrs_ = 4  ! short for neighbourhs. Each site can have up to four neighbourhs...
   integer, private, allocatable :: state_lookup_up_(:,:), phase_lookup_up_(:,:)
   integer, private, allocatable :: state_lookup_dn_(:,:), phase_lookup_dn_(:,:)
@@ -28,6 +30,7 @@ contains
 ! one for the spin-up part, and one for the spin-down part.
 ! This saves us a lot of memory.
 !*******************************
+
   subroutine make_hilbert_space(nx,ny,lattice)
     integer, intent (in) :: nx,ny,lattice
     integer, allocatable :: icount(:)
@@ -88,6 +91,7 @@ contains
   end subroutine make_hilbert_space
 
 !*******************************
+
   subroutine print_hilbert_space()
     integer :: ne
     character(11) :: x
@@ -99,6 +103,7 @@ contains
   end subroutine print_hilbert_space
 
 !*******************************
+
   subroutine cleanup_hilbert_space()
     if (allocated(nstates_)) deallocate(nstates_)
     if (allocated(states_)) deallocate(states_)
@@ -107,6 +112,7 @@ contains
   end subroutine cleanup_hilbert_space
 
 !*******************************
+
   subroutine num_states(n_up,n_dn,n)
     integer :: n_up,n_dn,n
     n_up_ = n_up
@@ -116,6 +122,7 @@ contains
   end subroutine num_states
 
 !***********************************
+
   subroutine make_h_index(lattice)
     integer :: lattice
   
@@ -143,6 +150,7 @@ contains
   end subroutine make_h_index
 
 !***********************************
+
   subroutine make_h_index_rectangular()
     integer :: ix,iy,i,jx,jy,j
 
@@ -167,6 +175,7 @@ contains
   end subroutine make_h_index_rectangular
 
 !***********************************
+
   subroutine make_h_index_linear()
     integer :: ix,i,jx,j
 
@@ -187,7 +196,9 @@ contains
 
   end subroutine make_h_index_linear
   
+
 !***********************************
+
   subroutine make_h_index_12h3()
     integer :: ix,iy,i,jx,jy,j
 
@@ -221,6 +232,7 @@ contains
   end subroutine make_h_index_12h3
 
 !***********************************
+
   subroutine make_h_index_3band()
     integer :: ix,iy,i,jx,jy,j
 
@@ -259,6 +271,7 @@ contains
   end subroutine make_h_index_3band
 
 !***********************************
+
   subroutine initialise_lookup_tables()    
     if (.not.allocated(state_lookup_up_)) then
        allocate(state_lookup_up_(0:nbrs_*nsite_,nstates_(n_up_)))      ! nstates_(n_up_) gives the number of fock states with n_up_ electrons
@@ -278,12 +291,14 @@ contains
   end subroutine initialise_lookup_tables
 
 !***********************************
+
   subroutine deallocate_lookup_tables()
     deallocate(state_lookup_up_,state_lookup_dn_)
     deallocate(phase_lookup_up_,phase_lookup_dn_)
   end subroutine deallocate_lookup_tables
 
 !***********************************
+
   subroutine make_state_lookup_table()
     integer :: istate,state_up,state_dn,i,j,k,new_state,phase
     integer :: icount
@@ -357,6 +372,7 @@ contains
 
 
 !***********************************
+
   subroutine new_state_and_phase(state_up,i,j,new_state,phase)
     integer, intent(in) :: i,j,state_up
     integer, intent(out)  :: new_state,phase
@@ -386,6 +402,7 @@ contains
   end subroutine new_state_and_phase
 
 !******************************************
+
   integer function statesindex(ne,selstate)
     integer :: ne
     integer :: selstate
@@ -427,6 +444,7 @@ contains
 
 
 !***********************************
+
   subroutine multiply_by_hamiltonian(v_in,v_out)
     !
     ! Multiply the vector v_in by the Hamiltonian.
@@ -495,6 +513,7 @@ contains
   end subroutine multiply_by_hamiltonian
   
 !***********************************
+
   subroutine get_static_correlations(gvec)
     real (real_kind), intent (in) :: gvec(n_)
     integer :: istate_up,istate_dn,state_up,state_dn,istate,isite
@@ -550,6 +569,7 @@ contains
   end subroutine get_static_correlations
 
 !***********************************
+
   subroutine make_excited_state(isite,icase,n_up_ground,n_dn_ground,GroundStateVec,ExcitedStateVec,Norm)
     integer, intent (in) :: isite,icase,n_up_ground,n_dn_ground
     real (real_kind), intent (in) :: GroundStateVec(:)
@@ -655,6 +675,7 @@ contains
   end subroutine make_excited_state
 
   !**************************
+
   character(16) function convert_to_binary(a)
     implicit none
     integer :: a

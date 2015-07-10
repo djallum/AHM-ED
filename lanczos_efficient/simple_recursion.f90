@@ -1,15 +1,20 @@
 module simple_recursion_routines
+
   use math_setup
   use Hilbert_space_routines
   use parameters
+
   implicit none
+
   real (real_kind), parameter, private :: abstol_ = 1d-4
   complex (real_kind), parameter, private :: igam_ = (0d0,1d-1)
   integer, parameter :: nw_=401
   real (real_kind), parameter :: wmin_=-20.0, wmax_=20.0, dw_=(wmax_-wmin_)/(nw_-1)
   real (real_kind), save :: spectrum_(nw_,4)
+
 contains
   !**************************************
+
   subroutine simple_recursion(q0,maxit,E0,icase,A,B,k)
     integer, intent (in) :: maxit,icase
     integer, intent (out) :: k
@@ -90,6 +95,7 @@ contains
 
 
   !**************************************
+
   subroutine get_spectrum(n,A,B,norm,icase,E0)
     integer, intent (in) :: n,icase
     real (real_kind), intent (in) :: A(:),B(:),norm,E0
@@ -119,6 +125,7 @@ contains
   end subroutine get_spectrum
 
   !**************************************
+
   subroutine get_spectrum_alt(n,A,B,norm,icase,E0)
     integer, intent (in) :: n,icase
     real (real_kind), intent (in) :: A(:),B(:),norm,E0
@@ -146,15 +153,16 @@ contains
   end subroutine get_spectrum_alt
 
   !************************************
+
   subroutine print_spectrum(output_file)
-    integer :: iw,in
-    real (real_kind) :: w
-    character(32) :: output_file
+    integer :: iw,in         ! counter used for making the different frequency bins
+    real (real_kind) :: w    ! the frequency value of each bin will be assigned to this during loop
+    character(32) :: output_file  ! the name of the file being outputed. Specified in the parameters module and printed to terminal
     
     open(10,file=output_file)
     do iw = 1,nw_
        w = wmin_ + (iw-1)*dw_
-       write(10,100) w,spectrum_(iw,:)/pars%nsite/pars%iconfig
+       write(10,100) w,spectrum_(iw,:)/pars%nsite/pars%iconfig    ! this normalizes the values
     end do
     close(10)
 100 format(6(1x,g13.6))
