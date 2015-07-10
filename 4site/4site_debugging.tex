@@ -1,0 +1,38 @@
+\documentclass{article}
+  
+\title{4site Debugging}
+\author{Patrick Daley}
+
+\addtolength{\oddsidemargin}{-.875in}
+\addtolength{\evensidemargin}{-.875in}
+\addtolength{\textwidth}{1.75in}
+\addtolength{\topmargin}{-1.075in}
+\addtolength{\textheight}{1.75in}
+	
+\begin{document}
+	
+\maketitle
+	
+This documents summarizes the debugging process of the density of states (DOS) for the Anderson Hubbard 4 site code with on site interactions. The sections are in the order in which each of the simplified simulations were tested. The code file name is main.f90 and used the module in routines.f90.
+
+\subsection*{Atomic Limit (t=0) and Non-Interacting (U=0)}
+
+The DOS had a large zero bias anomaly. The DOS in this case should be a perfect rectangle with edges at W/4 (disorder width / 4). This was originally thought to be due to rounding errors since the matrices we big (largest was 36x36). The rounding would cause states that normally should have identical energy to be slightly off creating this anomaly. This was not the case. There ended up being some off diagonal terms even though t=0 which was causing the errors in the energies. What was happening is that even though the matrices were being zeroed in the same line as they were being declared when these declarations were done multiple times since they were within the loop they would for some reason no longer be zero. This was solved by setting all the variable to zero again in the body of the code instead of in the declaration statements. The error was found by outputting the ground grand potential and calculating what it should be by hand and comparing. The answer was always right on the first loop but would be off sometimes on subsequent loops. The simulation was run many times and would keep track of what iteration of the loop the errors were occurring and it was found to never occur on first loop. Afterwards we printed the matrices of the second loop and the non zero off diagonal terms were found. By zeroing the matrices in a separate step then the declaration immediately fixed this and graph then resembled what it should.
+
+\subsection*{Atomic Limit (t=0) with Interactions (U/=0)}
+
+The contributions to the DOS were happening at values that were above the allowed range. It looked similar to how it should but the should be straight edges were slopping off. The code was programmed so that when a bad DOS contribution was made it would print all the ground state and the site potentials as well as the ground state eigenvector. The program was run multiple times and it was noticed that the illegal contributions would occur when it was a specific ground state. The photo emission spectrum (PES) and inverse photo emission spectrum (IPES) lookup tables were check for these ground states and the errors were found. The graph of the DOS looked as it should again and the illegal contributions stopped. 
+
+\subsection*{Non-Interacting (U=0) and not Atomic Limit (t/=0)}
+
+The DOS looked atrocious and the zero bias anomaly was back. The parameters were entered so that it was identical to those of a paper published about the non-interacting case. There was almost no contributions above a certain energy for the DOS in the paper however ours still had many. For this scenario all the contributions should be occurring at the eigenvalues of the 1 particle hamiltonian since U=0. A portion of code was added that would print out the contribution energies as well as the single particle eigenstates. There was a large difference between these values. The values were all consistently off and would get farther off as the value of t was increased. This lead us to believe the errors would due to mistakes in the hamiltonians. The hamiltonians were all recalculating by hand and some errors were found. Once these errors were fixed the graph became a little better and the asymmetries and zero bias anomaly were diminishing but were both still there. 
+
+To check if the matrices were right but the code was just solving the matrices incorrectly a second program (solver.f90) was written that would take a matrix from a file and solved it for the eigenvectors and eigenvalues.  The original code was changed so that it would output the hamiltonians to a file and this was tested. The two programs were found to always give the same result so the error must be in the matrices still. 
+
+The code was then programmed to output the hamiltonians to the terminal but it was difficult to compare the matrices in the excel file and the program by sight. Another program (compare.f90) was written to compare the two matrices. The excel files were exported as .csv files and the scripting language "sed" was used to change the commas to semi colon so that fortran could read it. The program took any two files that contained matrices and compared them and printed out each matrix and the location of any differences. This found a few difficult to find mistakes. The asymmetry and the zero bias anomaly were almost completely gone.
+
+To check if the IPES and PES lookup tables had errors another program was written (trans.f90). This program would create a ground state vector that was any state and would apply the IPES and PES matrices to it and print the states it would transition too. To speed up the process the a extra portion of code was added that would loop over all states and print out error messages if there was not transitions to 8 states (there must always be 8 transitions). This allowed the problematic states to be quickly found and then individually probed and fixed. After fixing these two areas the DOS no longer had zero bias anomaly but was still slightly asymmetric. 
+
+To check at what energies the errors were happening we wrote a program that would do the non interacting case (nonint.f90). The two codes used the same random generator which was seeded to a constant so that they would have the same site potentials. Both simulations were run with the same size of ensemble (very large). The graphs should be identical and mostly were but the negative frequency side of the DOS was slightly different because the non-interacting code was symmetric. At the moment we are investigating this error.
+
+\end{document}
