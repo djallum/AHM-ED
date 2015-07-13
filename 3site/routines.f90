@@ -1,5 +1,7 @@
 module routines
 
+   ! this code containes all the subroutines needed for main.f90 in the 3 site problem
+   
    implicit none 
 
    real, dimension(3) :: W10=0, W20=0, W31=0, W32=0
