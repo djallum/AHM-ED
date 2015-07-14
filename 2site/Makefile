@@ -1,14 +1,23 @@
-main.e: main.o random_generator.o modules.o
-	gfortran random_generator.o modules.o main.o -llapack -o main.e
+# define the compiler to use:
+CC = gfortran
 
-random_generator.o: random_generator.f90
-	gfortran -c random_generator.f90
+# compiler flags:
+#   -g  adds debugging information to the executable file
+#   -O0 and -03 defines the level of optimization (0 is low 3 is high)
+#CFLAGS = -g -O0
+CFLAGS = -O3
 
-modules.o: modules.f90
-	gfortran -c modules.f90
+#define any libraries to be linked to the executable:
+LIBS = -llapack
+
+main.e: routines.o main.o
+	$(CC) $(CFLAGS) routines.o main.o $(LIBS) -o main.e
+
+routines.o: routines.f90
+	$(CC) $(CFLAGS) -c routines.f90
 
 main.o: main.f90
-	gfortran -c main.f90
+	$(CC) $(CFLAGS) -c main.f90
 
 clean: 
-	rm *.o
+	rm *.o *.mod *~

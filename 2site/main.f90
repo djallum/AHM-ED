@@ -3,7 +3,7 @@ program main
 ! Author: Patrick Daley          
 ! Date last modified : May 26th 2015
 ! 
-! This code solves the 2cite problem with on-site interactions and hopping. The hamiltonian matrices are found by hand and entered into the program.
+! This code solves the 2site problem with on-site interactions and hopping. The hamiltonian matrices are found by hand and entered into the program.
 ! The matrices are solved using lapack. The wieght of peaks for the LDOS is found by multiplying the ground state vector by matrices representing PES and 
 ! IPES from both cites and computed its inner product with each eigenstate. The location of the peaks is calculated by subtracting or adding (depending
 ! if PES or IPES) the lowest grandpotential with the grandpotential of that eigenstate. The DOS and GIPR are calculated using the two LDOS with the 
@@ -13,12 +13,10 @@ program main
 ! The fock state basis used in order is (+ is up, - is down) :
 ! 00,0+,+0,0-,-0,++,--,-+,+-,02,20,+2,2+,-2,2-,22
 
-use random_generator
 use routines
 
 implicit none
 
-integer, parameter :: nsites = 2                  ! number of sites (this must be set to two)
 integer, parameter :: npairs=1000000             ! number of pairs in the ensemble
 real, parameter :: t=-1                           ! hopping
 real, parameter :: U=0                           ! on-site interaction
@@ -32,7 +30,7 @@ integer :: bin=0                                    ! index for the bin number t
 real, dimension(nbins,2) :: DOS=0                        ! array that stores the DOS peaks and all the energy bin frequencies 
 real, dimension(nbins) :: GIPR_num=0, GIPR_den=0, GIPR=0     ! arrays that store the numerator and denominator and the GIPR
 real :: sum=0, sum_half=0                                       ! used to sum the DOS and normalize it
-real :: E(nsites)=0                                 ! stores the random site potentials
+real :: E(2)=0                                 ! stores the random site potentials
 real :: H0=0,H1(2,2)=0,H2(2,2)=0,H3=0,H4=0,H5(4,4)=0,H6(2,2)=0,H7(2,2)=0,H8=0    ! hamiltonian sub matrices
 real :: W0=0,W1(2)=0,W2(2)=0,W3=0,W4=0,W5(4)=0,W6(2)=0,W7(2)=0,W8=0              ! matrices for eigenvalues
 real :: omega(16)=0                                              ! grand potentials (eigen_energies - mu*number_electrons)
@@ -56,7 +54,7 @@ integer :: INFO = 0       ! varible that error message is stored in (zero means 
 integer :: LWORK = 16
 integer :: WORK(16)
 
-open(unit=10,file='2citedata1.dat', status='replace', action='write',IOSTAT = error)
+open(unit=10,file='2sitedata1.dat', status='replace', action='write',IOSTAT = error)
 if (error/=0) then
    write(*,*) 'error opening output file. Error number:', error
 end if
