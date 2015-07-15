@@ -2,7 +2,6 @@ module routines
 
 implicit none
 
-
 integer, parameter :: sp = kind(1.0)    !single precison kind
 integer, parameter :: dp = kind(1.0d0)  !double precision kind
 real(dp) :: grand_potential(256)=0.0_dp                    ! grand potentials (eigenenergies - mu*number electrons)
@@ -1457,7 +1456,7 @@ PES_down(3,15) = 68; phase_PES_down(3,15) = -1
 PES_down(3,16) = 42; phase_PES_down(3,16) = 1
 PES_down(3,18) = 44; phase_PES_down(3,18) = -1
 PES_down(3,20) = 45; phase_PES_down(3,20) = -1
-PES_down(3,22) = 72; phase_PES_down(3,22) = -1
+PES_down(3,22) = 72; phase_PES_down(3,22) = 1
 PES_down(3,23) = 71; phase_PES_down(3,23) = 1
 PES_down(3,25) = 85; phase_PES_down(3,25) = 1
 PES_down(3,26) = 78; phase_PES_down(3,26) = -1
