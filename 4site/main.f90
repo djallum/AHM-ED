@@ -4,7 +4,7 @@ program main
 
   implicit none
 
-  integer, parameter :: npairs=100             ! size of the ensemble
+  integer, parameter :: npairs=10000             ! size of the ensemble
   real(dp) :: t = -1.0_dp                      ! hopping term
   real(dp), parameter :: delta = 6.0_dp        ! width of disorder for the site potentials 
   real(dp), parameter :: U = 0.0_dp            ! on-site interactions
@@ -24,7 +24,7 @@ program main
   integer :: bin=0                                   ! index for the bin number the peak goes in
   real(dp), dimension(nbins,2) :: DOS=0.0_dp                                      ! array that stores the DOS peaks and all the frequencies of the energy bins
   real(dp), dimension(nbins) :: GIPR_num=0.0_dp, GIPR_den=0.0_dp, GIPR=0.0_dp     ! arrays that store the numerator and denominator and the GIPR
-  real(dp) :: sum=0.0_dp
+  real(dp) :: dos_sum=0.0_dp
   real(dp) :: eps(4)=0.0_dp
 
   frequency_delta = (frequency_max - frequency_min)/nbins   ! calculating the step size between bins for the energy bining process
@@ -111,34 +111,37 @@ program main
        do i=1,256
           inner_product_up = (dot_product(IPES_up_ground(j,:),eigenvectors(i,:)))**2
           inner_product_down =  (dot_product(IPES_down_ground(j,:),eigenvectors(i,:)))**2
-          LDOS(j,i+256,1) = grand_potential(i) - grand_potential_ground        ! location of the peak
+          LDOS(j,i+256,1) = grand_potential(i) - grand_potential_ground           ! location of the peak
           LDOS(j,i+256,2) = (inner_product_up + inner_product_down)*0.5_dp        ! weight of the peak
        end do
     end do
 
     do i=1,512
        bin = floor(LDOS(2,i,1)/frequency_delta) + nbins/2  +1              !find the bin number for energy bining
-       DOS(bin,2) = DOS(bin,2) + (LDOS(1,i,2) + LDOS(2,i,2) + LDOS(3,i,2) + LDOS(4,i,2))/4.0_dp
-        if ((LDOS(1,i,2) + LDOS(2,i,2) + LDOS(3,i,2) + LDOS(4,i,2)) /= 0) then
-          IPR(i) = (LDOS(1,i,2)**2 + LDOS(2,i,2)**2 + LDOS(3,i,2)**2 + LDOS(4,i,2)**2) 
-          GIPR_num(bin) = GIPR_num(bin) + IPR(i)*(LDOS(1,i,2) + LDOS(2,i,2) + LDOS(3,i,2) + LDOS(4,i,2))/4.0  ! numerator of the weighted GIPR
-          GIPR_den(bin) = GIPR_den(bin) + (LDOS(1,i,2) + LDOS(2,i,2) + LDOS(3,i,2) + LDOS(4,i,2))/4.0         ! denominator of the weighted GIPR
+       DOS(bin,2) = DOS(bin,2) + (SUM(LDOS(:,i,2)))/4.0_dp
+        if (SUM(LDOS(:,i,2)) /= 0) then
+          IPR(i) = SUM(LDOS(:,i,2)**2)/(SUM(LDOS(:,i,2))**2)
+          GIPR_num(bin) = GIPR_num(bin) + IPR(i)*(SUM(LDOS(:,i,2)))/4.0_dp  ! numerator of the weighted GIPR
+          GIPR_den(bin) = GIPR_den(bin) + (SUM(LDOS(:,i,2)))/4.0_dp         ! denominator of the weighted GIPR
        end if
     end do
 
   end do pairs
 
-  sum = DOS(1,2)
+  dos_sum = DOS(1,2)
   DOS(1,1) = frequency_min
 
   do i=2,nbins                                    ! calculate sum to normalize the area under DOS to 1
      DOS(i,1) = DOS(i-1,1) + frequency_delta
-     sum = sum + DOS(i,2)
+     dos_sum = dos_sum + DOS(i,2)
   end do
 
   do i=1,nbins
-     GIPR(i) = GIPR_num(i)/GIPR_den(i)
-     write(10,*), DOS(i,1), DOS(i,2)/sum/frequency_delta, GIPR(i)
+    GIPR(i) = GIPR_num(i)/GIPR_den(i)
+    if(DOS(i,2)/dos_sum/frequency_delta < 0.000000001) then
+      GIPR(i) = 0.25
+    end if
+    write(10,*), DOS(i,1), DOS(i,2)/dos_sum/frequency_delta, GIPR(i)
   end do
 
   close(10)
