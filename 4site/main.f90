@@ -4,7 +4,8 @@ program main
 
   implicit none
 
-  integer, parameter :: npairs=10000             ! size of the ensemble
+  integer, parameter :: npairs=10000         ! size of the ensemble
+  integer, parameter :: nsites=4               ! must be set to 4. Included so certain portions can be generalized in the future
   real(dp) :: t = -1.0_dp                      ! hopping term
   real(dp), parameter :: delta = 6.0_dp        ! width of disorder for the site potentials 
   real(dp), parameter :: U = 0.0_dp            ! on-site interactions
@@ -98,8 +99,8 @@ program main
 
     ! calculate the LDOS for all the cites
 
-    do j=1,4
-       do i=1,256
+    do j=1,nsites
+       do i=1,4**nsites
           inner_product_up = (dot_product(PES_up_ground(j,:),eigenvectors(i,:)))**2
           inner_product_down =  (dot_product(PES_down_ground(j,:),eigenvectors(i,:)))**2
           LDOS(j,i,1) = grand_potential_ground - grand_potential(i)           ! location of the peak
@@ -107,8 +108,8 @@ program main
        end do
     end do
 
-    do j=1,4
-       do i=1,256
+    do j=1,nsites
+       do i=1,4**nsites
           inner_product_up = (dot_product(IPES_up_ground(j,:),eigenvectors(i,:)))**2
           inner_product_down =  (dot_product(IPES_down_ground(j,:),eigenvectors(i,:)))**2
           LDOS(j,i+256,1) = grand_potential(i) - grand_potential_ground           ! location of the peak
@@ -116,13 +117,13 @@ program main
        end do
     end do
 
-    do i=1,512
+    do i=1,2*(4**nsites)
        bin = floor(LDOS(2,i,1)/frequency_delta) + nbins/2  +1              !find the bin number for energy bining
-       DOS(bin,2) = DOS(bin,2) + (SUM(LDOS(:,i,2)))/4.0_dp
+       DOS(bin,2) = DOS(bin,2) + (SUM(LDOS(:,i,2)))/real(nsites)
         if (SUM(LDOS(:,i,2)) /= 0) then
           IPR(i) = SUM(LDOS(:,i,2)**2)/(SUM(LDOS(:,i,2))**2)
-          GIPR_num(bin) = GIPR_num(bin) + IPR(i)*(SUM(LDOS(:,i,2)))/4.0_dp  ! numerator of the weighted GIPR
-          GIPR_den(bin) = GIPR_den(bin) + (SUM(LDOS(:,i,2)))/4.0_dp         ! denominator of the weighted GIPR
+          GIPR_num(bin) = GIPR_num(bin) + IPR(i)*(SUM(LDOS(:,i,2)))/real(nsites)  ! numerator of the weighted GIPR
+          GIPR_den(bin) = GIPR_den(bin) + (SUM(LDOS(:,i,2)))/real(nsites)         ! denominator of the weighted GIPR
        end if
     end do
 
@@ -139,7 +140,7 @@ program main
   do i=1,nbins
     GIPR(i) = GIPR_num(i)/GIPR_den(i)
     if(DOS(i,2)/dos_sum/frequency_delta < 0.000000001) then
-      GIPR(i) = 0.25
+      GIPR(i) = 1/real(nsites)
     end if
     write(10,*), DOS(i,1), DOS(i,2)/dos_sum/frequency_delta, GIPR(i)
   end do
