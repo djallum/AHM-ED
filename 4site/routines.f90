@@ -46,7 +46,7 @@ subroutine site_potentials(delta,E)
 
 end subroutine site_potentials
 
-subroutine hamiltonian(E,t,U,mu,eps)
+subroutine hamiltonian(E,t,U,mu)
 
   implicit none
 
@@ -54,7 +54,6 @@ subroutine hamiltonian(E,t,U,mu,eps)
   real(dp), intent(in) :: mu 
   real(dp), intent(in) :: t
   real(dp), intent(in) :: U
-  real(dp), intent(out) :: eps(4)
   real(dp) :: H00=0.0_dp, W00=0.0_dp, H40=0.0_dp, W40=0.0_dp, H44=0.0_dp
   real(dp) :: W10(4)=0.0_dp, W30(4)=0.0_dp, W41(4)=0.0_dp, W43(4)=0.0_dp
   real(dp) :: W20(6)=0.0_dp, W42(6)=0.0_dp, W11(16)=0.0_dp, W31(16)=0.0_dp
@@ -119,7 +118,6 @@ subroutine hamiltonian(E,t,U,mu,eps)
   do i=1,4
      grand_potential(i+1) = W10(i) - mu*1  ! grand potentials of H10
      grand_potential(i+5) = W10(i) - mu*1  ! grand potentials of H01
-     eps(i) = W10(i)
   end do
 
   do i=1,4

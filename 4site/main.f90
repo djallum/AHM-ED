@@ -59,7 +59,7 @@ program main
     PES_down_ground=0.0_dp; PES_up_ground=0.0_dp; IPES_down_ground=0.0_dp; IPES_up_ground=0.0_dp
 
     call site_potentials(delta,E)
-    call hamiltonian(E,t,U,mu,eps)
+    call hamiltonian(E,t,U,mu)
 
     !-----find ground state energy------------------------
 
@@ -103,7 +103,7 @@ program main
        do i=1,4**nsites
           inner_product_up = (dot_product(PES_up_ground(j,:),eigenvectors(i,:)))**2
           inner_product_down =  (dot_product(PES_down_ground(j,:),eigenvectors(i,:)))**2
-          LDOS(j,i,1) = grand_potential_ground - grand_potential(i)           ! location of the peak
+          LDOS(j,i,1) = grand_potential_ground - grand_potential(i)              ! location of the peak
           LDOS(j,i,2) = (inner_product_up + inner_product_down)*0.5_dp           ! weight of the peak (average up and down spin components)
        end do
     end do
