@@ -4,7 +4,7 @@ module routines
 
 	integer, parameter :: sp = kind(1.0)      !single precison kind
 	integer, parameter :: dp = kind(1.0d0)    !double precision kind
-	real(dp), allocatable, dimension(:) :: grand_potential , v_ground      ! grand potentials (eigenenergies - mu*number electrons)
+	real(dp), allocatable, dimension(:) :: grand_potential      ! grand potentials (eigenenergies - mu*number electrons)
 	real(dp) :: grand_potential_ground=0.0_dp                 ! the lowest grand ensemble energy
 	real(dp), allocatable, dimension(:,:) :: eigenvectors                  ! the 64 eigenvectors
 	integer, parameter :: nsites = 2
@@ -39,7 +39,8 @@ contains
 	  call random_seed(size=seed_size)
 	  allocate(seed(seed_size))
 	  call system_clock(count = clock)
-	  seed=clock + 37*(/(i-1,i=1,seed_size)/)
+	  !seed=clock + 37*(/(i-1,i=1,seed_size)/)
+	  seed=3
 	  call random_seed(put=seed)
 	  deallocate(seed)
 
@@ -436,10 +437,6 @@ contains
 
 		integer :: n_up, n_dn,i,j,ne,isite,istate
 
-		real(dp) :: W00(1)=0.0_dp, W01(2)=0.0_dp, W02(1)=0.0_dp
-		real(dp) :: W10(2)=0.0_dp, W11(4)=0.0_dp, W12(2)=0.0_dp
-		real(dp) :: W20(1)=0.0_dp, W21(2)=0.0_dp, W22(1)=0.0_dp
-
 		real(dp), intent(in) :: E(nsites)
   		real(dp), intent(in) :: mu 
   		real(dp), intent(in) :: U
@@ -453,13 +450,9 @@ contains
 
 		allocate(eigenvectors(total_states,total_states))
 		allocate(grand_potential(total_states))
-		allocate(v_ground(total_states))
 
-		eigenvectors = 0.0_dp
+		eigenvectors = 0
 		grand_potential = 0.0_dp
-		v_ground = 0.0_dp
-		W00=0.0_dp;W01=0.0_dp;W02=0.0_dp;W10=0.0_dp;W11=0.0_dp;W12=0.0_dp
-		W20=0.0_dp;W21=0.0_dp;W22=0.0_dp
 
 		do n_up=0,nsites
 			do n_dn=0,nsites
@@ -509,11 +502,6 @@ contains
 							htemp(istate,istate) = htemp(istate,istate) + U
 						end if
 					end do
-				end do
-
-				write(*,*) n_up,n_dn
-				do i=1,msize(n_up,n_dn)
-					write(*,*) htemp(i,:)
 				end do
 
 				LWORK = 3*msize(n_up,n_dn)
