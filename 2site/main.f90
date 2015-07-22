@@ -1,8 +1,11 @@
 program main
 
-! Author: Patrick Daley          
-! Date last modified : May 26th 2015
-! 
+! Programmer         Date(yy/mm/dd)         Modification
+! -----------        --------------         ------------
+! P. Daley              15/05/18            created code 
+! P. Daley              15/07/20            rewrote LDOS calculations
+! P. Daley              15/07/21            added comments
+!
 ! This code solves the 2site problem with on-site interactions and hopping. The hamiltonian matrices are found by hand and entered into the program.
 ! The matrices are solved using lapack. The wieght of peaks for the LDOS is found by multiplying the ground state vector by matrices representing PES and 
 ! IPES from both cites and computed its inner product with each eigenstate. The location of the peaks is calculated by subtracting or adding (depending
@@ -13,331 +16,174 @@ program main
 ! The fock state basis used in order is (+ is up, - is down) :
 ! 00,0+,+0,0-,-0,++,--,-+,+-,02,20,+2,2+,-2,2-,22
 
-use routines
+	use routines
 
-implicit none
+	implicit none
 
-integer, parameter :: npairs=1000000             ! number of pairs in the ensemble
-real, parameter :: t=-1                           ! hopping
-real, parameter :: U=0                           ! on-site interaction
-real :: mu= U/2                              ! chemical potential (half-filling)
-real, parameter :: delta =6                      ! width of the disorder             
-integer, parameter :: nbins = 200                 ! number of bins for energy bining to get smooth curves
-real, parameter :: frequency_max = 10             ! maximum energy considered in energy bining
-real, parameter :: frequency_min = -10            ! lowest energy considered in energy bining
-real :: frequency_delta=0                           ! step size between different energy bins
-integer :: bin=0                                    ! index for the bin number the peak goes in
-real, dimension(nbins,2) :: DOS=0                        ! array that stores the DOS peaks and all the energy bin frequencies 
-real, dimension(nbins) :: GIPR_num=0, GIPR_den=0, GIPR=0     ! arrays that store the numerator and denominator and the GIPR
-real :: sum=0, sum_half=0                                       ! used to sum the DOS and normalize it
-real :: E(2)=0                                 ! stores the random site potentials
-real :: H0=0,H1(2,2)=0,H2(2,2)=0,H3=0,H4=0,H5(4,4)=0,H6(2,2)=0,H7(2,2)=0,H8=0    ! hamiltonian sub matrices
-real :: W0=0,W1(2)=0,W2(2)=0,W3=0,W4=0,W5(4)=0,W6(2)=0,W7(2)=0,W8=0              ! matrices for eigenvalues
-real :: omega(16)=0                                              ! grand potentials (eigen_energies - mu*number_electrons)
-real :: omega_ground=0                                           ! the lowest grand ensemble energy
-real :: eigenvector(16,16)=0                                     ! the 16 eigenvectors
-real :: v_ground(16)=0                                           ! the ground state eigenvector
-integer :: location(1)=0                                         ! will store the location in the omega array of the lowest energy
-integer :: PES_up(2,16)=0, PES_down(2,16)=0                 ! matrices that operate on eigenstate for photo emmisions (up2 mean remove up spin from cite 2 etc.)
-integer :: IPES_up(2,16)=0,IPES_down(2,16)=0                ! matrices for inverse photo emmisions (up mean add spin up electron)
-integer :: phase_PES_up(2,16)=0, phase_PES_down(2,16)=0     ! matrices to hold -1 or 1 for anticomutation
-integer :: phase_IPES_up(2,16)=0, phase_IPES_down(2,16)=0   ! matrices to hold -1 or 1 for anticomutation
-real :: LDOS1(32,2)=0, LDOS2(32,2)=0
-real :: PES_up_ground(16)=0, PES_down_ground(16)=0, IPES_up_ground(16)=0, IPES_down_ground(16)=0 ! vectors afterPES and IPES matrices have operatated on v_ground
-real :: IPR(32)=0
-real :: inner_product_up(16)=0, inner_product_down(16)=0
-integer :: error=0             ! to store error messages
-integer :: i,j,iterations !counters
-real :: temp=0
-!-----(for lapack)----------------
-integer :: INFO = 0       ! varible that error message is stored in (zero means success)
-integer :: LWORK = 16
-integer :: WORK(16)
+	!-------------------Input Parameters---------------------------------
+	integer, parameter :: npairs = 100000000  ! size of the ensemble
+	real, parameter :: t = -1                 ! nearest neighbour hoping 
+	real, parameter :: delta = 12.0           ! width of disorder for the site potentials 
+  	real, parameter :: U = 4.0                ! on-site interactions
+ 	real, parameter :: mu = U/2               ! chemical potential (half filling)
+ 	integer, parameter :: nbins = 600         ! number of bins for energy bining to get smooth curves
+  	real, parameter :: frequency_max = 12     ! maximum energy considered in energy bining
+  	real, parameter :: frequency_min = -12    ! lowest energy considered in energy bining
 
-open(unit=10,file='2sitedata1.dat', status='replace', action='write',IOSTAT = error)
-if (error/=0) then
-   write(*,*) 'error opening output file. Error number:', error
-end if
+  	!-------------------Dependent Variables------------------------------
+ 	integer :: pair, i, j                        ! counters for loops
+  	integer :: error                    		 ! variable for error message
+  	integer :: location(1)                       ! stores the location in the grand_potential array of the lowest energy
+  	integer :: bin=0                             ! index for the bin number the peak goes in
+  	real, dimension(nsites) :: E                 ! site potentials
+  	real, dimension(nsites,nstates) :: PES_dn_ground, PES_up_ground   ! ground state vector after an down or up photo emmision respectively
+  	real, dimension(nsites,nstates) :: IPES_dn_ground, IPES_up_ground ! ground state vector after an down or up inverse photo emmision respectively
+  	real, dimension(nsites,2*nstates,2) :: LDOS     ! Local DOS (LDOS(i,j,1) is the energy of state j's contribution LDOS for site i and LDOS(i,j,2) is the weight of the contribution)
+  	real :: inner_product_up, inner_product_dn   ! used in the calculation of the weight of LDOS contributions
+  	real :: frequency_delta                      ! step size between different energy bins
+  	real, dimension(nbins,2) :: DOS=0            ! array that stores the DOS peaks and all the frequencies of the energy bins (DOS(i,1) is frequency of bin i and DOS(i,2) is the weight)
+  	real :: IPR(512)                             ! contains the Inverse Participation Ratio (IPR) contributions (non weighted)
+  	real, dimension(nbins) :: GIPR_num=0, GIPR_den=0, GIPR=0  ! arrays that store the numerator and denominator and the weighted IPR
+  	real :: dos_sum                              ! sums the entire DOS so that it can be normalized to 1
+  	real :: half_sum                             ! sums half of the DOS to find the filling 
 
-call random_gen_seed() ! seed the random number generator
-call transformations(PES_up,PES_down,IPES_up,IPES_down,phase_PES_up,phase_PES_down,phase_IPES_up,phase_IPES_down)
-frequency_delta = (frequency_max - frequency_min)/nbins
+  	!-----------------Preparations for the main loop----------------------
 
-pairs: do j=1,npairs
+  	frequency_delta = (frequency_max - frequency_min)/nbins   ! calculating the step size between bins for the energy bining process
 
-E = 0                   !zeroing everything for starting the next loop
-eigenvector = 0
-LDOS1 = 0; LDOS2 = 0; IPR = 0
-omega = 0
-omega_ground = 0
-H0=0;H1=0;H2=0;H3=0;H4=0;H5=0;H6=0;H7=0;H8=0  
-W0=0;W1=0;W2=0;W3=0;W4=0;W5=0;W6=0;W7=0;W8=0
+  	call random_gen_seed()
+  	call transformations()
 
-call site_potentials(delta,E)
+ 	open(unit=10,file='2site.dat', status='replace', action='write', IOSTAT = error)   ! open the file that DOS and GIPR will be printed to
+  	if (error/=0) then                                                                 ! check if there was error when opening the file
+    	write(*,*) "Error opening output file. Error number:", error                   ! if there was an error print the error message
+    	stop                                                                           ! exit the program 
+  	end if
 
-!-------(making matrices and solving eigenstates and eigenvaleus)-----------------------
-H0 = 0
-W0 = H0
-omega(1) = W0
-eigenvector(1,1) = 1
+  	! write informartion about the code to the top of the output file
+  	write(10,*) "# 2site DOS and GIPR created by main.f90 with subroutines in routines.f90"
+	write(10,*) "#"
+	write(10,'(A17,F6.2,2(A5,F6.2))') "# parameters: U =",U,"t =",t,"W =",delta
+	write(10,'(A9,I4,A20,I12)') "# nbins =",nbins, "ensemble size =", npairs 
+	write(10,*) "#"
+	write(10,*) "#  Frequency           DOS            GIPR" 
+  	
+  	!---------------------------Main loop-----------------------------------
 
-!---one electrons states--------------
-H1(1,1) = E(1)
-H1(2,2) = E(2)
-H1(2,1) = t
-H1(1,2) = t
+	pairs: do pair=1,npairs
 
-H2 = H1
+		if (MOD(pair,npairs/100) == 0) then
+     		write(*,*) nint(real(pair)/npairs*100), "%"
+    	end if
 
-call ssyev('v','u',2,H1,2,W1,WORK,LWORK,INFO)
-if (INFO /= 0) then
-   write(*,*) 'Problem with Lapack for H1 matrix. Error code:', INFO
-   stop
-end if
+		! zero variables for each loop
 
-omega(2) = W1(1) - mu*1
-omega(3) = W1(2) - mu*1 
-eigenvector(2,2:3) = H1(1:2,1)
-eigenvector(3,2:3) = H1(1:2,2)
+		v_ground = 0.0
+	    LDOS = 0.0
+	    inner_product_up = 0.0
+	    inner_product_dn = 0.0
 
-call ssyev('v','u',2,H2,2,W2,WORK,LWORK,INFO)
-if (INFO /= 0) then
-   write(*,*) 'Problem with Lapack for H2 matrix. Error code:', INFO
-   stop
-end if
+	    call site_potentials(delta,E)        ! call subroutine to assign the site potentials
+	    call hamiltonian(t,U,mu,E)            ! make and solve the hamiltonians for their eigenvectors and eigenvalues
 
-omega(4) = W2(1) - mu*1
-omega(5) = W2(2) - mu*1
-eigenvector(4,4:5) = H2(1:2,1)
-eigenvector(5,4:5) = H2(1:2,2)
+	    !-----find the ground state grand potential------------------------
 
-!---two electrons states--------------
+	    grand_potential_ground = minval(grand_potential)   ! find the lowest grand ensemble energy
 
-H3 = E(1) + E(2)
-H4 = E(1) + E(2)
-W3 = H3
-W4 = H4
+	    !-----find the corresponding eigenvector----------------
 
-H5(1,1) = E(1) + E(2)
-H5(2,2) = E(1) + E(2)
-H5(3,3) = 2*E(1) + U
-H5(4,4) = 2*E(2) + U
-H5(1,3) = t
-H5(1,4) = t
-H5(2,3) = -t
-H5(2,4) = -t
-H5(3,1) = t
-H5(3,2) = -t
-H5(4,1) = t
-H5(4,2) = -t
+	    location = minloc(grand_potential)          ! find the location of the lowest energy  
+	    v_ground = eigenvectors(location(1),:)      ! set v ground to the eigenvector corresponding to the lowest energy
 
+	    !write(*,*) location(1)
+	    !write(*,*) 2*E
+	    !write(*,*) grand_potential_ground
+	    !write(*,*) v_ground
 
-call ssyev('v','u',4,H5,4,W5,WORK,LWORK,INFO)
-if (INFO /= 0) then
-   write(*,*) 'Problem with Lapack for H5 matrix. Error code:', INFO
-   stop
-end if
+	    ! multiply ground state vector by the PES and IPES matrices
 
-omega(6) = W3 - mu*2
-omega(7) = W4 - mu*2
-omega(8) = W5(1) - mu*2
-omega(9) = W5(2) - mu*2
-omega(10) = W5(3) - mu*2
-omega(11) = W5(4) - mu*2
-eigenvector(6,6) = 1
-eigenvector(7,7) = 1
-eigenvector(8,8:11) = H5(1:4,1)
-eigenvector(9,8:11) = H5(1:4,2)
-eigenvector(10,8:11) = H5(1:4,3)
-eigenvector(11,8:11) = H5(1:4,4)
+	    do j=1,nsites
+	       	do i=1,nstates
+	          	if (PES_up(j,i)==0) then
+	             	PES_up_ground(j,i) = 0.0
+	          	else 
+	             	PES_up_ground(j,i) = v_ground(PES_up(j,i))*phase_PES_up(j,i)
+	          	end if
+	          	if (PES_dn(j,i)==0) then
+	             	PES_dn_ground(j,i) = 0.0
+	          	else 
+	             	PES_dn_ground(j,i) = v_ground(PES_dn(j,i))*phase_PES_dn(j,i)
+	          	end if
+	          	if (IPES_up(j,i)==0) then
+	             	IPES_up_ground(j,i) = 0.0
+	          	else 
+	             	IPES_up_ground(j,i) = v_ground(IPES_up(j,i))*phase_IPES_up(j,i)
+	          	end if
+	          	if (IPES_dn(j,i)==0) then
+	             	IPES_dn_ground(j,i) = 0.0
+	          	else 
+	             	IPES_dn_ground(j,i) = v_ground(IPES_dn(j,i))*phase_IPES_dn(j,i)
+	          	end if
+	       	end do
+	    end do 
 
-!-----three electron states---------------
+	    ! calculate the LDOS for all the cites
 
-H6(1,1) = 2*E(1) + E(2) + U
-H6(2,2) = E(1) + 2*E(2) + U
-H6(2,1) = -t
-H6(1,2) = -t
+	    do j=1,nsites
+	       	do i=1,nstates
+	          	inner_product_up = (dot_product(PES_up_ground(j,:),eigenvectors(i,:)))**2
+	          	inner_product_dn =  (dot_product(PES_dn_ground(j,:),eigenvectors(i,:)))**2
+	          	LDOS(j,i,1) = grand_potential_ground - grand_potential(i)              ! location of the contribution
+	          	LDOS(j,i,2) = (inner_product_up + inner_product_dn)*0.5              ! weight of the contribution (average up and down spin components)
+	       	end do
+	    end do
 
-H7 = H6
+	    do j=1,nsites
+	       	do i=1,nstates
+	          	inner_product_up = (dot_product(IPES_up_ground(j,:),eigenvectors(i,:)))**2
+	          	inner_product_dn =  (dot_product(IPES_dn_ground(j,:),eigenvectors(i,:)))**2
+	          	LDOS(j,i+nstates,1) = grand_potential(i) - grand_potential_ground           ! location of the contribution
+	          	LDOS(j,i+nstates,2) = (inner_product_up + inner_product_dn)*0.5           ! weight of the contribution (average up and down spin components)
+	       	end do
+	    end do
 
-call ssyev('v','u',2,H6,2,W6,WORK,LWORK,INFO)
-if (INFO /= 0) then
-   write(*,*) 'Problem with Lapack for H6 matrix. Error code:', INFO
-   stop
-end if
+	    do i=1,2*nstates
+	       	bin = floor(LDOS(1,i,1)/frequency_delta) + nbins/2  + 1              ! find the bin number for energy bining
+	       	DOS(bin,2) = DOS(bin,2) + (SUM(LDOS(:,i,2)))/real(nsites)            ! make the contribution to that bin
+	       	if (SUM(LDOS(:,i,2)) /= 0) then
+	          	IPR(i) = SUM(LDOS(:,i,2)**2)/(SUM(LDOS(:,i,2))**2)
+	          	GIPR_num(bin) = GIPR_num(bin) + IPR(i)*(SUM(LDOS(:,i,2)))/real(nsites)  ! numerator of the weighted GIPR
+	          	GIPR_den(bin) = GIPR_den(bin) + (SUM(LDOS(:,i,2)))/real(nsites)         ! denominator of the weighted GIPR
+	       	end if
+	    end do
 
-omega(12) = W6(1) - mu*3 
-omega(13) = W6(2) - mu*3 
-eigenvector(12,12:13) = H6(1:2,1)
-eigenvector(13,12:13) = H6(1:2,2)
+	end do pairs
 
-call ssyev('v','u',2,H7,2,W7,WORK,LWORK,INFO)
-if (INFO /= 0) then
-   write(*,*) 'Problem with Lapack for H7 matrix. Error code:', INFO
-   stop
-end if
+	!-----------------Normalize DOS and print to output file--------------------------
 
-omega(14) = W7(1) - mu*3 
-omega(15) = W7(2) - mu*3
-eigenvector(14,14:15) = H7(1:2,1)
-eigenvector(15,14:15) = H7(1:2,2)
+  	dos_sum = DOS(1,2)
+  	DOS(1,1) = frequency_min
 
-!------four electron states-------------------------
+  	do i=2,nbins                                    ! calculate sum to normalize the area under DOS to 1
+     	DOS(i,1) = DOS(i-1,1) + frequency_delta
+     	dos_sum = dos_sum + DOS(i,2)
+  	end do
 
-H8 = 2*E(1) + 2*E(2) + 2*U
-W8 = H8
+  	half_sum = DOS(1,2)
+  	do i=2,nbins/2                                    ! calculate half sum
+  	   half_sum = half_sum + DOS(i,2)
+  	end do
 
-omega(16) = W8 - mu*4
-eigenvector(16,16) = 1
+  	!write(*,*) "Filling:", half_sum/dos_sum
 
-!-----find ground state energy------------------------
+  	do i=1,nbins
+    	GIPR(i) = GIPR_num(i)/GIPR_den(i)
+    	if(DOS(i,2)/dos_sum/frequency_delta < 0.00001) then
+      	GIPR(i) = 1/real(nsites)
+    end if
+    	write(10,*), DOS(i,1), DOS(i,2)/dos_sum/frequency_delta, GIPR(i)
+  	end do
 
-omega_ground = minval(omega)   ! find the lowest grand ensemble energy
-
-!-----find the corresponding eigenvector----------------
-
-location = minloc(omega)  !find the location of the lowest energy  
-v_ground = eigenvector(location(1),:) !set v ground to the eigenvector corresponding to the lowest energy
-
-
-!----find the LDOS for cite 1 (average the magnitude of spin up and spin down)-------
-
-!multiply ground state vector by the matrices
-do i =1,16
-   if (PES_up(1,i)==0) then
-      PES_up_ground(i) = 0
-   else 
-      PES_up_ground(i) = v_ground(PES_up(1,i))*phase_PES_up(1,i)
-   end if
-end do
-
-do i =1,16
-   if (PES_down(1,i)==0) then
-      PES_down_ground(i) = 0
-   else 
-      PES_down_ground(i) = v_ground(PES_down(1,i))*phase_PES_down(1,i)
-   end if
-end do
-
-!do the inner product of the ground state thats been acted on with PES with each eigenstate
-do i=1,16
-   inner_product_up(i) = (dot_product(PES_up_ground,eigenvector(i,:)))**2
-   inner_product_down(i) =  (dot_product(PES_down_ground,eigenvector(i,:)))**2
-   LDOS1(i,1) = omega_ground - omega(i)
-   LDOS1(i,2) = (inner_product_up(i) + inner_product_down(i))*0.5
-end do
-
-
-!multiply ground state vector by the matrices
-do i =1,16
-   if (IPES_up(1,i)==0) then
-      IPES_up_ground(i) = 0
-   else 
-      IPES_up_ground(i) = v_ground(IPES_up(1,i))*phase_IPES_up(1,i)
-   end if
-end do
-
-do i =1,16
-   if (IPES_down(1,i)==0) then
-      IPES_down_ground(i) = 0
-   else 
-      IPES_down_ground(i) = v_ground(IPES_down(1,i))*phase_IPES_down(1,i)
-   end if
-end do
-
-!do the inner product of the ground state thats been acted on with IPES with each eigenstate
-do i=1,16
-   inner_product_up(i) = (dot_product(IPES_up_ground,eigenvector(i,:)))**2
-   inner_product_down(i) =  (dot_product(IPES_down_ground,eigenvector(i,:)))**2
-   LDOS1(i+16,1) = omega(i) - omega_ground
-   LDOS1(i+16,2) = (inner_product_up(i) + inner_product_down(i))*0.5   !average the up spin and down spin magnitudes
-end do
-
-!------find the LDOS for cite 2------------------------------------
-
-!multiply ground state vector by the matrices
-do i =1,16
-   if (PES_up(2,i)==0) then
-      PES_up_ground(i) = 0
-   else 
-      PES_up_ground(i) = v_ground(PES_up(2,i))*phase_PES_up(2,i)
-   end if
-end do
-
-do i =1,16
-   if (PES_down(2,i)==0) then
-      PES_down_ground(i) = 0
-   else 
-      PES_down_ground(i) = v_ground(PES_down(2,i))*phase_PES_down(2,i)
-   end if
-end do
-
-!do the inner product of the ground state thats been acted on with PES with each eigenstate
-do i=1,16
-   inner_product_up(i) = (dot_product(PES_up_ground,eigenvector(i,:)))**2
-   inner_product_down(i) =  (dot_product(PES_down_ground,eigenvector(i,:)))**2
-   LDOS2(i,1) = omega_ground - omega(i)
-   LDOS2(i,2) = (inner_product_up(i) + inner_product_down(i))*0.5
-end do
-
-!multiply ground state vector by the matrices
-do i =1,16
-   if (IPES_up(2,i)==0) then
-      IPES_up_ground(i) = 0
-   else 
-      IPES_up_ground(i) = v_ground(IPES_up(2,i))*phase_IPES_up(2,i)
-   end if
-end do
-
-do i=1,16
-   if (IPES_down(2,i)==0) then
-      IPES_down_ground(i) = 0
-   else 
-      IPES_down_ground(i) = v_ground(IPES_down(2,i))*phase_IPES_down(2,i)
-   end if
-end do
-
-!do the inner product of the ground state thats been acted on with IPES with each eigenstate
-do i=1,16
-   inner_product_up(i) = (dot_product(IPES_up_ground,eigenvector(i,:)))**2
-   inner_product_down(i) =  (dot_product(IPES_down_ground,eigenvector(i,:)))**2
-   LDOS2(i+16,1) = omega(i) - omega_ground                             !calculate the frequency of the peak
-   LDOS2(i+16,2) = (inner_product_up(i) + inner_product_down(i))*0.5   !average the up spin and down spin magnitudes
-end do
-
-do i=1,32
-   bin = floor(LDOS2(i,1)/frequency_delta) + nbins/2 !find the bin number for energy bining
-   DOS(bin,2) = DOS(bin,2) + (LDOS1(i,2) + LDOS2(i,2))*0.5
-   if ((LDOS1(i,2) + LDOS2(i,2))**2 /= 0) then
-      IPR(i) = (LDOS1(i,2)**2 + LDOS2(i,2)**2)/((LDOS1(i,2) + LDOS2(i,2))**2) !calculated for each transition but not weighted with DOS
-   end if
-   GIPR_num(bin) = GIPR_num(bin) + IPR(i)*(LDOS1(i,2) + LDOS2(i,2))*0.5  !numerator of the wieghted GIPR
-   GIPR_den(bin) = GIPR_den(bin) + (LDOS1(i,2) + LDOS2(i,2))*0.5  !denominator of the wieghted GIPR
-end do
-end do pairs
-
-
-sum = DOS(1,2)
-DOS(1,1) = frequency_min
-
-do i=2,nbins
-   DOS(i,1) = DOS(i-1,1) + frequency_delta
-   sum = sum + DOS(i,2)
-end do
-
-!sum_half = DOS(1,2)
-!do i=2,nbins/2
-!   sum_half = sum_half + DOS(i,2) 
-!end do
-
-!write(*,*)'Filling:', sum_half/sum - DOS(nbins/2,2)/sum/2
-!write(*,*) 'Error range:', DOS(nbins/2,2)/sum/2 
-
-do i=1,nbins
-   GIPR(i) = GIPR_num(i)/GIPR_den(i)
-   write(10,*), DOS(i,1), DOS(i,2)/sum/frequency_delta, GIPR(i)
-end do
-
-close(10)
+  	close(10)
 
 end program main

@@ -20,4 +20,4 @@ main.o: main.f90
 	$(CC) $(CFLAGS) -c main.f90
 
 clean: 
-	rm *.o *.mod *~
+	rm -f *.o *.mod *~
