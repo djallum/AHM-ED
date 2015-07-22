@@ -174,13 +174,14 @@ program main
   	   half_sum = half_sum + DOS(i,2)
   	end do
 
-  	!write(*,*) "Filling:", half_sum/dos_sum
+  	!write(*,*) "Filling:", (half_sum-(DOS(nbins/2,2)/2))/dos_sum
+  	!write(*,*) "Filling Error:", DOS(nbins/2,2)/2
 
   	do i=1,nbins
     	GIPR(i) = GIPR_num(i)/GIPR_den(i)
     	if(DOS(i,2)/dos_sum/frequency_delta < 0.00001) then
-      	GIPR(i) = 1/real(nsites)
-    end if
+      		GIPR(i) = 1/real(nsites)
+    	end if
     	write(10,*), DOS(i,1), DOS(i,2)/dos_sum/frequency_delta, GIPR(i)
   	end do
 
