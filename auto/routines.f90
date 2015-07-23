@@ -4,7 +4,7 @@ module routines
 
 	integer, parameter :: sp = kind(1.0)      !single precison kind
 	integer, parameter :: dp = kind(1.0d0)    !double precision kind
-	real :: grand_potential_ground=0.0        ! the lowest grand ensemble energy
+	real :: grand_potential_ground=0.0                 ! the lowest grand ensemble energy
 	integer, parameter :: nsites = 4
 	integer, parameter :: total_states = 256
 	integer, parameter :: int_kind = 4
@@ -16,19 +16,19 @@ module routines
 	integer :: total_states_up
 	integer, dimension(nsites,total_states) :: PES_down=0, PES_up=0, IPES_down=0, IPES_up=0  !matrices for PES and IPES 
 	integer, dimension(nsites,total_states) :: phase_PES_down=0, phase_PES_up=0, phase_IPES_down=0, phase_IPES_up=0  !to get anticommutation sign right
-
-	real, dimension(total_states) :: grand_potential      ! grand potentials (eigenenergies - mu*number electrons)
-	real, dimension(total_states,total_states) :: eigenvectors                  ! the eigenvectors
-	integer, dimension(0:nsites) :: block, temp_block
-	integer, dimension(0:nsites) :: nstates_up
-	integer, allocatable, dimension(:,:) :: neighbours
-	integer, dimension(0:nsites,0:nsites) :: msize, mblock
 	
 	real :: H00(1,1),H01(4,4),H02(6,6),H03(4,4),H04(1,1)
 	real :: H10(4,4),H11(16,16),H12(24,24),H13(16,16),H14(4,4)
 	real :: H20(6,6),H21(24,24),H22(36,36),H23(24,24),H24(6,6)
 	real :: H30(4,4),H31(16,16),H32(24,24),H33(16,16),H34(4,4)
 	real :: H40(1,1),H41(4,4),H42(6,6),H43(4,4),H44(1,1)
+
+	real, dimension(total_states) :: grand_potential      ! grand potentials (eigenenergies - mu*number electrons)
+	real, dimension(total_states,36) :: eigenvectors                  ! the eigenvectors
+	integer, dimension(0:nsites) :: block, temp_block
+	integer, dimension(0:nsites) :: nstates_up
+	integer, allocatable, dimension(:,:) :: neighbours
+	integer, dimension(0:nsites,0:nsites) :: msize, mblock
 
 contains
 
@@ -45,7 +45,6 @@ contains
 	  allocate(seed(seed_size))
 	  call system_clock(count = clock)
 	  seed=clock + 37*(/(i-1,i=1,seed_size)/)
-	  seed=3
 	  call random_seed(put=seed)
 	  deallocate(seed)
 
@@ -610,7 +609,7 @@ contains
 				end do
 
 				do i=1,msize(n_up,n_dn)
-			   		eigenvectors(i+mblock(n_up,n_dn)-1,mblock(n_up,n_dn):mblock(n_up,n_dn)+msize(n_up,n_dn)) = htemp(1:msize(n_up,n_dn),i)  ! eigenvectors
+			   		eigenvectors(i+mblock(n_up,n_dn)-1,1:msize(n_up,n_dn)) = htemp(1:msize(n_up,n_dn),i)  ! eigenvectors
 				end do
 
 				deallocate(htemp,wtemp)

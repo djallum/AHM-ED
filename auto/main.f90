@@ -74,7 +74,18 @@ program main
 	    !-----find the corresponding eigenvector----------------
 
 	    location = minloc(grand_potential)          ! find the location of the lowest energy  
-	    v_ground = eigenvectors(location(1),:)      ! set v ground to the eigenvector corresponding to the lowest energy
+
+	    do n_up=0,nsites
+	    	do n_dn=0,nsites
+	    		!write(*,*) n_up,n_dn,mblock(n_up,n_dn), msize(n_up,n_dn)
+	    		if(location(1) == mblock(n_up,n_dn)) then
+	    			g_up = n_up
+	    			g_dn = n_dn
+	    		end if
+	    	end do
+	   	end do
+	   	high = mblock(g_up,g_dn) + msize(g_up,g_dn) - 1
+	   	v_ground(mblock(g_up,g_dn):high) = eigenvectors(location(1),1:msize(g_up,g_dn))      ! set v ground to the eigenvector corresponding to the lowest energy
 
 	    !multiply ground state vector by the matrices
 
@@ -110,12 +121,12 @@ program main
 		    	low = mblock(n_up,n_dn)
 		       	high = mblock(n_up,n_dn) + msize(n_up,n_dn) - 1
 		       	do i=low,high
-		          	inner_product_up = (dot_product(PES_up_ground(j,low:high),eigenvectors(i,low:high)))**2
-		          	inner_product_down =  (dot_product(PES_down_ground(j,low:high),eigenvectors(i,low:high)))**2
+		          	inner_product_up = (dot_product(PES_up_ground(j,low:high),eigenvectors(i,1:msize(n_up,n_dn))))**2
+		          	inner_product_down =  (dot_product(PES_down_ground(j,low:high),eigenvectors(i,1:msize(n_up,n_dn))))**2
 		          	LDOS(j,i,1) = grand_potential_ground - grand_potential(i)              ! location of the peak
 		          	LDOS(j,i,2) = (inner_product_up + inner_product_down)*0.5           ! weight of the peak (average up and down spin components)
-		          	inner_product_up = (dot_product(IPES_up_ground(j,low:high),eigenvectors(i,low:high)))**2
-		          	inner_product_down =  (dot_product(IPES_down_ground(j,low:high),eigenvectors(i,low:high)))**2
+		          	inner_product_up = (dot_product(IPES_up_ground(j,low:high),eigenvectors(i,1:msize(n_up,n_dn))))**2
+		          	inner_product_down =  (dot_product(IPES_down_ground(j,low:high),eigenvectors(i,1:msize(n_up,n_dn))))**2
 		         	LDOS(j,i+total_states,1) = grand_potential(i) - grand_potential_ground           ! location of the peak
 		         	LDOS(j,i+total_states,2) = (inner_product_up + inner_product_down)*0.5        ! weight of the peak
 		       	end do

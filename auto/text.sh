@@ -21,15 +21,8 @@ echo "module routines
 	integer :: total_states_up
 	integer, dimension(nsites,total_states) :: PES_down=0, PES_up=0, IPES_down=0, IPES_up=0  !matrices for PES and IPES 
 	integer, dimension(nsites,total_states) :: phase_PES_down=0, phase_PES_up=0, phase_IPES_down=0, phase_IPES_up=0  !to get anticommutation sign right
-
-	real, dimension(total_states) :: grand_potential      ! grand potentials (eigenenergies - mu*number electrons)
-	real, dimension(total_states,total_states) :: eigenvectors                  ! the eigenvectors
-	integer, dimension(0:nsites) :: block, temp_block
-	integer, dimension(0:nsites) :: nstates_up
-	integer, allocatable, dimension(:,:) :: neighbours
-	integer, dimension(0:nsites,0:nsites) :: msize, mblock
 	"
-
+max=0
 for ((n_up=0; n_up<=nsites; n_up++)); do
 	echo -n "	real :: "
 	for ((n_dn=0; n_dn<=nsites; n_dn++)); do
@@ -40,11 +33,21 @@ for ((n_up=0; n_up<=nsites; n_up++)); do
 		if [[ $n_dn != $nsites ]]; then
 			echo -n ","
 		fi
+		if [[ "$final" -gt "$max" ]]; then
+			max=$final
+		fi
 	done
 	echo ""
 done
 
 echo "
+	real, dimension(total_states) :: grand_potential      ! grand potentials (eigenenergies - mu*number electrons)
+	real, dimension(total_states,$max) :: eigenvectors                  ! the eigenvectors
+	integer, dimension(0:nsites) :: block, temp_block
+	integer, dimension(0:nsites) :: nstates_up
+	integer, allocatable, dimension(:,:) :: neighbours
+	integer, dimension(0:nsites,0:nsites) :: msize, mblock
+
 contains
 
 	!------------------------------------------------------
@@ -471,7 +474,7 @@ echo "
 				end do
 
 				do i=1,msize(n_up,n_dn)
-			   		eigenvectors(i+mblock(n_up,n_dn)-1,mblock(n_up,n_dn):mblock(n_up,n_dn)+msize(n_up,n_dn)) = htemp(1:msize(n_up,n_dn),i)  ! eigenvectors
+			   		eigenvectors(i+mblock(n_up,n_dn)-1,1:msize(n_up,n_dn)) = htemp(1:msize(n_up,n_dn),i)  ! eigenvectors
 				end do
 
 				deallocate(htemp,wtemp)
