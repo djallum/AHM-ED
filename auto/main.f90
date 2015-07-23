@@ -10,20 +10,20 @@ program main
 	real, parameter :: U=4.0
   	real, parameter :: mu = U/2
   	real, parameter :: delta=12.0
-  	real, dimension(nsites,4**nsites) :: PES_down_ground=0.0, PES_up_ground=0.0, IPES_down_ground=0.0, IPES_up_ground=0.0
-  	real, dimension(4**nsites) :: v_ground
-	real, dimension(nsites,2*(4**nsites),2) :: LDOS=0.0
+  	real, dimension(nsites,total_states) :: PES_down_ground=0.0, PES_up_ground=0.0, IPES_down_ground=0.0, IPES_up_ground=0.0
+  	real, dimension(total_states) :: v_ground
+	real, dimension(nsites,2*total_states,2) :: LDOS=0.0
 	real :: inner_product_up=0.0, inner_product_down=0.0
-	real :: IPR(2*(4**nsites))=0.0
+	real :: IPR(2*total_states)=0.0
 	integer, parameter :: nbins = 300                  ! number of bins for energy bining to get smooth curves
 	real, parameter :: frequency_max = 12              ! maximum energy considered in energy bining
 	real, parameter :: frequency_min = -12             ! lowest energy considered in energy bining
-	real :: frequency_delta=0.0                 ! step size between different energy bins
+	real :: frequency_delta=0.0                        ! step size between different energy bins
 	integer :: bin=0                                   ! index for the bin number the peak goes in
 	real, dimension(nbins,2) :: DOS=0.0                                      ! array that stores the DOS peaks and all the frequencies of the energy bins
 	real, dimension(nbins) :: GIPR_num=0.0, GIPR_den=0.0, GIPR=0.0     ! arrays that store the numerator and denominator and the GIPR
 	real :: dos_sum=0.0, half_sum=0.0
-	integer :: i,j, pair, tsize
+	integer :: i,j, pair
 	integer :: error=0                     ! variable for error message
  	integer :: location(1)=0               ! stores the location in the grand_potential array of the lowest energy 
 

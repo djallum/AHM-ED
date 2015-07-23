@@ -4,7 +4,7 @@ module routines
 
 	integer, parameter :: sp = kind(1.0)      !single precison kind
 	integer, parameter :: dp = kind(1.0d0)    !double precision kind
-	real :: grand_potential_ground=0.0                 ! the lowest grand ensemble energy
+	real :: grand_potential_ground=0.0        ! the lowest grand ensemble energy
 	integer, parameter :: nsites = 4
 	integer, parameter :: total_states = 256
 	integer, parameter :: int_kind = 4
@@ -288,7 +288,7 @@ contains
 		do istate = mblock(n_up,n_dn),mblock(n_up,n_dn) + msize(n_up,n_dn)-1
 			do isite = 1,nsites
 				if (ibits(fock_states(1,istate),isite-1,1) == 1) then
-					do y=1,2
+					do y=1,size(neighbours,2)
 						new_state(1) = IBCLR(fock_states(1,istate),isite-1)
 						inbr = neighbours(isite,y)
 						if (ibits(new_state(1),inbr-1,1) == 0) then
@@ -383,7 +383,7 @@ contains
 					end do
 				end if
 				if (ibits(fock_states(2,istate),isite-1,1) == 1) then
-					do y=1,2
+					do y=1,size(neighbours,2)
 						new_state(2) = IBCLR(fock_states(2,istate),isite-1)
 						inbr = neighbours(isite,y)
 						if (ibits(new_state(2),inbr-1,1) == 0) then
