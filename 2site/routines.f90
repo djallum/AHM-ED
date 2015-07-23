@@ -211,7 +211,7 @@ subroutine transformations()
 	PES_dn(1,2) = 10; phase_PES_dn(1,2) = 1
 	PES_dn(1,3) = 9; phase_PES_dn(1,3) = -1 
 	PES_dn(1,5) = 7; phase_PES_dn(1,4) = -1
-	PES_dn(1,6) = 12;  phase_PES_dn(1,5) = -1
+	PES_dn(1,6) = 12;  phase_PES_dn(1,6) = -1
 	PES_dn(1,8) = 14; phase_PES_dn(1,8) = -1
 	PES_dn(1,11) = 15; phase_PES_dn(1,11) = 1
 	PES_dn(1,13) = 16; phase_PES_dn(1,13) = 1
