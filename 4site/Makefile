@@ -39,4 +39,4 @@ trans.o: trans.f90
 	$(CC) $(CFLAGS) -c trans.f90
 
 clean: 
-	rm *.o
+	rm -f *.o *~ *.mod

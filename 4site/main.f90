@@ -4,11 +4,11 @@ program main
 
   implicit none
 
-  integer, parameter :: npairs=10000         ! size of the ensemble
+  integer, parameter :: npairs=100000         ! size of the ensemble
   integer, parameter :: nsites=4               ! must be set to 4. Included so certain portions can be generalized in the future
   real(dp) :: t = -1.0_dp                      ! hopping term
-  real(dp), parameter :: delta = 6.0_dp        ! width of disorder for the site potentials 
-  real(dp), parameter :: U = 0.0_dp            ! on-site interactions
+  real(dp), parameter :: delta = 12.0_dp        ! width of disorder for the site potentials 
+  real(dp), parameter :: U = 4.0_dp            ! on-site interactions
   real(dp), parameter :: mu=U/2                ! chemical potential (half filling) 
   real(dp) :: E(4)=0.0_dp                ! site potentials
   integer :: pair=0,i=0,j=0, k=0         ! counters
@@ -19,21 +19,20 @@ program main
   real(dp) :: inner_product_up=0.0_dp, inner_product_down=0.0_dp
   real(dp) :: IPR(512)=0.0_dp
   integer, parameter :: nbins = 300                  ! number of bins for energy bining to get smooth curves
-  real, parameter :: frequency_max = 10              ! maximum energy considered in energy bining
-  real, parameter :: frequency_min = -10             ! lowest energy considered in energy bining
+  real, parameter :: frequency_max = 15              ! maximum energy considered in energy bining
+  real, parameter :: frequency_min = -15             ! lowest energy considered in energy bining
   real(dp) :: frequency_delta=0.0_dp                 ! step size between different energy bins
   integer :: bin=0                                   ! index for the bin number the peak goes in
   real(dp), dimension(nbins,2) :: DOS=0.0_dp                                      ! array that stores the DOS peaks and all the frequencies of the energy bins
   real(dp), dimension(nbins) :: GIPR_num=0.0_dp, GIPR_den=0.0_dp, GIPR=0.0_dp     ! arrays that store the numerator and denominator and the GIPR
-  real(dp) :: dos_sum=0.0_dp
-  real(dp) :: eps(4)=0.0_dp
+  real(dp) :: dos_sum=0.0_dp, half_sum=0.0_dp
 
   frequency_delta = (frequency_max - frequency_min)/nbins   ! calculating the step size between bins for the energy bining process
 
   call random_gen_seed()
   call transformations()
 
-  open(unit=10,file='4site_data.dat', status='replace', action='write',IOSTAT = error) ! open the file that DOS and GIPR will be printed to
+  open(unit=10,file='4site.dat', status='replace', action='write',IOSTAT = error) ! open the file that DOS and GIPR will be printed to
   if (error/=0) then
      write(*,*) 'error opening output file. Error number:', error
   end if
@@ -49,7 +48,11 @@ program main
 
   pairs: do pair=1,npairs
    
-    v_ground(256)=0.0_dp; eigenvectors(256,256)=0.0_dp; grand_potential_ground=0.0_dp; grand_potential(256)=0.0_dp
+    if (MOD(pair,npairs/100) == 0) then
+      write(*,*) nint(real(pair)/npairs*100), "%"
+    end if
+
+    v_ground=0.0_dp
     eigenvectors = 0.0_dp
     grand_potential_ground = 0.0_dp
     grand_potential = 0.0_dp
@@ -137,9 +140,16 @@ program main
      dos_sum = dos_sum + DOS(i,2)
   end do
 
+  !half_sum = DOS(1,2)
+  !do i=2,nbins/2                                    ! calculate half sum
+  !   half_sum = half_sum + DOS(i,2)
+  !end do
+
+  write(*,*) "Filling:", half_sum/dos_sum
+
   do i=1,nbins
     GIPR(i) = GIPR_num(i)/GIPR_den(i)
-    if(DOS(i,2)/dos_sum/frequency_delta < 0.000000001) then
+    if(DOS(i,2)/dos_sum/frequency_delta < 0.00001) then
       GIPR(i) = 1/real(nsites)
     end if
     write(10,*), DOS(i,1), DOS(i,2)/dos_sum/frequency_delta, GIPR(i)
