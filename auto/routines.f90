@@ -4,26 +4,31 @@ module routines
 
 	integer, parameter :: sp = kind(1.0)      !single precison kind
 	integer, parameter :: dp = kind(1.0d0)    !double precision kind
-	real(dp), allocatable, dimension(:) :: grand_potential      ! grand potentials (eigenenergies - mu*number electrons)
 	real(dp) :: grand_potential_ground=0.0_dp                 ! the lowest grand ensemble energy
-	real(dp), allocatable, dimension(:,:) :: eigenvectors                  ! the 64 eigenvectors
-	integer, parameter :: nsites = 2
+	integer, parameter :: nsites = 4
+	integer, parameter :: total_states = 256
 	integer, parameter :: int_kind = 4
 	integer, parameter :: STDOUT = 10
-	real (dp), parameter :: PI_ = 4d0*atan(1d0)
 
-	integer, allocatable, dimension(:,:) :: fock_states
-	integer, allocatable, dimension(:) :: states_order
+	integer, dimension(2,total_states) :: fock_states
+	integer, dimension(0:2**nsites) :: states_order
 	integer :: ne
-	integer :: total_states_up, total_states
-	integer, dimension(nsites,4**nsites) :: PES_down=0, PES_up=0, IPES_down=0, IPES_up=0  !matrices for PES and IPES 
-	integer, dimension(nsites,4**nsites) :: phase_PES_down=0, phase_PES_up=0, phase_IPES_down=0, phase_IPES_up=0  !to get anticommutation sign right
+	integer :: total_states_up
+	integer, dimension(nsites,total_states) :: PES_down=0, PES_up=0, IPES_down=0, IPES_up=0  !matrices for PES and IPES 
+	integer, dimension(nsites,total_states) :: phase_PES_down=0, phase_PES_up=0, phase_IPES_down=0, phase_IPES_up=0  !to get anticommutation sign right
 
-	integer, allocatable, dimension(:) :: block, temp_block, nstates_up
+	real(dp), dimension(total_states) :: grand_potential      ! grand potentials (eigenenergies - mu*number electrons)
+	real(dp), dimension(total_states,total_states) :: eigenvectors                  ! the eigenvectors
+	integer, dimension(0:nsites) :: block, temp_block
+	integer, dimension(0:nsites) :: nstates_up
 	integer, allocatable, dimension(:,:) :: neighbours
-	integer, allocatable, dimension(:,:) :: msize, mblock
-
-	real(dp) :: H00(1,1), H01(2,2), H02(1,1), H10(2,2), H11(4,4), H12(2,2), H20(1,1), H21(2,2), H22(1,1)
+	integer, dimension(0:nsites,0:nsites) :: msize, mblock
+	
+	real(dp) :: H00(1,1),H01(4,4),H02(6,6),H03(4,4),H04(1,1)
+	real(dp) :: H10(4,4),H11(16,16),H12(24,24),H13(16,16),H14(4,4)
+	real(dp) :: H20(6,6),H21(24,24),H22(36,36),H23(24,24),H24(6,6)
+	real(dp) :: H30(4,4),H31(16,16),H32(24,24),H33(16,16),H34(4,4)
+	real(dp) :: H40(1,1),H41(4,4),H42(6,6),H43(4,4),H44(1,1)
 
 contains
 
@@ -39,7 +44,7 @@ contains
 	  call random_seed(size=seed_size)
 	  allocate(seed(seed_size))
 	  call system_clock(count = clock)
-	  !seed=clock + 37*(/(i-1,i=1,seed_size)/)
+	  seed=clock + 37*(/(i-1,i=1,seed_size)/)
 	  seed=3
 	  call random_seed(put=seed)
 	  deallocate(seed)
@@ -75,12 +80,7 @@ contains
 		integer :: max_electrons
 
 		total_states_up = 2**nsites
-		total_states = 4**nsites
 		max_electrons = nsites
-
-		allocate(states_order(total_states_up))
-		allocate(block(0:max_electrons),temp_block(0:max_electrons))
-		allocate(nstates_up(0:nsites))
 
 		block = 0  
 	    nstates_up = 0
@@ -102,10 +102,6 @@ contains
 			states_order(temp_block(ne)) = istate
 			temp_block(ne) = temp_block(ne) + 1
 		end do
-
-		deallocate(temp_block)
-
-		allocate(fock_states(2,4**nsites))
 
 		istate = 1
 		do ne=0,max_electrons
@@ -210,20 +206,6 @@ contains
 
 	end subroutine transformations
 
-	!------------------------------------------------------
-
-	subroutine new_state(old,new)
-
-		implicit none
-		
-		integer, intent(in) :: old
-		integer, intent(out) :: new 
-
-
-
-
-	end subroutine new_state
-
 	!-------------------------------------------------------
 
 	subroutine make_neighbours()
@@ -266,9 +248,6 @@ contains
 
 		integer :: n_up,n_dn
 
-		allocate(mblock(0:nsites,0:nsites))
-		allocate(msize(0:nsites,0:nsites))
-
 		do n_up=0,nsites
 			do n_dn=0,nsites
 				msize(n_up,n_dn) = choose(nsites,n_up)*choose(nsites,n_dn)
@@ -295,9 +274,12 @@ contains
 		real(dp), intent(in) :: t
 
 		integer :: istate,isite, inbr,new_state(2),phase, ne, i, trans_site(2), new_index,j,state_index,y,n_up,n_dn
-
-		H00=0.0_dp; H01=0.0_dp; H10=0.0_dp; H20=0.0_dp
-		H02=0.0_dp; H11=0.0_dp; H22=0.0_dp
+		
+		H00=0.0_dp; H01=0.0_dp; H02=0.0_dp; H03=0.0_dp; H04=0.0_dp; 
+		H10=0.0_dp; H11=0.0_dp; H12=0.0_dp; H13=0.0_dp; H14=0.0_dp; 
+		H20=0.0_dp; H21=0.0_dp; H22=0.0_dp; H23=0.0_dp; H24=0.0_dp; 
+		H30=0.0_dp; H31=0.0_dp; H32=0.0_dp; H33=0.0_dp; H34=0.0_dp; 
+		H40=0.0_dp; H41=0.0_dp; H42=0.0_dp; H43=0.0_dp; H44=0.0_dp; 
 
 		call matrix_sizes()
 
@@ -306,8 +288,8 @@ contains
 		do istate = mblock(n_up,n_dn),mblock(n_up,n_dn) + msize(n_up,n_dn)-1
 			do isite = 1,nsites
 				if (ibits(fock_states(1,istate),isite-1,1) == 1) then
-					new_state(1) = IBCLR(fock_states(1,istate),isite-1)
-					do y=1,1
+					do y=1,2
+						new_state(1) = IBCLR(fock_states(1,istate),isite-1)
 						inbr = neighbours(isite,y)
 						if (ibits(new_state(1),inbr-1,1) == 0) then
 							new_state(2) = fock_states(2,istate)
@@ -339,6 +321,10 @@ contains
 											H01(state_index,new_index) = t*phase
 										case(2)
 											H02(state_index,new_index) = t*phase
+										case(3)
+											H03(state_index,new_index) = t*phase
+										case(4)
+											H04(state_index,new_index) = t*phase
 									end select
 								case(1)
 									select case (n_dn)
@@ -348,6 +334,10 @@ contains
 											H11(state_index,new_index) = t*phase
 										case(2)
 											H12(state_index,new_index) = t*phase
+										case(3)
+											H13(state_index,new_index) = t*phase
+										case(4)
+											H14(state_index,new_index) = t*phase
 									end select
 								case(2)
 									select case (n_dn)
@@ -357,14 +347,44 @@ contains
 											H21(state_index,new_index) = t*phase
 										case(2)
 											H22(state_index,new_index) = t*phase
+										case(3)
+											H23(state_index,new_index) = t*phase
+										case(4)
+											H24(state_index,new_index) = t*phase
+									end select
+								case(3)
+									select case (n_dn)
+										case(0)
+											H30(state_index,new_index) = t*phase
+										case(1)
+											H31(state_index,new_index) = t*phase
+										case(2)
+											H32(state_index,new_index) = t*phase
+										case(3)
+											H33(state_index,new_index) = t*phase
+										case(4)
+											H34(state_index,new_index) = t*phase
+									end select
+								case(4)
+									select case (n_dn)
+										case(0)
+											H40(state_index,new_index) = t*phase
+										case(1)
+											H41(state_index,new_index) = t*phase
+										case(2)
+											H42(state_index,new_index) = t*phase
+										case(3)
+											H43(state_index,new_index) = t*phase
+										case(4)
+											H44(state_index,new_index) = t*phase
 									end select
 							end select
 						end if
 					end do
 				end if
 				if (ibits(fock_states(2,istate),isite-1,1) == 1) then
-					new_state(2) = IBCLR(fock_states(2,istate),isite-1)
-					do y=1,1
+					do y=1,2
+						new_state(2) = IBCLR(fock_states(2,istate),isite-1)
 						inbr = neighbours(isite,y)
 						if (ibits(new_state(2),inbr-1,1) == 0) then
 							new_state(1) = fock_states(1,istate)
@@ -396,6 +416,10 @@ contains
 											H01(state_index,new_index) = t*phase
 										case(2)
 											H02(state_index,new_index) = t*phase
+										case(3)
+											H03(state_index,new_index) = t*phase
+										case(4)
+											H04(state_index,new_index) = t*phase
 									end select
 								case(1)
 									select case (n_dn)
@@ -405,6 +429,10 @@ contains
 											H11(state_index,new_index) = t*phase
 										case(2)
 											H12(state_index,new_index) = t*phase
+										case(3)
+											H13(state_index,new_index) = t*phase
+										case(4)
+											H14(state_index,new_index) = t*phase
 									end select
 								case(2)
 									select case (n_dn)
@@ -414,6 +442,36 @@ contains
 											H21(state_index,new_index) = t*phase
 										case(2)
 											H22(state_index,new_index) = t*phase
+										case(3)
+											H23(state_index,new_index) = t*phase
+										case(4)
+											H24(state_index,new_index) = t*phase
+									end select
+								case(3)
+									select case (n_dn)
+										case(0)
+											H30(state_index,new_index) = t*phase
+										case(1)
+											H31(state_index,new_index) = t*phase
+										case(2)
+											H32(state_index,new_index) = t*phase
+										case(3)
+											H33(state_index,new_index) = t*phase
+										case(4)
+											H34(state_index,new_index) = t*phase
+									end select
+								case(4)
+									select case (n_dn)
+										case(0)
+											H40(state_index,new_index) = t*phase
+										case(1)
+											H41(state_index,new_index) = t*phase
+										case(2)
+											H42(state_index,new_index) = t*phase
+										case(3)
+											H43(state_index,new_index) = t*phase
+										case(4)
+											H44(state_index,new_index) = t*phase
 									end select
 							end select
 						end if
@@ -448,17 +506,11 @@ contains
  		real(dp), allocatable, dimension(:) :: wtemp
  		real(dp), allocatable, dimension(:,:) :: htemp
 
-		allocate(eigenvectors(total_states,total_states))
-		allocate(grand_potential(total_states))
-
-		eigenvectors = 0
-		grand_potential = 0.0_dp
-
 		do n_up=0,nsites
 			do n_dn=0,nsites
 				
 				allocate(htemp(msize(n_up,n_dn),msize(n_up,n_dn)),wtemp(msize(n_up,n_dn)))
-
+				
 				select case (n_up)
 					case(0)
 						select case (n_dn)
@@ -468,6 +520,10 @@ contains
 								htemp=H01
 							case(2)
 								htemp=H02
+							case(3)
+								htemp=H03
+							case(4)
+								htemp=H04
 						end select
 					case(1)
 						select case (n_dn)
@@ -477,6 +533,10 @@ contains
 								htemp=H11
 							case(2)
 								htemp=H12
+							case(3)
+								htemp=H13
+							case(4)
+								htemp=H14
 						end select
 					case(2)
 						select case (n_dn)
@@ -486,9 +546,38 @@ contains
 								htemp=H21
 							case(2)
 								htemp=H22
+							case(3)
+								htemp=H23
+							case(4)
+								htemp=H24
+						end select
+					case(3)
+						select case (n_dn)
+							case(0)
+								htemp=H30
+							case(1)
+								htemp=H31
+							case(2)
+								htemp=H32
+							case(3)
+								htemp=H33
+							case(4)
+								htemp=H34
+						end select
+					case(4)
+						select case (n_dn)
+							case(0)
+								htemp=H40
+							case(1)
+								htemp=H41
+							case(2)
+								htemp=H42
+							case(3)
+								htemp=H43
+							case(4)
+								htemp=H44
 						end select
 				end select
-
 
 				wtemp=0.0_dp
 

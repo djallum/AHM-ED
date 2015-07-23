@@ -4,7 +4,7 @@ program main
 
 	implicit none
 
-	integer, parameter :: npairs=1000
+	integer, parameter :: npairs=100000
 	real(dp), parameter :: t = -1.0_dp
 	real(dp) :: E(nsites)
 	real(dp), parameter :: U=4.0_dp
@@ -16,14 +16,14 @@ program main
 	real(dp) :: inner_product_up=0.0_dp, inner_product_down=0.0_dp
 	real(dp) :: IPR(2*(4**nsites))=0.0_dp
 	integer, parameter :: nbins = 300                  ! number of bins for energy bining to get smooth curves
-	real, parameter :: frequency_max = 15              ! maximum energy considered in energy bining
-	real, parameter :: frequency_min = -15             ! lowest energy considered in energy bining
+	real, parameter :: frequency_max = 12              ! maximum energy considered in energy bining
+	real, parameter :: frequency_min = -12             ! lowest energy considered in energy bining
 	real(dp) :: frequency_delta=0.0_dp                 ! step size between different energy bins
 	integer :: bin=0                                   ! index for the bin number the peak goes in
 	real(dp), dimension(nbins,2) :: DOS=0.0_dp                                      ! array that stores the DOS peaks and all the frequencies of the energy bins
 	real(dp), dimension(nbins) :: GIPR_num=0.0_dp, GIPR_den=0.0_dp, GIPR=0.0_dp     ! arrays that store the numerator and denominator and the GIPR
-	real(dp) :: dos_sum=0.0_dp
-	integer :: i,j, pair
+	real(dp) :: dos_sum=0.0_dp, half_sum=0.0_dp
+	integer :: i,j, pair, tsize
 	integer :: error=0                     ! variable for error message
  	integer :: location(1)=0               ! stores the location in the grand_potential array of the lowest energy 
 
@@ -40,7 +40,7 @@ program main
 	write(10,'(A17,F6.2,2(A5,F6.2))') "# parameters: U=",U,"t=",t,"W=",delta
   	write(10,'(A9,I4,A20,I12)') "# nbins=",nbins, "ensemble size=", npairs 
   	write(10,*) "#"
-  	write(10,*) "#     Frequency                      DOS                       GIPR" 
+  	write(10,*) "#     Frequency                     DOS                     GIPR" 
 
 	call num_sites()
 	call random_gen_seed()
@@ -60,6 +60,8 @@ program main
     	inner_product_up=0.0_dp
     	inner_product_down=0.0_dp
     	PES_down_ground=0.0_dp; PES_up_ground=0.0_dp; IPES_down_ground=0.0_dp; IPES_up_ground=0.0_dp
+    	grand_potential = 0
+    	eigenvectors = 0
 
 		call site_potentials(delta,E)
 		call solve_hamiltonian2(E,U,mu)
@@ -103,12 +105,12 @@ program main
 	    ! calculate the LDOS for all the cites
 
 	    do j=1,nsites
-	       do i=1,total_states
-	          inner_product_up = (dot_product(PES_up_ground(j,:),eigenvectors(i,:)))**2
-	          inner_product_down =  (dot_product(PES_down_ground(j,:),eigenvectors(i,:)))**2
-	          LDOS(j,i,1) = grand_potential_ground - grand_potential(i)              ! location of the peak
-	          LDOS(j,i,2) = (inner_product_up + inner_product_down)*0.5_dp           ! weight of the peak (average up and down spin components)
-	       end do
+	       	do i=1,total_states
+	          	inner_product_up = (dot_product(PES_up_ground(j,:),eigenvectors(i,:)))**2
+	          	inner_product_down =  (dot_product(PES_down_ground(j,:),eigenvectors(i,:)))**2
+	          	LDOS(j,i,1) = grand_potential_ground - grand_potential(i)              ! location of the peak
+	          	LDOS(j,i,2) = (inner_product_up + inner_product_down)*0.5_dp           ! weight of the peak (average up and down spin components)
+	       	end do
 	    end do
 
 	    do j=1,nsites
@@ -129,8 +131,7 @@ program main
 	          GIPR_den(bin) = GIPR_den(bin) + (SUM(LDOS(:,i,2)))/real(nsites)         ! denominator of the weighted GIPR
 	       end if
 	    end do
-		
-		deallocate(eigenvectors,grand_potential)
+
 	end do pairs
 
 	dos_sum = DOS(1,2)
@@ -148,6 +149,13 @@ program main
     	end if
     	write(10,*), DOS(i,1), DOS(i,2)/dos_sum/frequency_delta, GIPR(i)
   	end do
+
+  	half_sum = DOS(1,2)
+  	do i=2,nbins/2                                    ! calculate half sum
+  	   half_sum = half_sum + DOS(i,2)
+  	end do
+
+  	write(*,*) "Filling:", half_sum/dos_sum
 
   close(10)
 
