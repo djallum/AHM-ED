@@ -24,6 +24,7 @@ program main
 	real, dimension(nbins) :: GIPR_num=0.0, GIPR_den=0.0, GIPR=0.0     ! arrays that store the numerator and denominator and the GIPR
 	real :: dos_sum=0.0, half_sum=0.0
 	integer :: i,j, pair
+	integer :: g_up,g_dn,low,high,n_up,n_dn
 	integer :: error=0                     ! variable for error message
  	integer :: location(1)=0               ! stores the location in the grand_potential array of the lowest energy 
 
@@ -103,23 +104,23 @@ program main
 	    end do 
 
 	    ! calculate the LDOS for all the cites
-
-	    do j=1,nsites
-	       	do i=1,total_states
-	          	inner_product_up = (dot_product(PES_up_ground(j,:),eigenvectors(i,:)))**2
-	          	inner_product_down =  (dot_product(PES_down_ground(j,:),eigenvectors(i,:)))**2
-	          	LDOS(j,i,1) = grand_potential_ground - grand_potential(i)              ! location of the peak
-	          	LDOS(j,i,2) = (inner_product_up + inner_product_down)*0.5           ! weight of the peak (average up and down spin components)
-	       	end do
+	    do n_up=0,nsites
+		do n_dn=0,nsites
+		    do j=1,nsites
+		    	low = mblock(n_up,n_dn)
+		       	high = mblock(n_up,n_dn) + msize(n_up,n_dn) - 1
+		       	do i=low,high
+		          	inner_product_up = (dot_product(PES_up_ground(j,low:high),eigenvectors(i,low:high)))**2
+		          	inner_product_down =  (dot_product(PES_down_ground(j,low:high),eigenvectors(i,low:high)))**2
+		          	LDOS(j,i,1) = grand_potential_ground - grand_potential(i)              ! location of the peak
+		          	LDOS(j,i,2) = (inner_product_up + inner_product_down)*0.5           ! weight of the peak (average up and down spin components)
+		          	inner_product_up = (dot_product(IPES_up_ground(j,low:high),eigenvectors(i,low:high)))**2
+		          	inner_product_down =  (dot_product(IPES_down_ground(j,low:high),eigenvectors(i,low:high)))**2
+		         	LDOS(j,i+total_states,1) = grand_potential(i) - grand_potential_ground           ! location of the peak
+		         	LDOS(j,i+total_states,2) = (inner_product_up + inner_product_down)*0.5        ! weight of the peak
+		       	end do
+		    end do
 	    end do
-
-	    do j=1,nsites
-	       do i=1,total_states
-	          inner_product_up = (dot_product(IPES_up_ground(j,:),eigenvectors(i,:)))**2
-	          inner_product_down =  (dot_product(IPES_down_ground(j,:),eigenvectors(i,:)))**2
-	          LDOS(j,i+total_states,1) = grand_potential(i) - grand_potential_ground           ! location of the peak
-	          LDOS(j,i+total_states,2) = (inner_product_up + inner_product_down)*0.5        ! weight of the peak
-	       end do
 	    end do
 
 	    do i=1,2*total_states
