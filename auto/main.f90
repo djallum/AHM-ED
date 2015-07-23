@@ -5,31 +5,31 @@ program main
 	implicit none
 
 	integer, parameter :: npairs=100000
-	real(dp), parameter :: t = -1.0_dp
-	real(dp) :: E(nsites)
-	real(dp), parameter :: U=4.0_dp
-  	real(dp), parameter :: mu = U/2
-  	real(dp), parameter :: delta=12.0_dp
-  	real(dp), dimension(nsites,4**nsites) :: PES_down_ground=0.0_dp, PES_up_ground=0.0_dp, IPES_down_ground=0.0_dp, IPES_up_ground=0.0_dp
-  	real(dp), dimension(4**nsites) :: v_ground
-	real(dp), dimension(nsites,2*(4**nsites),2) :: LDOS=0.0_dp
-	real(dp) :: inner_product_up=0.0_dp, inner_product_down=0.0_dp
-	real(dp) :: IPR(2*(4**nsites))=0.0_dp
+	real, parameter :: t = -1.0
+	real :: E(nsites)
+	real, parameter :: U=4.0
+  	real, parameter :: mu = U/2
+  	real, parameter :: delta=12.0
+  	real, dimension(nsites,4**nsites) :: PES_down_ground=0.0, PES_up_ground=0.0, IPES_down_ground=0.0, IPES_up_ground=0.0
+  	real, dimension(4**nsites) :: v_ground
+	real, dimension(nsites,2*(4**nsites),2) :: LDOS=0.0
+	real :: inner_product_up=0.0, inner_product_down=0.0
+	real :: IPR(2*(4**nsites))=0.0
 	integer, parameter :: nbins = 300                  ! number of bins for energy bining to get smooth curves
 	real, parameter :: frequency_max = 12              ! maximum energy considered in energy bining
 	real, parameter :: frequency_min = -12             ! lowest energy considered in energy bining
-	real(dp) :: frequency_delta=0.0_dp                 ! step size between different energy bins
+	real :: frequency_delta=0.0                 ! step size between different energy bins
 	integer :: bin=0                                   ! index for the bin number the peak goes in
-	real(dp), dimension(nbins,2) :: DOS=0.0_dp                                      ! array that stores the DOS peaks and all the frequencies of the energy bins
-	real(dp), dimension(nbins) :: GIPR_num=0.0_dp, GIPR_den=0.0_dp, GIPR=0.0_dp     ! arrays that store the numerator and denominator and the GIPR
-	real(dp) :: dos_sum=0.0_dp, half_sum=0.0_dp
+	real, dimension(nbins,2) :: DOS=0.0                                      ! array that stores the DOS peaks and all the frequencies of the energy bins
+	real, dimension(nbins) :: GIPR_num=0.0, GIPR_den=0.0, GIPR=0.0     ! arrays that store the numerator and denominator and the GIPR
+	real :: dos_sum=0.0, half_sum=0.0
 	integer :: i,j, pair, tsize
 	integer :: error=0                     ! variable for error message
  	integer :: location(1)=0               ! stores the location in the grand_potential array of the lowest energy 
 
 	frequency_delta = (frequency_max - frequency_min)/nbins   ! calculating the step size between bins for the energy bining process
 
-	open(unit=10,file='auto_data.dat', status='replace', action='write',IOSTAT = error) ! open the file that DOS and GIPR will be printed to
+	open(unit=10,file='auto.dat', status='replace', action='write',IOSTAT = error) ! open the file that DOS and GIPR will be printed to
   	if (error/=0) then
     	write(*,*) 'error opening output file. Error number:', error
   	end if
@@ -54,12 +54,12 @@ program main
      		write(*,*) nint(real(pair)/npairs*100), "%"
     	end if
 
-		v_ground=0.0_dp
-    	grand_potential_ground = 0.0_dp
-    	LDOS = 0.0_dp
-    	inner_product_up=0.0_dp
-    	inner_product_down=0.0_dp
-    	PES_down_ground=0.0_dp; PES_up_ground=0.0_dp; IPES_down_ground=0.0_dp; IPES_up_ground=0.0_dp
+		v_ground=0.0
+    	grand_potential_ground = 0.0
+    	LDOS = 0.0
+    	inner_product_up=0.0
+    	inner_product_down=0.0
+    	PES_down_ground=0.0; PES_up_ground=0.0; IPES_down_ground=0.0; IPES_up_ground=0.0
     	grand_potential = 0
     	eigenvectors = 0
 
@@ -80,22 +80,22 @@ program main
 	    do j=1,nsites
 	       do i=1,total_states
 	          if (PES_up(j,i)==0) then
-	             PES_up_ground(j,i) = 0.0_dp
+	             PES_up_ground(j,i) = 0.0
 	          else 
 	             PES_up_ground(j,i) = v_ground(PES_up(j,i))*phase_PES_up(j,i)
 	          end if
 	          if (PES_down(j,i)==0) then
-	             PES_down_ground(j,i) = 0.0_dp
+	             PES_down_ground(j,i) = 0.0
 	          else 
 	             PES_down_ground(j,i) = v_ground(PES_down(j,i))*phase_PES_down(j,i)
 	          end if
 	          if (IPES_up(j,i)==0) then
-	             IPES_up_ground(j,i) = 0.0_dp
+	             IPES_up_ground(j,i) = 0.0
 	          else 
 	             IPES_up_ground(j,i) = v_ground(IPES_up(j,i))*phase_IPES_up(j,i)
 	          end if
 	          if (IPES_down(j,i)==0) then
-	             IPES_down_ground(j,i) = 0.0_dp
+	             IPES_down_ground(j,i) = 0.0
 	          else 
 	             IPES_down_ground(j,i) = v_ground(IPES_down(j,i))*phase_IPES_down(j,i)
 	          end if
@@ -109,7 +109,7 @@ program main
 	          	inner_product_up = (dot_product(PES_up_ground(j,:),eigenvectors(i,:)))**2
 	          	inner_product_down =  (dot_product(PES_down_ground(j,:),eigenvectors(i,:)))**2
 	          	LDOS(j,i,1) = grand_potential_ground - grand_potential(i)              ! location of the peak
-	          	LDOS(j,i,2) = (inner_product_up + inner_product_down)*0.5_dp           ! weight of the peak (average up and down spin components)
+	          	LDOS(j,i,2) = (inner_product_up + inner_product_down)*0.5           ! weight of the peak (average up and down spin components)
 	       	end do
 	    end do
 
@@ -118,7 +118,7 @@ program main
 	          inner_product_up = (dot_product(IPES_up_ground(j,:),eigenvectors(i,:)))**2
 	          inner_product_down =  (dot_product(IPES_down_ground(j,:),eigenvectors(i,:)))**2
 	          LDOS(j,i+total_states,1) = grand_potential(i) - grand_potential_ground           ! location of the peak
-	          LDOS(j,i+total_states,2) = (inner_product_up + inner_product_down)*0.5_dp        ! weight of the peak
+	          LDOS(j,i+total_states,2) = (inner_product_up + inner_product_down)*0.5        ! weight of the peak
 	       end do
 	    end do
 

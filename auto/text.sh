@@ -8,7 +8,7 @@ echo "module routines
 
 	integer, parameter :: sp = kind(1.0)      !single precison kind
 	integer, parameter :: dp = kind(1.0d0)    !double precision kind
-	real(dp) :: grand_potential_ground=0.0_dp                 ! the lowest grand ensemble energy
+	real :: grand_potential_ground=0.0                 ! the lowest grand ensemble energy
 	integer, parameter :: nsites = $nsites
 	integer, parameter :: total_states = $nstates
 	integer, parameter :: int_kind = 4
@@ -21,8 +21,8 @@ echo "module routines
 	integer, dimension(nsites,total_states) :: PES_down=0, PES_up=0, IPES_down=0, IPES_up=0  !matrices for PES and IPES 
 	integer, dimension(nsites,total_states) :: phase_PES_down=0, phase_PES_up=0, phase_IPES_down=0, phase_IPES_up=0  !to get anticommutation sign right
 
-	real(dp), dimension(total_states) :: grand_potential      ! grand potentials (eigenenergies - mu*number electrons)
-	real(dp), dimension(total_states,total_states) :: eigenvectors                  ! the eigenvectors
+	real, dimension(total_states) :: grand_potential      ! grand potentials (eigenenergies - mu*number electrons)
+	real, dimension(total_states,total_states) :: eigenvectors                  ! the eigenvectors
 	integer, dimension(0:nsites) :: block, temp_block
 	integer, dimension(0:nsites) :: nstates_up
 	integer, allocatable, dimension(:,:) :: neighbours
@@ -30,7 +30,7 @@ echo "module routines
 	"
 
 for ((n_up=0; n_up<=nsites; n_up++)); do
-	echo -n "	real(dp) :: "
+	echo -n "	real :: "
 	for ((n_dn=0; n_dn<=nsites; n_dn++)); do
 		term1="$(echo -e "$nsites \n $n_up"| ./math.e)"
 		term2="$(echo -e "$nsites \n $n_dn"| ./math.e)"
@@ -70,14 +70,14 @@ contains
 
 	  implicit none
 
-	  real(dp), intent(in) :: delta
-	  real(dp), intent(out) :: E(nsites)
+	  real, intent(in) :: delta
+	  real, intent(out) :: E(nsites)
 	  real :: random
 	  integer :: i ! counter
 
 	  do i=1,nsites
 	     call random_number(random)              ! gives a random number between 0 and 1
-	     E(i) = delta*(random - 0.5_dp)          ! centers the random numbers about 0
+	     E(i) = delta*(random - 0.5)          ! centers the random numbers about 0
 	  end do
 
 	end subroutine site_potentials
@@ -284,7 +284,7 @@ contains
 
 		implicit none
 
-		real(dp), intent(in) :: t
+		real, intent(in) :: t
 
 		integer :: istate,isite, inbr,new_state(2),phase, ne, i, trans_site(2), new_index,j,state_index,y,n_up,n_dn
 		"
@@ -292,7 +292,7 @@ contains
 for ((n_up=0;n_up<=nsites;n_up++)); do
 	echo -n "		"
 	for ((n_dn=0;n_dn<=nsites;n_dn++)); do
-		echo -n "H$n_up$n_dn=0.0_dp"
+		echo -n "H$n_up$n_dn=0.0"
 		if [[ n_dn != $nsites ]]; then
 			echo -n "; "
 		fi
@@ -427,16 +427,16 @@ echo "
 
 		integer :: n_up, n_dn,i,j,ne,isite,istate
 
-		real(dp), intent(in) :: E(nsites)
-  		real(dp), intent(in) :: mu 
-  		real(dp), intent(in) :: U
+		real, intent(in) :: E(nsites)
+  		real, intent(in) :: mu 
+  		real, intent(in) :: U
 
 		!------for lapack------------
   		integer :: INFO = 0
   		integer :: LWORK
- 		real(dp), allocatable, dimension(:) :: WORK
- 		real(dp), allocatable, dimension(:) :: wtemp
- 		real(dp), allocatable, dimension(:,:) :: htemp
+ 		real, allocatable, dimension(:) :: WORK
+ 		real, allocatable, dimension(:) :: wtemp
+ 		real, allocatable, dimension(:,:) :: htemp
 
 		do n_up=0,nsites
 			do n_dn=0,nsites
@@ -457,7 +457,7 @@ done
 echo "				end select"
 
 echo "
-				wtemp=0.0_dp
+				wtemp=0.0
 
 				do istate=1,msize(n_up,n_dn)
 					do isite=1,nsites
@@ -475,7 +475,7 @@ echo "
 
 			  	allocate(WORK(LWORK))
 
-				call dsyev('v','u',msize(n_up,n_dn),htemp,msize(n_up,n_dn),wtemp,WORK,LWORK,INFO)
+				call ssyev('v','u',msize(n_up,n_dn),htemp,msize(n_up,n_dn),wtemp,WORK,LWORK,INFO)
 				if (INFO /= 0) then
 			   		write(*,*) 'Problem with Lapack. Error code:', INFO
 			   		stop

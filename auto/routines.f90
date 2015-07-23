@@ -4,7 +4,7 @@ module routines
 
 	integer, parameter :: sp = kind(1.0)      !single precison kind
 	integer, parameter :: dp = kind(1.0d0)    !double precision kind
-	real(dp) :: grand_potential_ground=0.0_dp                 ! the lowest grand ensemble energy
+	real :: grand_potential_ground=0.0                 ! the lowest grand ensemble energy
 	integer, parameter :: nsites = 4
 	integer, parameter :: total_states = 256
 	integer, parameter :: int_kind = 4
@@ -17,18 +17,18 @@ module routines
 	integer, dimension(nsites,total_states) :: PES_down=0, PES_up=0, IPES_down=0, IPES_up=0  !matrices for PES and IPES 
 	integer, dimension(nsites,total_states) :: phase_PES_down=0, phase_PES_up=0, phase_IPES_down=0, phase_IPES_up=0  !to get anticommutation sign right
 
-	real(dp), dimension(total_states) :: grand_potential      ! grand potentials (eigenenergies - mu*number electrons)
-	real(dp), dimension(total_states,total_states) :: eigenvectors                  ! the eigenvectors
+	real, dimension(total_states) :: grand_potential      ! grand potentials (eigenenergies - mu*number electrons)
+	real, dimension(total_states,total_states) :: eigenvectors                  ! the eigenvectors
 	integer, dimension(0:nsites) :: block, temp_block
 	integer, dimension(0:nsites) :: nstates_up
 	integer, allocatable, dimension(:,:) :: neighbours
 	integer, dimension(0:nsites,0:nsites) :: msize, mblock
 	
-	real(dp) :: H00(1,1),H01(4,4),H02(6,6),H03(4,4),H04(1,1)
-	real(dp) :: H10(4,4),H11(16,16),H12(24,24),H13(16,16),H14(4,4)
-	real(dp) :: H20(6,6),H21(24,24),H22(36,36),H23(24,24),H24(6,6)
-	real(dp) :: H30(4,4),H31(16,16),H32(24,24),H33(16,16),H34(4,4)
-	real(dp) :: H40(1,1),H41(4,4),H42(6,6),H43(4,4),H44(1,1)
+	real :: H00(1,1),H01(4,4),H02(6,6),H03(4,4),H04(1,1)
+	real :: H10(4,4),H11(16,16),H12(24,24),H13(16,16),H14(4,4)
+	real :: H20(6,6),H21(24,24),H22(36,36),H23(24,24),H24(6,6)
+	real :: H30(4,4),H31(16,16),H32(24,24),H33(16,16),H34(4,4)
+	real :: H40(1,1),H41(4,4),H42(6,6),H43(4,4),H44(1,1)
 
 contains
 
@@ -57,14 +57,14 @@ contains
 
 	  implicit none
 
-	  real(dp), intent(in) :: delta
-	  real(dp), intent(out) :: E(nsites)
+	  real, intent(in) :: delta
+	  real, intent(out) :: E(nsites)
 	  real :: random
 	  integer :: i ! counter
 
 	  do i=1,nsites
 	     call random_number(random)              ! gives a random number between 0 and 1
-	     E(i) = delta*(random - 0.5_dp)          ! centers the random numbers about 0
+	     E(i) = delta*(random - 0.5)          ! centers the random numbers about 0
 	  end do
 
 	end subroutine site_potentials
@@ -271,15 +271,15 @@ contains
 
 		implicit none
 
-		real(dp), intent(in) :: t
+		real, intent(in) :: t
 
 		integer :: istate,isite, inbr,new_state(2),phase, ne, i, trans_site(2), new_index,j,state_index,y,n_up,n_dn
 		
-		H00=0.0_dp; H01=0.0_dp; H02=0.0_dp; H03=0.0_dp; H04=0.0_dp; 
-		H10=0.0_dp; H11=0.0_dp; H12=0.0_dp; H13=0.0_dp; H14=0.0_dp; 
-		H20=0.0_dp; H21=0.0_dp; H22=0.0_dp; H23=0.0_dp; H24=0.0_dp; 
-		H30=0.0_dp; H31=0.0_dp; H32=0.0_dp; H33=0.0_dp; H34=0.0_dp; 
-		H40=0.0_dp; H41=0.0_dp; H42=0.0_dp; H43=0.0_dp; H44=0.0_dp; 
+		H00=0.0; H01=0.0; H02=0.0; H03=0.0; H04=0.0; 
+		H10=0.0; H11=0.0; H12=0.0; H13=0.0; H14=0.0; 
+		H20=0.0; H21=0.0; H22=0.0; H23=0.0; H24=0.0; 
+		H30=0.0; H31=0.0; H32=0.0; H33=0.0; H34=0.0; 
+		H40=0.0; H41=0.0; H42=0.0; H43=0.0; H44=0.0; 
 
 		call matrix_sizes()
 
@@ -495,16 +495,16 @@ contains
 
 		integer :: n_up, n_dn,i,j,ne,isite,istate
 
-		real(dp), intent(in) :: E(nsites)
-  		real(dp), intent(in) :: mu 
-  		real(dp), intent(in) :: U
+		real, intent(in) :: E(nsites)
+  		real, intent(in) :: mu 
+  		real, intent(in) :: U
 
 		!------for lapack------------
   		integer :: INFO = 0
   		integer :: LWORK
- 		real(dp), allocatable, dimension(:) :: WORK
- 		real(dp), allocatable, dimension(:) :: wtemp
- 		real(dp), allocatable, dimension(:,:) :: htemp
+ 		real, allocatable, dimension(:) :: WORK
+ 		real, allocatable, dimension(:) :: wtemp
+ 		real, allocatable, dimension(:,:) :: htemp
 
 		do n_up=0,nsites
 			do n_dn=0,nsites
@@ -579,7 +579,7 @@ contains
 						end select
 				end select
 
-				wtemp=0.0_dp
+				wtemp=0.0
 
 				do istate=1,msize(n_up,n_dn)
 					do isite=1,nsites
@@ -597,7 +597,7 @@ contains
 
 			  	allocate(WORK(LWORK))
 
-				call dsyev('v','u',msize(n_up,n_dn),htemp,msize(n_up,n_dn),wtemp,WORK,LWORK,INFO)
+				call ssyev('v','u',msize(n_up,n_dn),htemp,msize(n_up,n_dn),wtemp,WORK,LWORK,INFO)
 				if (INFO /= 0) then
 			   		write(*,*) 'Problem with Lapack. Error code:', INFO
 			   		stop
