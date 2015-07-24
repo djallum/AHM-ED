@@ -5,8 +5,8 @@ module routines
 	integer, parameter :: sp = kind(1.0)      !single precison kind
 	integer, parameter :: dp = kind(1.0d0)    !double precision kind
 	real :: grand_potential_ground=0.0                 ! the lowest grand ensemble energy
-	integer, parameter :: nsites = 4
-	integer, parameter :: total_states = 256
+	integer, parameter :: nsites = 2
+	integer, parameter :: total_states = 16
 	integer, parameter :: int_kind = 4
 	integer, parameter :: STDOUT = 10
 
@@ -17,20 +17,42 @@ module routines
 	integer, dimension(nsites,total_states) :: PES_down=0, PES_up=0, IPES_down=0, IPES_up=0  !matrices for PES and IPES 
 	integer, dimension(nsites,total_states) :: phase_PES_down=0, phase_PES_up=0, phase_IPES_down=0, phase_IPES_up=0  !to get anticommutation sign right
 	
-	real :: H00(1,1),H01(4,4),H02(6,6),H03(4,4),H04(1,1)
-	real :: H10(4,4),H11(16,16),H12(24,24),H13(16,16),H14(4,4)
-	real :: H20(6,6),H21(24,24),H22(36,36),H23(24,24),H24(6,6)
-	real :: H30(4,4),H31(16,16),H32(24,24),H33(16,16),H34(4,4)
-	real :: H40(1,1),H41(4,4),H42(6,6),H43(4,4),H44(1,1)
+	real :: H00(1,1),H01(2,2),H02(1,1)
+	real :: H10(2,2),H11(4,4),H12(2,2)
+	real :: H20(1,1),H21(2,2),H22(1,1)
 
 	real, dimension(total_states) :: grand_potential      ! grand potentials (eigenenergies - mu*number electrons)
-	real, dimension(total_states,36) :: eigenvectors                  ! the eigenvectors
+	real, dimension(total_states,4) :: eigenvectors                  ! the eigenvectors
 	integer, dimension(0:nsites) :: block, temp_block
 	integer, dimension(0:nsites) :: nstates_up
 	integer, allocatable, dimension(:,:) :: neighbours
 	integer, dimension(0:nsites,0:nsites) :: msize, mblock
 
 contains
+
+	!------------------------------------------------------
+
+	subroutine make_filename(filename,t,U,mu,delta)
+
+		implicit none
+
+		character(len=50), intent(out) :: filename
+		character(len=10) :: mu_str, t_str, U_str, W_str, s_str
+		real, intent(in) :: t,U,mu,delta
+
+		write(mu_str,'(F4.1)') mu
+		write(t_str,'(I2)') nint(t)
+		write(W_str,'(I2)') nint(delta) 
+		write(U_str,'(I2)') nint(U)
+		write(s_str,'(I1)') nsites
+
+		write(filename,'(A)') trim(adjustl('auto')) // trim(adjustl(s_str)) 
+		write(filename,'(A)') trim(adjustl(filename)) // '_t' // trim(adjustl(t_str)) 
+		write(filename,'(A)') trim(adjustl(filename)) // 'U' // trim(adjustl(U_str)) 
+		write(filename,'(A)') trim(adjustl(filename)) // 'W' // trim(adjustl(W_str)) 
+		write(filename,'(A)') trim(adjustl(filename)) // 'mu' // trim(adjustl(mu_str)) // '.dat'
+
+	end subroutine make_filename
 
 	!------------------------------------------------------
 
@@ -274,11 +296,9 @@ contains
 
 		integer :: istate,isite, inbr,new_state(2),phase, ne, i, trans_site(2), new_index,j,state_index,y,n_up,n_dn
 		
-		H00=0.0; H01=0.0; H02=0.0; H03=0.0; H04=0.0; 
-		H10=0.0; H11=0.0; H12=0.0; H13=0.0; H14=0.0; 
-		H20=0.0; H21=0.0; H22=0.0; H23=0.0; H24=0.0; 
-		H30=0.0; H31=0.0; H32=0.0; H33=0.0; H34=0.0; 
-		H40=0.0; H41=0.0; H42=0.0; H43=0.0; H44=0.0; 
+		H00=0.0; H01=0.0; H02=0.0; 
+		H10=0.0; H11=0.0; H12=0.0; 
+		H20=0.0; H21=0.0; H22=0.0; 
 
 		call matrix_sizes()
 
@@ -320,10 +340,6 @@ contains
 											H01(state_index,new_index) = t*phase
 										case(2)
 											H02(state_index,new_index) = t*phase
-										case(3)
-											H03(state_index,new_index) = t*phase
-										case(4)
-											H04(state_index,new_index) = t*phase
 									end select
 								case(1)
 									select case (n_dn)
@@ -333,10 +349,6 @@ contains
 											H11(state_index,new_index) = t*phase
 										case(2)
 											H12(state_index,new_index) = t*phase
-										case(3)
-											H13(state_index,new_index) = t*phase
-										case(4)
-											H14(state_index,new_index) = t*phase
 									end select
 								case(2)
 									select case (n_dn)
@@ -346,36 +358,6 @@ contains
 											H21(state_index,new_index) = t*phase
 										case(2)
 											H22(state_index,new_index) = t*phase
-										case(3)
-											H23(state_index,new_index) = t*phase
-										case(4)
-											H24(state_index,new_index) = t*phase
-									end select
-								case(3)
-									select case (n_dn)
-										case(0)
-											H30(state_index,new_index) = t*phase
-										case(1)
-											H31(state_index,new_index) = t*phase
-										case(2)
-											H32(state_index,new_index) = t*phase
-										case(3)
-											H33(state_index,new_index) = t*phase
-										case(4)
-											H34(state_index,new_index) = t*phase
-									end select
-								case(4)
-									select case (n_dn)
-										case(0)
-											H40(state_index,new_index) = t*phase
-										case(1)
-											H41(state_index,new_index) = t*phase
-										case(2)
-											H42(state_index,new_index) = t*phase
-										case(3)
-											H43(state_index,new_index) = t*phase
-										case(4)
-											H44(state_index,new_index) = t*phase
 									end select
 							end select
 						end if
@@ -415,10 +397,6 @@ contains
 											H01(state_index,new_index) = t*phase
 										case(2)
 											H02(state_index,new_index) = t*phase
-										case(3)
-											H03(state_index,new_index) = t*phase
-										case(4)
-											H04(state_index,new_index) = t*phase
 									end select
 								case(1)
 									select case (n_dn)
@@ -428,10 +406,6 @@ contains
 											H11(state_index,new_index) = t*phase
 										case(2)
 											H12(state_index,new_index) = t*phase
-										case(3)
-											H13(state_index,new_index) = t*phase
-										case(4)
-											H14(state_index,new_index) = t*phase
 									end select
 								case(2)
 									select case (n_dn)
@@ -441,36 +415,6 @@ contains
 											H21(state_index,new_index) = t*phase
 										case(2)
 											H22(state_index,new_index) = t*phase
-										case(3)
-											H23(state_index,new_index) = t*phase
-										case(4)
-											H24(state_index,new_index) = t*phase
-									end select
-								case(3)
-									select case (n_dn)
-										case(0)
-											H30(state_index,new_index) = t*phase
-										case(1)
-											H31(state_index,new_index) = t*phase
-										case(2)
-											H32(state_index,new_index) = t*phase
-										case(3)
-											H33(state_index,new_index) = t*phase
-										case(4)
-											H34(state_index,new_index) = t*phase
-									end select
-								case(4)
-									select case (n_dn)
-										case(0)
-											H40(state_index,new_index) = t*phase
-										case(1)
-											H41(state_index,new_index) = t*phase
-										case(2)
-											H42(state_index,new_index) = t*phase
-										case(3)
-											H43(state_index,new_index) = t*phase
-										case(4)
-											H44(state_index,new_index) = t*phase
 									end select
 							end select
 						end if
@@ -519,10 +463,6 @@ contains
 								htemp=H01
 							case(2)
 								htemp=H02
-							case(3)
-								htemp=H03
-							case(4)
-								htemp=H04
 						end select
 					case(1)
 						select case (n_dn)
@@ -532,10 +472,6 @@ contains
 								htemp=H11
 							case(2)
 								htemp=H12
-							case(3)
-								htemp=H13
-							case(4)
-								htemp=H14
 						end select
 					case(2)
 						select case (n_dn)
@@ -545,36 +481,6 @@ contains
 								htemp=H21
 							case(2)
 								htemp=H22
-							case(3)
-								htemp=H23
-							case(4)
-								htemp=H24
-						end select
-					case(3)
-						select case (n_dn)
-							case(0)
-								htemp=H30
-							case(1)
-								htemp=H31
-							case(2)
-								htemp=H32
-							case(3)
-								htemp=H33
-							case(4)
-								htemp=H34
-						end select
-					case(4)
-						select case (n_dn)
-							case(0)
-								htemp=H40
-							case(1)
-								htemp=H41
-							case(2)
-								htemp=H42
-							case(3)
-								htemp=H43
-							case(4)
-								htemp=H44
 						end select
 				end select
 

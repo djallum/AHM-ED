@@ -1,6 +1,6 @@
 #!/bin/bash
 
-nsites=4
+nsites=2
 nstates="$(echo "$((4**$nsites))")"
 
 echo "module routines
@@ -49,6 +49,30 @@ echo "
 	integer, dimension(0:nsites,0:nsites) :: msize, mblock
 
 contains
+
+	!------------------------------------------------------
+
+	subroutine make_filename(filename,t,U,mu,delta)
+
+		implicit none
+
+		character(len=50), intent(out) :: filename
+		character(len=10) :: mu_str, t_str, U_str, W_str, s_str
+		real, intent(in) :: t,U,mu,delta
+
+		write(mu_str,'(F4.1)') mu
+		write(t_str,'(I2)') nint(t)
+		write(W_str,'(I2)') nint(delta) 
+		write(U_str,'(I2)') nint(U)
+		write(s_str,'(I1)') nsites
+
+		write(filename,'(A)') trim(adjustl('auto')) // trim(adjustl(s_str)) 
+		write(filename,'(A)') trim(adjustl(filename)) // '_t' // trim(adjustl(t_str)) 
+		write(filename,'(A)') trim(adjustl(filename)) // 'U' // trim(adjustl(U_str)) 
+		write(filename,'(A)') trim(adjustl(filename)) // 'W' // trim(adjustl(W_str)) 
+		write(filename,'(A)') trim(adjustl(filename)) // 'mu' // trim(adjustl(mu_str)) // '.dat'
+
+	end subroutine make_filename
 
 	!------------------------------------------------------
 

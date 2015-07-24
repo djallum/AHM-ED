@@ -4,10 +4,10 @@ program main
 
 	implicit none
 
-	integer, parameter :: npairs=100000
-	real, parameter :: t = -1.0
+	integer, parameter :: npairs=1
+	real, parameter :: t = 1.0
 	real :: E(nsites)
-	real, parameter :: U=4.0
+	real, parameter :: U=0.0
   	real, parameter :: mu = U/2
   	real, parameter :: delta=12.0
   	real, dimension(nsites,total_states) :: PES_down_ground=0.0, PES_up_ground=0.0, IPES_down_ground=0.0, IPES_up_ground=0.0
@@ -15,7 +15,7 @@ program main
 	real, dimension(nsites,2*total_states,2) :: LDOS=0.0
 	real :: inner_product_up=0.0, inner_product_down=0.0
 	real :: IPR(2*total_states)=0.0
-	integer, parameter :: nbins = 300                  ! number of bins for energy bining to get smooth curves
+	integer, parameter :: nbins = 3000                  ! number of bins for energy bining to get smooth curves
 	real, parameter :: frequency_max = 12              ! maximum energy considered in energy bining
 	real, parameter :: frequency_min = -12             ! lowest energy considered in energy bining
 	real :: frequency_delta=0.0                        ! step size between different energy bins
@@ -27,21 +27,26 @@ program main
 	integer :: g_up,g_dn,low,high,n_up,n_dn
 	integer :: error=0                     ! variable for error message
  	integer :: location(1)=0               ! stores the location in the grand_potential array of the lowest energy 
+ 	character(len=50) :: filename, str_npairs
 
 	frequency_delta = (frequency_max - frequency_min)/nbins   ! calculating the step size between bins for the energy bining process
 
-	open(unit=10,file='auto.dat', status='replace', action='write',IOSTAT = error) ! open the file that DOS and GIPR will be printed to
+	call make_filename(filename,t,U,mu,delta)
+
+	open(unit=10,file=filename, status='replace', action='write',IOSTAT = error) ! open the file that DOS and GIPR will be printed to
   	if (error/=0) then
     	write(*,*) 'error opening output file. Error number:', error
   	end if
 
+  	write(str_npairs,'(I15)') npairs
   	! write informartion about the code to the top of the output file
   	write(10,*) "# created by main.f90 with subroutines in routines.f90"
   	write(10,*) "#"
 	write(10,'(A17,F6.2,2(A5,F6.2))') "# parameters: U=",U,"t=",t,"W=",delta
-  	write(10,'(A9,I4,A20,I12)') "# nbins=",nbins, "ensemble size=", npairs 
+  	write(10,'(A9,I4)',advance='no') "# nbins=",nbins 
+  	write(10,*) "ensemble size=" // adjustl(trim(str_npairs)) 
   	write(10,*) "#"
-  	write(10,*) "#     Frequency                     DOS                     GIPR" 
+  	write(10,*) "#  Frequency           DOS             GIPR" 
 
 	call num_sites()
 	call random_gen_seed()
@@ -51,9 +56,9 @@ program main
 
 	pairs: do pair=1,npairs
 
-		if (MOD(pair,npairs/100) == 0) then
-     		write(*,*) nint(real(pair)/npairs*100), "%"
-    	end if
+		!if (MOD(pair,npairs/100) == 0) then
+     	!	write(*,*) nint(real(pair)/npairs*100), "%"
+    	!end if
 
 		v_ground=0.0
     	grand_potential_ground = 0.0
@@ -66,6 +71,7 @@ program main
 
 		call site_potentials(delta,E)
 		call solve_hamiltonian2(E,U,mu)
+		write(*,*) "Single Particle Energies:", grand_potential(2:9) 
 
 		!-----find ground state energy------------------------
 
@@ -167,7 +173,14 @@ program main
   	   half_sum = half_sum + DOS(i,2)
   	end do
 
-  	write(*,*) "Filling:", half_sum/dos_sum
+  	write(10,*) "#"
+  	write(10,*) "# Filling:", half_sum/dos_sum
+
+  	do i=1,nbins
+  		if(DOS(i,2) > 0.000001) then
+  			write(*,*) DOS(i,1)
+  		end if
+  	end do
 
   close(10)
 
