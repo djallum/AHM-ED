@@ -4,10 +4,10 @@ program main
 
 	implicit none
 
-	integer, parameter :: npairs=1
-	real, parameter :: t = 1.0
+	integer, parameter :: npairs=100000
+	real, parameter :: t = -1.0
 	real :: E(nsites)
-	real, parameter :: U=0.0
+	real, parameter :: U=4.0
   	real, parameter :: mu = U/2
   	real, parameter :: delta=12.0
   	real, dimension(nsites,total_states) :: PES_down_ground=0.0, PES_up_ground=0.0, IPES_down_ground=0.0, IPES_up_ground=0.0
@@ -15,7 +15,7 @@ program main
 	real, dimension(nsites,2*total_states,2) :: LDOS=0.0
 	real :: inner_product_up=0.0, inner_product_down=0.0
 	real :: IPR(2*total_states)=0.0
-	integer, parameter :: nbins = 3000                  ! number of bins for energy bining to get smooth curves
+	integer, parameter :: nbins = 300                  ! number of bins for energy bining to get smooth curves
 	real, parameter :: frequency_max = 12              ! maximum energy considered in energy bining
 	real, parameter :: frequency_min = -12             ! lowest energy considered in energy bining
 	real :: frequency_delta=0.0                        ! step size between different energy bins
@@ -24,7 +24,7 @@ program main
 	real, dimension(nbins) :: GIPR_num=0.0, GIPR_den=0.0, GIPR=0.0     ! arrays that store the numerator and denominator and the GIPR
 	real :: dos_sum=0.0, half_sum=0.0
 	integer :: i,j, pair
-	integer :: g_up,g_dn,low,high,n_up,n_dn
+	integer :: g_up,g_dn,low,high,n_up,n_dn, min_up,min_dn, max_up, max_dn
 	integer :: error=0                     ! variable for error message
  	integer :: location(1)=0               ! stores the location in the grand_potential array of the lowest energy 
  	character(len=50) :: filename, str_npairs
@@ -56,9 +56,9 @@ program main
 
 	pairs: do pair=1,npairs
 
-		!if (MOD(pair,npairs/100) == 0) then
-     	!	write(*,*) nint(real(pair)/npairs*100), "%"
-    	!end if
+		if (MOD(pair,npairs/100) == 0) then
+     		write(*,*) nint(real(pair)/npairs*100), "%"
+    	end if
 
 		v_ground=0.0
     	grand_potential_ground = 0.0
@@ -71,7 +71,6 @@ program main
 
 		call site_potentials(delta,E)
 		call solve_hamiltonian2(E,U,mu)
-		write(*,*) "Single Particle Energies:", grand_potential(2:9) 
 
 		!-----find ground state energy------------------------
 
@@ -120,9 +119,14 @@ program main
 	       end do
 	    end do 
 
+	    min_up = MAX(0,g_up-1)
+	    max_up = MIN(nsites,g_up+1)
+	    min_dn = MAX(0,g_dn-1)
+	    max_dn = MIN(nsites,g_dn+1)
+
 	    ! calculate the LDOS for all the cites
-	    do n_up=0,nsites
-		do n_dn=0,nsites
+	    do n_up=min_up,max_up
+		do n_dn=min_dn,max_dn
 		    do j=1,nsites
 		    	low = mblock(n_up,n_dn)
 		       	high = mblock(n_up,n_dn) + msize(n_up,n_dn) - 1
@@ -175,12 +179,7 @@ program main
 
   	write(10,*) "#"
   	write(10,*) "# Filling:", half_sum/dos_sum
-
-  	do i=1,nbins
-  		if(DOS(i,2) > 0.000001) then
-  			write(*,*) DOS(i,1)
-  		end if
-  	end do
+  	write(10,*) "# Filling Error:", DOS(nbins/2+1,2)/dos_sum
 
   close(10)
 
