@@ -1,5 +1,7 @@
 module routines
 
+	use lapack
+
 	implicit none
 
 	integer, parameter :: sp = kind(1.0)      !single precison kind
@@ -522,11 +524,6 @@ contains
 		real, intent(in) :: E(nsites)
   		real, intent(in) :: mu 
   		real, intent(in) :: U
-
-		!------for lapack------------
-  		integer :: INFO = 0
-  		integer :: LWORK
- 		real, allocatable, dimension(:) :: WORK
  		real, allocatable, dimension(:) :: wtemp
  		real, allocatable, dimension(:,:) :: htemp
 
@@ -617,17 +614,7 @@ contains
 					end do
 				end do
 
-				LWORK = 3*msize(n_up,n_dn)
-
-			  	allocate(WORK(LWORK))
-
-				call ssyev('v','u',msize(n_up,n_dn),htemp,msize(n_up,n_dn),wtemp,WORK,LWORK,INFO)
-				if (INFO /= 0) then
-			   		write(*,*) 'Problem with Lapack. Error code:', INFO
-			   		stop
-				end if 
-
-				deallocate(WORK)
+				call ssyev_lapack(msize(n_up,n_dn),htemp,wtemp)
 
 				do i=1,msize(n_up,n_dn)
 			   		grand_potential(i+mblock(n_up,n_dn)-1) = wtemp(i) - mu*(n_up+n_dn)  ! grand potentials

@@ -1,6 +1,7 @@
 program main
 
 	use routines
+	use timemachine
 
 	implicit none
 
@@ -28,6 +29,10 @@ program main
 	integer :: error=0                     ! variable for error message
  	integer :: location(1)=0               ! stores the location in the grand_potential array of the lowest energy 
  	character(len=50) :: filename, str_npairs
+ 	!---------- Time machine ----------
+  	integer :: dd,hh,mm,ss,mss    !these variables will represent the amount of time elapsed
+
+  	call time_starter()
 
 	frequency_delta = (frequency_max - frequency_min)/nbins   ! calculating the step size between bins for the energy bining process
 
@@ -54,10 +59,13 @@ program main
 	call make_neighbours()
 	call make_hamiltonian2(t)
 
+	!call time_elapsed(hh,mm,ss,mss) ! timer ends here
+	!write(*,*) "pre:", mm,ss
+
 	pairs: do pair=1,npairs
 
 		if (MOD(pair,npairs/100) == 0) then
-     		write(*,*) nint(real(pair)/npairs*100), "%"
+     		write(*,'(I3,A1)') nint(real(pair)/npairs*100), "%"
     	end if
 
 		v_ground=0.0
@@ -69,8 +77,11 @@ program main
     	grand_potential = 0
     	eigenvectors = 0
 
-		call site_potentials(delta,E)
+		call site_potentials(delta,E) 
 		call solve_hamiltonian2(E,U,mu)
+
+		!call time_elapsed(hh,mm,ss,mss) ! timer ends here
+		!write(*,*) "hamiltonian:", mm,ss
 
 		!-----find ground state energy------------------------
 
@@ -144,6 +155,10 @@ program main
 	    end do
 	    end do
 
+	    !write(*,*) g_up,g_dn
+	    !call time_elapsed(hh,mm,ss,mss) ! timer ends here
+		!write(*,*) "LDOS", mm,ss
+
 	    do i=1,2*total_states
 	       bin = floor(LDOS(2,i,1)/frequency_delta) + nbins/2  +1              !find the bin number for energy bining
 	       DOS(bin,2) = DOS(bin,2) + (SUM(LDOS(:,i,2)))/real(nsites)
@@ -180,6 +195,8 @@ program main
   	write(10,*) "#"
   	write(10,*) "# Filling:", half_sum/dos_sum
   	write(10,*) "# Filling Error:", DOS(nbins/2+1,2)/dos_sum
+
+  	write(*,*) ""
 
   close(10)
 
