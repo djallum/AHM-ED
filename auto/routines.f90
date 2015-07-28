@@ -1,7 +1,7 @@
 module routines
 
 	use lapack
-
+	
 	implicit none
 
 	integer, parameter :: sp = kind(1.0)      !single precison kind
@@ -513,7 +513,7 @@ contains
 
 	!-------------------------------------------------------
 
-	subroutine solve_hamiltonian2(E,U,mu)
+	subroutine solve_hamiltonian1(E,U,mu)
 
 		! this program makes the on diagonal terms and solves it
 
@@ -529,6 +529,122 @@ contains
 
 		do n_up=0,nsites
 			do n_dn=0,nsites
+				
+				allocate(htemp(msize(n_up,n_dn),msize(n_up,n_dn)),wtemp(msize(n_up,n_dn)))
+				
+				select case (n_up)
+					case(0)
+						select case (n_dn)
+							case(0)
+								htemp=H00
+							case(1)
+								htemp=H01
+							case(2)
+								htemp=H02
+							case(3)
+								htemp=H03
+							case(4)
+								htemp=H04
+						end select
+					case(1)
+						select case (n_dn)
+							case(0)
+								htemp=H10
+							case(1)
+								htemp=H11
+							case(2)
+								htemp=H12
+							case(3)
+								htemp=H13
+							case(4)
+								htemp=H14
+						end select
+					case(2)
+						select case (n_dn)
+							case(0)
+								htemp=H20
+							case(1)
+								htemp=H21
+							case(2)
+								htemp=H22
+							case(3)
+								htemp=H23
+							case(4)
+								htemp=H24
+						end select
+					case(3)
+						select case (n_dn)
+							case(0)
+								htemp=H30
+							case(1)
+								htemp=H31
+							case(2)
+								htemp=H32
+							case(3)
+								htemp=H33
+							case(4)
+								htemp=H34
+						end select
+					case(4)
+						select case (n_dn)
+							case(0)
+								htemp=H40
+							case(1)
+								htemp=H41
+							case(2)
+								htemp=H42
+							case(3)
+								htemp=H43
+							case(4)
+								htemp=H44
+						end select
+				end select
+
+				wtemp=0.0
+
+				do istate=1,msize(n_up,n_dn)
+					do isite=1,nsites
+						ne=0
+						ne = ne + IBITS(fock_states(1,istate+mblock(n_up,n_dn)-1),isite-1,1)
+						ne = ne + IBITS(fock_states(2,istate+mblock(n_up,n_dn)-1),isite-1,1)
+						htemp(istate,istate) = htemp(istate,istate) + ne*E(isite)
+						if (ne == 2) then 
+							htemp(istate,istate) = htemp(istate,istate) + U
+						end if
+					end do
+				end do
+
+				call ssyev_lapack1(msize(n_up,n_dn),htemp,wtemp)
+
+				do i=1,msize(n_up,n_dn)
+			   		grand_potential(i+mblock(n_up,n_dn)-1) = wtemp(i) - mu*(n_up+n_dn)  ! grand potentials
+				end do
+
+				deallocate(htemp,wtemp)
+			end do
+		end do
+
+	end subroutine solve_hamiltonian1
+
+	!-------------------------------------------------------
+
+	subroutine solve_hamiltonian2(E,U,mu,min_up,max_up,min_dn,max_dn)
+
+		! this program makes the on diagonal terms and solves it
+
+		implicit none
+
+		integer :: n_up, n_dn,i,j,ne,isite,istate
+
+		real, intent(in) :: E(nsites)
+  		real, intent(in) :: mu 
+  		real, intent(in) :: U
+  		integer, intent(in) :: min_up,max_up,min_dn,max_dn
+ 		real, allocatable, dimension(:) :: wtemp
+ 		real, allocatable, dimension(:,:) :: htemp
+
+		do n_up=min_up,max_up
+			do n_dn=min_dn,max_dn
 				
 				allocate(htemp(msize(n_up,n_dn),msize(n_up,n_dn)),wtemp(msize(n_up,n_dn)))
 				

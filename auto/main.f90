@@ -78,7 +78,7 @@ program main
     	eigenvectors = 0
 
 		call site_potentials(delta,E) 
-		call solve_hamiltonian2(E,U,mu)
+		call solve_hamiltonian1(E,U,mu)
 
 		!call time_elapsed(hh,mm,ss,mss) ! timer ends here
 		!write(*,*) "hamiltonian:", mm,ss
@@ -100,6 +100,14 @@ program main
 	    		end if
 	    	end do
 	   	end do
+
+	   	min_up = MAX(0,g_up-1)
+	    max_up = MIN(nsites,g_up+1)
+	    min_dn = MAX(0,g_dn-1)
+	    max_dn = MIN(nsites,g_dn+1)
+
+	   	call solve_hamiltonian2(E,U,mu,min_up,max_up,min_dn,max_dn)
+
 	   	high = mblock(g_up,g_dn) + msize(g_up,g_dn) - 1
 	   	v_ground(mblock(g_up,g_dn):high) = eigenvectors(location(1),1:msize(g_up,g_dn))      ! set v ground to the eigenvector corresponding to the lowest energy
 
@@ -129,11 +137,6 @@ program main
 	          end if
 	       end do
 	    end do 
-
-	    min_up = MAX(0,g_up-1)
-	    max_up = MIN(nsites,g_up+1)
-	    min_dn = MAX(0,g_dn-1)
-	    max_dn = MIN(nsites,g_dn+1)
 
 	    ! calculate the LDOS for all the cites
 	    do n_up=min_up,max_up
