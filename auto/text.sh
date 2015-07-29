@@ -505,9 +505,10 @@ echo "
   		real, intent(in) :: U
   		integer, intent(in) :: n_up,n_dn
  		real, allocatable, dimension(:) :: wtemp
- 		real, allocatable, dimension(:,:) :: htemp
+ 		real, allocatable, dimension(:,:) :: htemp, vtemp
 				
 		allocate(htemp(msize(n_up,n_dn),msize(n_up,n_dn)),wtemp(msize(n_up,n_dn)))
+		allocate(vtemp(msize(n_up,n_dn),msize(n_up,n_dn)))
 		"
 
 echo "		select case (n_up)"
@@ -537,17 +538,17 @@ echo "
 			end do
 		end do
 
-		call ssyev_lapack(msize(n_up,n_dn),htemp,wtemp)
+		call ssyevr_lapack(msize(n_up,n_dn),htemp,wtemp,vtemp)
 
 		do i=1,msize(n_up,n_dn)
 	   		grand_potential(i+mblock(n_up,n_dn)-1) = wtemp(i) - mu*(n_up+n_dn)  ! grand potentials
 		end do
 
 		do i=1,msize(n_up,n_dn)
-	   		eigenvectors(i+mblock(n_up,n_dn)-1,1:msize(n_up,n_dn)) = htemp(1:msize(n_up,n_dn),i)  ! eigenvectors
+	   		eigenvectors(i+mblock(n_up,n_dn)-1,1:msize(n_up,n_dn)) = vtemp(1:msize(n_up,n_dn),i)  ! eigenvectors
 		end do
 
-		deallocate(htemp,wtemp)
+		deallocate(htemp,wtemp,vtemp)
 
 	end subroutine solve_hamiltonian2
 

@@ -104,6 +104,8 @@ program main
 	    min_dn = MAX(0,g_dn-1)
 	    max_dn = MIN(nsites,g_dn+1)
 
+	    !write(*,*) g_up, g_dn
+
 	    call solve_hamiltonian2(E,U,mu,g_up,g_dn)
 	    if (g_up /= 0) call solve_hamiltonian2(E,U,mu,g_up-1,g_dn)
 	    if (g_dn /= 0) call solve_hamiltonian2(E,U,mu,g_up,g_dn-1)
@@ -111,7 +113,7 @@ program main
 	    if (g_dn /= nsites) call solve_hamiltonian2(E,U,mu,g_up,g_dn+1)
 
 	   	!call time_elapsed(hh,mm,ss,mss) ! timer ends here
-		!write(*,*) "hamiltonian1:", mm,ss
+		!write(*,*) "hamiltonian2:", mm,ss
 
 	   	high = mblock(g_up,g_dn) + msize(g_up,g_dn) - 1
 	   	v_ground(mblock(g_up,g_dn):high) = eigenvectors(location(1),1:msize(g_up,g_dn))      ! set v ground to the eigenvector corresponding to the lowest energy
@@ -145,30 +147,41 @@ program main
 
 	    ! calculate the LDOS for all the cites
 	    do n_up=min_up,max_up
-		do n_dn=min_dn,max_dn
-			if (n_up == min_up .and. n_dn == min_dn .and. g_up /= 0 .and. g_dn /= 0) CYCLE
-			if (n_up == max_up .and. n_dn == max_dn .and. g_up /= nsites .and. g_dn /= nsites) CYCLE
-			if (n_up == max_up .and. n_dn == min_dn .and. g_up /= nsites .and. g_dn /= 0) CYCLE
-			if (n_up == min_up .and. n_dn == max_dn .and. g_up /= 0 .and. g_dn /= nsites) CYCLE
-			if (n_up == g_up .and. n_dn == g_dn) CYCLE
-		    do j=1,nsites
-		    	low = mblock(n_up,n_dn)
-		       	high = mblock(n_up,n_dn) + msize(n_up,n_dn) - 1
-		       	do i=low,high
-		          	inner_product_up = (dot_product(PES_up_ground(j,low:high),eigenvectors(i,1:msize(n_up,n_dn))))**2
-		          	inner_product_down =  (dot_product(PES_down_ground(j,low:high),eigenvectors(i,1:msize(n_up,n_dn))))**2
-		          	LDOS(j,i,1) = grand_potential_ground - grand_potential(i)              ! location of the peak
-		          	LDOS(j,i,2) = (inner_product_up + inner_product_down)*0.5           ! weight of the peak (average up and down spin components)
-		          	inner_product_up = (dot_product(IPES_up_ground(j,low:high),eigenvectors(i,1:msize(n_up,n_dn))))**2
-		          	inner_product_down =  (dot_product(IPES_down_ground(j,low:high),eigenvectors(i,1:msize(n_up,n_dn))))**2
-		         	LDOS(j,i+total_states,1) = grand_potential(i) - grand_potential_ground           ! location of the peak
-		         	LDOS(j,i+total_states,2) = (inner_product_up + inner_product_down)*0.5        ! weight of the peak
-		       	end do
+			do n_dn=min_dn,max_dn
+				if (n_up == min_up .and. n_dn == min_dn .and. g_up /= 0 .and. g_dn /= 0) CYCLE
+				if (n_up == max_up .and. n_dn == max_dn .and. g_up /= nsites .and. g_dn /= nsites) CYCLE
+				if (n_up == max_up .and. n_dn == min_dn .and. g_up /= nsites .and. g_dn /= 0) CYCLE
+				if (n_up == min_up .and. n_dn == max_dn .and. g_up /= 0 .and. g_dn /= nsites) CYCLE
+				if (n_up == g_up .and. n_dn == g_dn) CYCLE
+				low = mblock(n_up,n_dn)
+			    high = mblock(n_up,n_dn) + msize(n_up,n_dn) - 1
+			    do j=1,nsites
+			       	do i=low,high
+			       		inner_product_up = 0
+			       		inner_product_down = 0
+			       		if (n_up == min_up) then
+			          		inner_product_up = (dot_product(PES_up_ground(j,low:high),eigenvectors(i,1:msize(n_up,n_dn))))**2
+			          	end if
+			          	if (n_dn == min_dn) then
+			          		inner_product_down =  (dot_product(PES_down_ground(j,low:high),eigenvectors(i,1:msize(n_up,n_dn))))**2
+			          	end if
+			          	LDOS(j,i,1) = grand_potential_ground - grand_potential(i)              ! location of the peak
+			          	LDOS(j,i,2) = (inner_product_up + inner_product_down)*0.5           ! weight of the peak (average up and down spin components)
+			          	inner_product_up = 0
+			       		inner_product_down = 0
+			          	if (n_up == max_up) then
+			          		inner_product_up = (dot_product(IPES_up_ground(j,low:high),eigenvectors(i,1:msize(n_up,n_dn))))**2
+			          	end if
+			          	if (n_dn == max_dn) then
+			          		inner_product_down =  (dot_product(IPES_down_ground(j,low:high),eigenvectors(i,1:msize(n_up,n_dn))))**2
+			          	end if
+			         	LDOS(j,i+total_states,1) = grand_potential(i) - grand_potential_ground           ! location of the peak
+			         	LDOS(j,i+total_states,2) = (inner_product_up + inner_product_down)*0.5        ! weight of the peak
+			       	end do
+			    end do
 		    end do
 	    end do
-	    end do
 
-	    !write(*,*) g_up,g_dn
 	    !call time_elapsed(hh,mm,ss,mss) ! timer ends here
 		!write(*,*) "LDOS", mm,ss
 
