@@ -507,47 +507,47 @@ echo "
  		real, allocatable, dimension(:) :: wtemp
  		real, allocatable, dimension(:,:) :: htemp
 				
-				allocate(htemp(msize(n_up,n_dn),msize(n_up,n_dn)),wtemp(msize(n_up,n_dn)))
-				"
+		allocate(htemp(msize(n_up,n_dn),msize(n_up,n_dn)),wtemp(msize(n_up,n_dn)))
+		"
 
-echo "				select case (n_up)"
+echo "		select case (n_up)"
 for ((i=0; i<=nsites; i++)); do
-	echo "					case($i)"
-	echo "						select case (n_dn)"
+	echo "			case($i)"
+	echo "				select case (n_dn)"
 	for ((j=0; j<=nsites; j++)); do
-		echo "							case($j)"
-		echo "								htemp=H$i$j"
+		echo "					case($j)"
+		echo "						htemp=H$i$j"
 	done
-	echo "						end select"
+	echo "				end select"
 done
-echo "				end select"
+echo "		end select"
 
 echo "
-				wtemp=0.0
+		wtemp=0.0
 
-				do istate=1,msize(n_up,n_dn)
-					do isite=1,nsites
-						ne=0
-						ne = ne + IBITS(fock_states(1,istate+mblock(n_up,n_dn)-1),isite-1,1)
-						ne = ne + IBITS(fock_states(2,istate+mblock(n_up,n_dn)-1),isite-1,1)
-						htemp(istate,istate) = htemp(istate,istate) + ne*E(isite)
-						if (ne == 2) then 
-							htemp(istate,istate) = htemp(istate,istate) + U
-						end if
-					end do
-				end do
+		do istate=1,msize(n_up,n_dn)
+			do isite=1,nsites
+				ne=0
+				ne = ne + IBITS(fock_states(1,istate+mblock(n_up,n_dn)-1),isite-1,1)
+				ne = ne + IBITS(fock_states(2,istate+mblock(n_up,n_dn)-1),isite-1,1)
+				htemp(istate,istate) = htemp(istate,istate) + ne*E(isite)
+				if (ne == 2) then 
+					htemp(istate,istate) = htemp(istate,istate) + U
+				end if
+			end do
+		end do
 
-				call ssyev_lapack(msize(n_up,n_dn),htemp,wtemp)
+		call ssyev_lapack(msize(n_up,n_dn),htemp,wtemp)
 
-				do i=1,msize(n_up,n_dn)
-			   		grand_potential(i+mblock(n_up,n_dn)-1) = wtemp(i) - mu*(n_up+n_dn)  ! grand potentials
-				end do
+		do i=1,msize(n_up,n_dn)
+	   		grand_potential(i+mblock(n_up,n_dn)-1) = wtemp(i) - mu*(n_up+n_dn)  ! grand potentials
+		end do
 
-				do i=1,msize(n_up,n_dn)
-			   		eigenvectors(i+mblock(n_up,n_dn)-1,1:msize(n_up,n_dn)) = htemp(1:msize(n_up,n_dn),i)  ! eigenvectors
-				end do
+		do i=1,msize(n_up,n_dn)
+	   		eigenvectors(i+mblock(n_up,n_dn)-1,1:msize(n_up,n_dn)) = htemp(1:msize(n_up,n_dn),i)  ! eigenvectors
+		end do
 
-				deallocate(htemp,wtemp)
+		deallocate(htemp,wtemp)
 
 	end subroutine solve_hamiltonian2
 

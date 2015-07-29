@@ -71,8 +71,6 @@ program main
 		v_ground=0.0
     	grand_potential_ground = 0.0
     	LDOS = 0.0
-    	inner_product_up=0.0
-    	inner_product_down=0.0
     	PES_down_ground=0.0; PES_up_ground=0.0; IPES_down_ground=0.0; IPES_up_ground=0.0
     	grand_potential = 0
     	eigenvectors = 0
@@ -81,7 +79,7 @@ program main
 		call solve_hamiltonian1(E,U,mu)
 
 		!call time_elapsed(hh,mm,ss,mss) ! timer ends here
-		!write(*,*) "hamiltonian:", mm,ss
+		!write(*,*) "hamiltonian1:", mm,ss
 
 		!-----find ground state energy------------------------
 
@@ -106,15 +104,14 @@ program main
 	    min_dn = MAX(0,g_dn-1)
 	    max_dn = MIN(nsites,g_dn+1)
 
-	    do n_up=min_up,max_up
-	    do n_dn=min_dn,max_dn
-	    	if (n_up == min_up .and. n_dn == min_dn .and. g_up /= 0 .and. g_dn /= 0) CYCLE
-			if (n_up == max_up .and. n_dn == max_dn .and. g_up /= nsites .and. g_dn /= nsites) CYCLE
-			if (n_up == max_up .and. n_dn == min_dn .and. g_up /= nsites .and. g_dn /= 0) CYCLE
-			if (n_up == min_up .and. n_dn == max_dn .and. g_up /= 0 .and. g_dn /= nsites) CYCLE
-	   		call solve_hamiltonian2(E,U,mu,n_up,n_dn)
-	   	end do
-	   	end do
+	    call solve_hamiltonian2(E,U,mu,g_up,g_dn)
+	    if (g_up /= 0) call solve_hamiltonian2(E,U,mu,g_up-1,g_dn)
+	    if (g_dn /= 0) call solve_hamiltonian2(E,U,mu,g_up,g_dn-1)
+	    if (g_up /= nsites) call solve_hamiltonian2(E,U,mu,g_up+1,g_dn)
+	    if (g_dn /= nsites) call solve_hamiltonian2(E,U,mu,g_up,g_dn+1)
+
+	   	!call time_elapsed(hh,mm,ss,mss) ! timer ends here
+		!write(*,*) "hamiltonian1:", mm,ss
 
 	   	high = mblock(g_up,g_dn) + msize(g_up,g_dn) - 1
 	   	v_ground(mblock(g_up,g_dn):high) = eigenvectors(location(1),1:msize(g_up,g_dn))      ! set v ground to the eigenvector corresponding to the lowest energy
