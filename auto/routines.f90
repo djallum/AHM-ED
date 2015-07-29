@@ -525,12 +525,13 @@ contains
   		real, intent(in) :: mu 
   		real, intent(in) :: U
  		real, allocatable, dimension(:) :: wtemp
- 		real, allocatable, dimension(:,:) :: htemp
+ 		real, allocatable, dimension(:,:) :: htemp, vtemp
 
 		do n_up=0,nsites
 			do n_dn=0,nsites
 				
 				allocate(htemp(msize(n_up,n_dn),msize(n_up,n_dn)),wtemp(msize(n_up,n_dn)))
+				allocate(vtemp(msize(n_up,n_dn),msize(n_up,n_dn)))
 				
 				select case (n_up)
 					case(0)
@@ -614,13 +615,14 @@ contains
 					end do
 				end do
 
-				call ssyev_lapack1(msize(n_up,n_dn),htemp,wtemp)
+				call ssyevr_lapack1(msize(n_up,n_dn),htemp,wtemp,vtemp)
 
 				do i=1,msize(n_up,n_dn)
 			   		grand_potential(i+mblock(n_up,n_dn)-1) = wtemp(i) - mu*(n_up+n_dn)  ! grand potentials
 				end do
 
-				deallocate(htemp,wtemp)
+				deallocate(htemp,wtemp,vtemp)
+
 			end do
 		end do
 
