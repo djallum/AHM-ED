@@ -106,7 +106,15 @@ program main
 	    min_dn = MAX(0,g_dn-1)
 	    max_dn = MIN(nsites,g_dn+1)
 
-	   	call solve_hamiltonian2(E,U,mu,min_up,max_up,min_dn,max_dn)
+	    do n_up=min_up,max_up
+	    do n_dn=min_dn,max_dn
+	    	if (n_up == min_up .and. n_dn == min_dn .and. g_up /= 0 .and. g_dn /= 0) CYCLE
+			if (n_up == max_up .and. n_dn == max_dn .and. g_up /= nsites .and. g_dn /= nsites) CYCLE
+			if (n_up == max_up .and. n_dn == min_dn .and. g_up /= nsites .and. g_dn /= 0) CYCLE
+			if (n_up == min_up .and. n_dn == max_dn .and. g_up /= 0 .and. g_dn /= nsites) CYCLE
+	   		call solve_hamiltonian2(E,U,mu,n_up,n_dn)
+	   	end do
+	   	end do
 
 	   	high = mblock(g_up,g_dn) + msize(g_up,g_dn) - 1
 	   	v_ground(mblock(g_up,g_dn):high) = eigenvectors(location(1),1:msize(g_up,g_dn))      ! set v ground to the eigenvector corresponding to the lowest energy

@@ -492,23 +492,20 @@ echo "
 
 	!-------------------------------------------------------
 
-	subroutine solve_hamiltonian2(E,U,mu,min_up,max_up,min_dn,max_dn)
+	subroutine solve_hamiltonian2(E,U,mu,n_up,n_dn)
 
 		! this program makes the on diagonal terms and solves it
 
 		implicit none
 
-		integer :: n_up, n_dn,i,j,ne,isite,istate
+		integer :: i,j,ne,isite,istate
 
 		real, intent(in) :: E(nsites)
   		real, intent(in) :: mu 
   		real, intent(in) :: U
-  		integer, intent(in) :: min_up,max_up,min_dn,max_dn
+  		integer, intent(in) :: n_up,n_dn
  		real, allocatable, dimension(:) :: wtemp
  		real, allocatable, dimension(:,:) :: htemp
-
-		do n_up=min_up,max_up
-			do n_dn=min_dn,max_dn
 				
 				allocate(htemp(msize(n_up,n_dn),msize(n_up,n_dn)),wtemp(msize(n_up,n_dn)))
 				"
@@ -551,8 +548,6 @@ echo "
 				end do
 
 				deallocate(htemp,wtemp)
-			end do
-		end do
 
 	end subroutine solve_hamiltonian2
 
