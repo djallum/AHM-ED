@@ -141,6 +141,11 @@ program main
 	    ! calculate the LDOS for all the cites
 	    do n_up=min_up,max_up
 		do n_dn=min_dn,max_dn
+			if (n_up == min_up .and. n_dn == min_dn .and. g_up /= 0 .and. g_dn /= 0) CYCLE
+			if (n_up == max_up .and. n_dn == max_dn .and. g_up /= nsites .and. g_dn /= nsites) CYCLE
+			if (n_up == max_up .and. n_dn == min_dn .and. g_up /= nsites .and. g_dn /= 0) CYCLE
+			if (n_up == min_up .and. n_dn == max_dn .and. g_up /= 0 .and. g_dn /= nsites) CYCLE
+			if (n_up == g_up .and. n_dn == g_dn) CYCLE
 		    do j=1,nsites
 		    	low = mblock(n_up,n_dn)
 		       	high = mblock(n_up,n_dn) + msize(n_up,n_dn) - 1
@@ -198,8 +203,6 @@ program main
   	write(10,*) "#"
   	write(10,*) "# Filling:", half_sum/dos_sum
   	write(10,*) "# Filling Error:", DOS(nbins/2+1,2)/dos_sum
-
-  	write(*,*) ""
 
   close(10)
 
