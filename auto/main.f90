@@ -50,8 +50,7 @@ program main
 	write(10,'(A17,F6.2,2(A5,F6.2))') "# parameters: U=",U,"t=",t,"W=",delta
   	write(10,'(A9,I4)',advance='no') "# nbins=",nbins 
   	write(10,*) "ensemble size=" // adjustl(trim(str_npairs)) 
-  	write(10,*) "#"
-  	write(10,*) "#  Frequency           DOS             GIPR" 
+  	write(10,*) "#" 
 
 	call num_sites()
 	call random_gen_seed()
@@ -74,6 +73,7 @@ program main
     	PES_down_ground=0.0; PES_up_ground=0.0; IPES_down_ground=0.0; IPES_up_ground=0.0
     	grand_potential = 0
     	eigenvectors = 0
+    	e_ground = 0
 
 		call site_potentials(delta,E) 
 		call solve_hamiltonian1(E,U,mu)
@@ -199,6 +199,16 @@ program main
     	dos_sum = dos_sum + DOS(i,2)
   	end do
 
+  	 half_sum = DOS(1,2)
+  	do i=2,nbins/2                                    ! calculate half sum
+  	   half_sum = half_sum + DOS(i,2)
+  	end do
+
+  	write(10,*) "# Filling:", half_sum/dos_sum
+  	write(10,*) "# Filling Error:", DOS(nbins/2+1,2)/dos_sum
+  	write(10,*) "#"
+  	write(10,*) "#  Frequency           DOS             GIPR"
+
   	do i=1,nbins
     	GIPR(i) = GIPR_num(i)/GIPR_den(i)
     	if(DOS(i,2)/dos_sum/frequency_delta < 0.00001) then
@@ -206,15 +216,6 @@ program main
     	end if
     	write(10,*), DOS(i,1), DOS(i,2)/dos_sum/frequency_delta, GIPR(i)
   	end do
-
-  	half_sum = DOS(1,2)
-  	do i=2,nbins/2                                    ! calculate half sum
-  	   half_sum = half_sum + DOS(i,2)
-  	end do
-
-  	write(10,*) "#"
-  	write(10,*) "# Filling:", half_sum/dos_sum
-  	write(10,*) "# Filling Error:", DOS(nbins/2+1,2)/dos_sum
 
   close(10)
 
