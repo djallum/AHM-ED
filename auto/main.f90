@@ -27,7 +27,7 @@ program main
 	integer :: i,j, pair
 	integer :: g_up,g_dn,low,high,n_up,n_dn, min_up,min_dn, max_up, max_dn
 	integer :: error=0                     ! variable for error message
- 	integer :: location(1)=0               ! stores the location in the grand_potential array of the lowest energy 
+ 	integer :: location(1)=0, groundloc(2)               ! stores the location in the grand_potential array of the lowest energy 
  	character(len=50) :: filename, str_npairs
  	!---------- Time machine ----------
   	integer :: dd,hh,mm,ss,mss    !these variables will represent the amount of time elapsed
@@ -83,21 +83,15 @@ program main
 
 		!-----find ground state energy------------------------
 
-	    grand_potential_ground = minval(grand_potential)   ! find the lowest grand ensemble energy
+	    grand_potential_ground = minval(e_ground)   ! find the lowest grand ensemble energy
 
-	    !-----find the corresponding eigenvector----------------
+	    !-----find the corresponding eigenvector---------------
 
-	    location = minloc(grand_potential)          ! find the location of the lowest energy  
+	    groundloc = minloc(e_ground)
+	    g_up = groundloc(1) - 1 
+	    g_dn = groundloc(2) - 1
 
-	    do n_up=0,nsites
-	    	do n_dn=0,nsites
-	    		!write(*,*) n_up,n_dn,mblock(n_up,n_dn), msize(n_up,n_dn)
-	    		if(location(1) == mblock(n_up,n_dn)) then
-	    			g_up = n_up
-	    			g_dn = n_dn
-	    		end if
-	    	end do
-	   	end do
+	    location = mblock(g_up,g_dn)          ! find the location of the lowest energy  
 
 	   	min_up = MAX(0,g_up-1)
 	    max_up = MIN(nsites,g_up+1)

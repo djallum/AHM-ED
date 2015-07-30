@@ -43,6 +43,7 @@ for ((n_up=0; n_up<=nsites; n_up++)); do
 done
 
 echo "
+	real, dimension(0:nsites,0:nsites) :: e_ground
 	real, dimension(total_states) :: grand_potential      ! grand potentials (eigenenergies - mu*number electrons)
 	real, dimension(total_states,$max) :: eigenvectors                  ! the eigenvectors
 	integer, dimension(0:nsites) :: block, temp_block
@@ -481,9 +482,7 @@ echo "
 
 				call ssyevr_lapack1(msize(n_up,n_dn),htemp,wtemp,vtemp)
 
-				do i=1,msize(n_up,n_dn)
-			   		grand_potential(i+mblock(n_up,n_dn)-1) = wtemp(i) - mu*(n_up+n_dn)  ! grand potentials
-				end do
+				e_ground(n_up,n_dn) = wtemp(1) - mu*(n_up+n_dn)  ! grand potentials
 
 				deallocate(htemp,wtemp,vtemp)
 
