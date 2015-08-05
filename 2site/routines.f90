@@ -28,8 +28,7 @@ subroutine random_gen_seed()
 	call random_seed(size = seed_size)       ! find the size of the random generators seed
 	allocate(seed(seed_size))                ! make our seed that same size
 	call system_clock(count = clock)         ! find the system time
-	!seed=clock + 37*(/(i-1,i=1,seed_size)/) ! create our seed using the clock
-	seed=3
+	seed=clock + 37*(/(i-1,i=1,seed_size)/) ! create our seed using the clock
 	call random_seed(put=seed)               ! seed the random generator with our seed
 
 	deallocate(seed)
@@ -39,6 +38,8 @@ end subroutine random_gen_seed
 !************************************************************************************
 
 subroutine site_potentials(delta,E)
+
+	! assigns site potentials chosen from a uniform distribution bounded between -W/2 and W/2
 
 	real, dimension(nsites), intent(out) :: E  ! site potentials
 	real, intent(in) :: delta                  ! width of disorder
@@ -55,7 +56,37 @@ end subroutine site_potentials
 
 !************************************************************************************
 
+subroutine make_filename(filename,t,U,mu,delta)
+
+	! assigns a filename for the output file based on parameters of the simulation
+
+	implicit none
+
+	character(len=50), intent(out) :: filename
+	character(len=10) :: mu_str, t_str, U_str, W_str, s_str
+	real, intent(in) :: t,U,mu,delta
+
+	write(mu_str,'(F4.1)') mu
+	write(t_str,'(I2)') nint(t)
+	write(W_str,'(I2)') nint(delta) 
+	write(U_str,'(I2)') nint(U)
+	write(s_str,'(I1)') nsites
+
+	write(filename,'(A)') trim(adjustl('auto')) // trim(adjustl(s_str)) 
+	write(filename,'(A)') trim(adjustl(filename)) // '_t' // trim(adjustl(t_str)) 
+	write(filename,'(A)') trim(adjustl(filename)) // 'U' // trim(adjustl(U_str)) 
+	write(filename,'(A)') trim(adjustl(filename)) // 'W' // trim(adjustl(W_str)) 
+	write(filename,'(A)') trim(adjustl(filename)) // 'mu' // trim(adjustl(mu_str)) // '.dat'
+
+end subroutine make_filename
+
+!************************************************************************************
+
 subroutine hamiltonian(t,U,mu,E)
+
+	! The hamiltonians were calculated by hand and are hard coded in. Each of the sub matrices are solved for eigenvalues and eigenvectors using LAPACK.
+	! The eigenvalues are stored in the array grand_potential and the eigenvectors are stored in matrix eigenvectors. 
+	! Eigenvectors(i,:) is the eigenvector of the ith state
 
 	implicit none
 
@@ -193,6 +224,10 @@ end subroutine hamiltonian
 
 subroutine transformations()
 
+	! The lookup tables for PES and IPES between fock state basis is entered. They were calculated by hand.
+	! PES_up(j,i) is a photo emmision of an up electron from site j of state i.
+	! The phase matrices are used to keep track of the anticommutations
+
 	PES_up = 0; PES_dn = 0
 	IPES_up = 0; IPES_dn = 0
 	phase_PES_up = 0; phase_PES_dn = 0
@@ -223,7 +258,7 @@ subroutine transformations()
 	IPES_up(1,12) = 9;  phase_IPES_up(1,12) = 1
 	IPES_up(1,13) = 11; phase_IPES_up(1,13) = 1
 	IPES_up(1,14) = 7; phase_IPES_up(1,14) = 1
-	IPES_up(1,16) = 15; phase_IPES_up(1,16) = -1           !found by hand
+	IPES_up(1,16) = 15; phase_IPES_up(1,16) = -1          
 
 	IPES_dn(1,4) = 1; phase_IPES_dn(1,4) = 1
 	IPES_dn(1,7) = 5; phase_IPES_dn(1,7) = -1
@@ -259,7 +294,7 @@ subroutine transformations()
 	IPES_up(2,12) = 10; phase_IPES_up(2,12) = 1
 	IPES_up(2,13) = 8; phase_IPES_up(2,13) = -1
 	IPES_up(2,15) = 7; phase_IPES_up(2,15) = -1
-	IPES_up(2,16) = 14; phase_IPES_up(2,16) = -1           !found by hand
+	IPES_up(2,16) = 14; phase_IPES_up(2,16) = -1          
 
 	IPES_dn(2,5) = 1; phase_IPES_dn(2,5) = 1
 	IPES_dn(2,7) = 4; phase_IPES_dn(2,7) = 1
