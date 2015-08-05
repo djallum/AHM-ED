@@ -1,5 +1,5 @@
 <html>
-<h2>2 Site Model</h2>
+<h1>2 Site Model</h1>
 <p> The files contained in the directory are for the simulation of the tight binding hubbard model with interactions for an ensemble of 2 site systems. The program will calculate the density of states (DOS), generalized inverse participaion ratio (GIPR) and the filling of the DOS.</p> 
 <p>Information regarding the use and structure of the code can be found in this README file. Addiontianal information regarding terminology and the problem being solved refer to the README in the AH-onsite directory (the parent directory of this one). The directory <em>validation</em> contains a pdf and .tex file (and images used in the files) that outlines the tests conducted and validation of the program.</p>
 <h3>1. Downloading files</h3>
