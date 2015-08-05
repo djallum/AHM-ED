@@ -5,6 +5,8 @@ program main
 ! P. Daley              15/05/18            created code 
 ! P. Daley              15/07/20            rewrote LDOS calculations
 ! P. Daley              15/07/21            added comments
+! P. Daley              15/07/23            corrected phase_PES
+! P. Daley              15/08/05            added comments
 !
 ! This code solves the 2site problem with on-site interactions and hopping. The hamiltonian matrices are found by hand and entered into the program.
 ! The matrices are solved using lapack. The wieght of peaks for the LDOS is found by multiplying the ground state vector by matrices representing PES and 
@@ -21,11 +23,11 @@ program main
 	implicit none
 
 	!-------------------Input Parameters---------------------------------
-	integer, parameter :: npairs = 100000000  ! size of the ensemble
+	integer, parameter :: npairs = 10000000  ! size of the ensemble
 	real, parameter :: t = -1                 ! nearest neighbour hoping 
 	real, parameter :: delta = 12.0           ! width of disorder for the site potentials 
   	real, parameter :: U = 4.0                ! on-site interactions
- 	real, parameter :: mu = U/2               ! chemical potential (half filling)
+ 	real :: mu = U/2               ! chemical potential (half filling)
  	integer, parameter :: nbins = 600         ! number of bins for energy bining to get smooth curves
   	real, parameter :: frequency_max = 12     ! maximum energy considered in energy bining
   	real, parameter :: frequency_min = -12    ! lowest energy considered in energy bining
@@ -46,18 +48,21 @@ program main
   	real, dimension(nbins) :: GIPR_num=0, GIPR_den=0, GIPR=0  ! arrays that store the numerator and denominator and the weighted IPR
   	real :: dos_sum                              ! sums the entire DOS so that it can be normalized to 1
   	real :: half_sum                             ! sums half of the DOS to find the filling 
+  	character(len=50) :: filename
 
   	!-----------------Preparations for the main loop----------------------
 
   	frequency_delta = (frequency_max - frequency_min)/nbins   ! calculating the step size between bins for the energy bining process
 
   	call random_gen_seed()
-  	call transformations()
+  	call transformations()    ! calls subroutines in routines.f90. It makes the lookup tables for PES and IPES.
 
- 	open(unit=10,file='2site.dat', status='replace', action='write', IOSTAT = error)   ! open the file that DOS and GIPR will be printed to
-  	if (error/=0) then                                                                 ! check if there was error when opening the file
-    	write(*,*) "Error opening output file. Error number:", error                   ! if there was an error print the error message
-    	stop                                                                           ! exit the program 
+  	call make_filename(filename,t,U,mu,delta)   ! calls subroutine in routines.f90 that assigns a filename based on the input parameters
+
+ 	open(unit=10,file=filename, status='replace', action='write', IOSTAT = error)   ! open the file that DOS and GIPR will be printed to
+  	if (error/=0) then                                                              ! check if there was error when opening the file
+    	write(*,*) "Error opening output file. Error number:", error                ! if there was an error print the error message
+    	stop                                                                        ! exit the program 
   	end if
 
   	! write informartion about the code to the top of the output file
@@ -66,15 +71,16 @@ program main
 	write(10,'(A17,F6.2,2(A5,F6.2))') "# parameters: U =",U,"t =",t,"W =",delta
 	write(10,'(A9,I4,A20,I12)') "# nbins =",nbins, "ensemble size =", npairs 
 	write(10,*) "#"
-	write(10,*) "#  Frequency           DOS            GIPR" 
   	
   	!---------------------------Main loop-----------------------------------
 
 	pairs: do pair=1,npairs
 
+		if (npairs < 100) then goto 15                     ! skips the pecentage completion loop if npairs < 100 since it would cause a segmentation fault
 		if (MOD(pair,npairs/100) == 0) then
-     		write(*,*) nint(real(pair)/npairs*100), "%"
+     		write(*,*) nint(real(pair)/npairs*100), "%"    ! this section will print the percentage of completion.
     	end if
+    	15 continue
 
 		! zero variables for each loop
 
@@ -83,7 +89,7 @@ program main
 	    inner_product_up = 0.0
 	    inner_product_dn = 0.0
 
-	    call site_potentials(delta,E)        ! call subroutine to assign the site potentials
+	    call site_potentials(delta,E)         ! call subroutine to assign the site potentials
 	    call hamiltonian(t,U,mu,E)            ! make and solve the hamiltonians for their eigenvectors and eigenvalues
 
 	    !-----find the ground state grand potential------------------------
@@ -95,12 +101,7 @@ program main
 	    location = minloc(grand_potential)          ! find the location of the lowest energy  
 	    v_ground = eigenvectors(location(1),:)      ! set v ground to the eigenvector corresponding to the lowest energy
 
-	    !write(*,*) location(1)
-	    !write(*,*) 2*E
-	    !write(*,*) grand_potential_ground
-	    !write(*,*) v_ground
-
-	    ! multiply ground state vector by the PES and IPES matrices
+	    !-----multiply v_ground by the PES and IPES matrices-------------
 
 	    do j=1,nsites
 	       	do i=1,nstates
@@ -127,14 +128,14 @@ program main
 	       	end do
 	    end do 
 
-	    ! calculate the LDOS for all the cites
+	    ! calculate the LDOS for each site
 
 	    do j=1,nsites
 	       	do i=1,nstates
-	          	inner_product_up = (dot_product(PES_up_ground(j,:),eigenvectors(i,:)))**2
-	          	inner_product_dn =  (dot_product(PES_dn_ground(j,:),eigenvectors(i,:)))**2
-	          	LDOS(j,i,1) = grand_potential_ground - grand_potential(i)              ! location of the contribution
-	          	LDOS(j,i,2) = (inner_product_up + inner_product_dn)*0.5              ! weight of the contribution (average up and down spin components)
+	          	inner_product_up = (dot_product(PES_up_ground(j,:),eigenvectors(i,:)))**2   ! dot product the PES up ground vector with each eigenstate
+	          	inner_product_dn =  (dot_product(PES_dn_ground(j,:),eigenvectors(i,:)))**2  ! dot product the PES down ground vector with each eigenstate
+	          	LDOS(j,i,1) = grand_potential_ground - grand_potential(i)                   ! location of the contribution
+	          	LDOS(j,i,2) = (inner_product_up + inner_product_dn)*0.5                     ! weight of the contribution (average up and down spin components)
 	       	end do
 	    end do
 
@@ -161,27 +162,27 @@ program main
 
 	!-----------------Normalize DOS and print to output file--------------------------
 
-  	dos_sum = DOS(1,2)
-  	DOS(1,1) = frequency_min
+  	dos_sum = DOS(1,2)                  ! set the sum equal to first term since the loop that sums the DOS starts at index 2.
+  	DOS(1,1) = frequency_min            ! set the first DOS energy to the mininum frequency
 
   	do i=2,nbins                                    ! calculate sum to normalize the area under DOS to 1
-     	DOS(i,1) = DOS(i-1,1) + frequency_delta
+     	DOS(i,1) = DOS(i-1,1) + frequency_delta     ! step the energy by frequency_delta
      	dos_sum = dos_sum + DOS(i,2)
   	end do
 
-  	half_sum = DOS(1,2)
-  	do i=2,nbins/2                                    ! calculate half sum
+  	half_sum = DOS(1,2)                  ! set the sum equal to first term since the loop that sums the DOS starts at index 2.
+  	do i=2,nbins/2                       ! calculate half sum
   	   half_sum = half_sum + DOS(i,2)
   	end do
 
-  	!write(*,*) "Filling:", (half_sum-(DOS(nbins/2,2)/2))/dos_sum
-  	!write(*,*) "Filling Error:", DOS(nbins/2,2)/2
+  	! print additional information to the file
+  	write(10,*) "# Filling:", half_sum/dos_sum
+  	write(10,*) "# Filling Error:", DOS(nbins/2+1,2)/dos_sum
+  	write(10,*) "#"
+  	write(10,*) "#  Frequency           DOS            GIPR" 
 
   	do i=1,nbins
     	GIPR(i) = GIPR_num(i)/GIPR_den(i)
-    	if(DOS(i,2)/dos_sum/frequency_delta < 0.00001) then
-      		GIPR(i) = 1/real(nsites)
-    	end if
     	write(10,*), DOS(i,1), DOS(i,2)/dos_sum/frequency_delta, GIPR(i)
   	end do
 
