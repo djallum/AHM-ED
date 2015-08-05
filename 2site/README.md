@@ -1,5 +1,5 @@
 <html>
-<h2>2site Anderson-Hubbard Model with Interactions</h2>
+<h2>2 Site Model</h2>
 <p> The files contained in the directory are for the simulation of the tight binding hubbard model with interactions for an ensemble of 2 site systems. The program will calculate the density of states (DOS), generalized inverse participaion ratio (GIPR) and the filling of the DOS.</p>
 <h3>Compilling and Running</h3>
 <h4>Basic</h4>
