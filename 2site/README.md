@@ -14,7 +14,9 @@
 <p>The only library that needs to be linked is the LAPACK library (linear algebra package). If not already owned it can be downloaded <a href="http://www.netlib.org/lapack/#_lapack_version_3_5_0">here</a>.</p>
 <p> To modify other aspects of the program read through the structure section in order to understand the location of the feauture you would like to change. </p>
 <h3>3. Data and Graphs</h3>
-Previous data and graphs that have been using this code can be found in the <em>data</em> directory. The graphs are stored as .agr files and can be opened using xmgrace and some as also saved in pdf format. The files have names based on the parameters of the simulation that created them. </p>
+Previous data and graphs that have been using this code can be found in the <em>data</em> directory. The graphs are stored as .agr files and can be opened using xmgrace and some as also saved in pdf format. The files have names based on the parameters of the simulation that created them. </p> 
+<p>The subdirectory in <em>data</em> called <em>filling</em> containes data for simulations run away from half filling. There are also graphs that compare the DOS and GIPR for different fillings.</p>
 <p>On the top of the data files more information regarding the simulation can be found as well as the filling of the DOS.</p>
 <h3>4. Structure of Program</h3>
+
 </html>
