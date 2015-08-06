@@ -16,7 +16,9 @@
 <h3>3. Data and Graphs</h3>
 Previous data and graphs that have been using this code can be found in the <em>data</em> directory. The graphs are stored as .agr files and can be opened using xmgrace and some as also saved in pdf format. The files have names based on the parameters of the simulation that created them. </p> 
 <p>The subdirectory in <em>data</em> called <em>filling</em> containes data for simulations run away from half filling. There are also graphs that compare the DOS and GIPR for different fillings.</p>
+<p>At the top of the data files there contains information about the simulation that created the data as well as the filling of the DOS. Then there are three labeled columns. The first column is the frequency of each energy bin, the second is the DOS of that bin and the third is the GIPR.</p>
 <p>On the top of the data files more information regarding the simulation can be found as well as the filling of the DOS.</p>
 <h3>4. Structure of Program</h3>
-
+<h4>General</h4>
+The file main.f90 contains the main program. This file is where the parameters are declared as well as any dependent variables that are only need in main.f90. The file routines.f90 contains the module <em>routines</em> which has all the subroutines need for the program. At the top of routines.f90 any variables that are needed in both main.f90 and in the subroutines are declared so that the when the subroutine is called the variables do not need to be passed as arguments. The final executable is called main.e and it will output data to a file ending in <em>.dat</em></p>
 </html>
