@@ -76,7 +76,7 @@ program main
 
 	pairs: do pair=1,npairs
 
-		if (npairs < 100) then goto 15                     ! skips the pecentage completion loop if npairs < 100 since it would cause a segmentation fault
+		if (npairs < 100) goto 15                     ! skips the pecentage completion loop if npairs < 100 since it would cause a segmentation fault
 		if (MOD(pair,npairs/100) == 0) then
      		write(*,*) nint(real(pair)/npairs*100), "%"    ! this section will print the percentage of completion.
     	end if
