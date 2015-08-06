@@ -19,5 +19,8 @@ routines.o: routines.f90
 main.o: main.f90
 	$(CC) $(CFLAGS) -c main.f90
 
+noint2.e: noint2.f90 routines.o
+	$(CC) $(CFLAGS) noint2.f90 routines.o $(LIBS) -o noint2.e
+
 clean: 
 	rm -f *.o *.mod *~
