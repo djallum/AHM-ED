@@ -29,6 +29,7 @@ subroutine random_gen_seed()
 	allocate(seed(seed_size))                ! make our seed that same size
 	call system_clock(count = clock)         ! find the system time
 	seed=clock + 37*(/(i-1,i=1,seed_size)/) ! create our seed using the clock
+	seed=3
 	call random_seed(put=seed)               ! seed the random generator with our seed
 
 	deallocate(seed)
@@ -63,16 +64,15 @@ subroutine make_filename(filename,t,U,mu,delta)
 	implicit none
 
 	character(len=50), intent(out) :: filename
-	character(len=10) :: mu_str, t_str, U_str, W_str, s_str
+	character(len=10) :: mu_str, t_str, U_str, W_str
 	real, intent(in) :: t,U,mu,delta
 
 	write(mu_str,'(F4.1)') mu
 	write(t_str,'(I2)') nint(t)
 	write(W_str,'(I2)') nint(delta) 
 	write(U_str,'(I2)') nint(U)
-	write(s_str,'(I1)') nsites
 
-	write(filename,'(A)') trim(adjustl('auto')) // trim(adjustl(s_str)) 
+	write(filename,'(A)') trim(adjustl('two'))
 	write(filename,'(A)') trim(adjustl(filename)) // '_t' // trim(adjustl(t_str)) 
 	write(filename,'(A)') trim(adjustl(filename)) // 'U' // trim(adjustl(U_str)) 
 	write(filename,'(A)') trim(adjustl(filename)) // 'W' // trim(adjustl(W_str)) 
