@@ -21,4 +21,5 @@ Previous data and graphs that have been using this code can be found in the <em>
 <h3>4. Structure of Program</h3>
 <h4>General</h4>
 The file main.f90 contains the main program. This file is where the parameters are declared as well as any dependent variables that are only need in main.f90. The file routines.f90 contains the module <em>routines</em> which has all the subroutines need for the program. At the top of routines.f90 any variables that are needed in both main.f90 and in the subroutines are declared so that the when the subroutine is called the variables do not need to be passed as arguments. The final executable is called main.e and it will output data to a file ending in <em>.dat</em></p>
+<h4>Main</h4>
 </html>
