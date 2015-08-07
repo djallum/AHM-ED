@@ -1,0 +1,29 @@
+\documentclass{article}
+
+\usepackage{amsmath}
+
+% local definitions
+\def\exp#1{\left<#1\right>}
+\title{Math Equations Used}
+\author{Patrick Daley}
+
+\begin{document}
+\maketitle
+
+\subsubsection*{Anderson-Hubbard Hamiltonian with On-site Interactions:}
+\begin{align}
+	H = \sum_{i,\sigma} (\epsilon_i - \mu)\hat{n}_{i \sigma} + t\sum_{\exp{i,j},\sigma} \hat{c}_{i\sigma}^{\dagger}\hat{c}_{j\sigma} + U\sum_{i}\hat{n}_{i \uparrow}\hat{n}_{i \downarrow}
+\end{align}
+\subsubsection*{Green's Function: }
+\begin{align}
+\rho_i = \sum_{\sigma,q}\big| \exp{\Psi_{q}|c_{i\sigma}^{\dagger}|\Psi_0}\big|^2 \ \delta \big(\omega - (\Omega_q - \Omega_0)\big) + \big|\exp{\Psi_{q}|c_{i\sigma}|\Psi_0}\big|^2 \ \delta \big(\omega + (\Omega_q - \Omega_0)\big) 
+\end{align}
+\subsubsection*{Density of states (DOS) from local density of states (LDOS):}
+\begin{align}
+\rho = \frac{1}{N} \sum_{i=1}^{N} \rho_i
+\end{align}
+\subsubsection*{Generalized inverse participation ratio (GIPR) from local density of states (LDOS):}
+\begin{align}
+I(\omega)= \frac{ \sum_{i=1}^{N} \rho_i^2(\omega)}{\big[ \sum_{i=1}^{N} \rho_i(\omega) \big]^2}
+\end{align}
+\end{document}
