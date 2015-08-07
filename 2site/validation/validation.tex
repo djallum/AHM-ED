@@ -45,7 +45,19 @@ The program was run with hoping (t) but with the on-site interactions (U) set to
 \end{center}
 The the non-interacting code does output the GIPR however both the graphs can be compared to those published in Johri and Bhatt's paper.
 \section{Comparison with Published Results}
-The program is run at 
+The program is run with interactions and hoping and compared to previously published results by J. Perera and R. Wortis [2]. The simulations were not run with the same seed for the random number generator so they should not be identical but they should be very similar. The comparison of the GIPR and the DOS for one case is shown in figure \ref{int-comp}.
+\begin{multicols}{2}
+\begin{center}
+	\includegraphics[width=250px]{dos_compareu4.jpg} \\ \label{int-comp}
+\end{center}
+\begin{center}
+	\includegraphics[width=250px]{gipr_compareu4.jpg} \\
+\end{center}
+\end{multicols}
+\begin{center}
+Figure \ref{int-comp}: The DOS and GIPR for the interacting case with hoping compared with results published by J. Perera and R. Wortis.
+\end{center}
+The two graphs are very similar as expected and contain all the same features. The small differences can be accounted for by the noise since the two random seeds are different.
 \section{Symmetry away from Half Filling}
 The program is run with hoping (t/=0) and onsite interactions(U/=0) away from half filling (mu/=$\frac{U}{2}$). There is little published work at the moment for this simulation and it is impossible to calculate analytically however the DOS and GIPR for a filling of $0.5-n$ should be the reflection about the y axis of the DOS and GIPR with filling $0.5+n$.
 \begin{center}

@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.15 (TeX Live 2014) (preloaded format=pdflatex 2015.2.9)  6 AUG 2015 11:25
+This is pdfTeX, Version 3.14159265-2.6-1.40.15 (TeX Live 2014) (preloaded format=pdflatex 2015.2.9)  7 AUG 2015 09:31
 entering extended mode
  restricted \write18 enabled.
  file:line:error style messages enabled.
@@ -213,30 +213,51 @@ File: dos_compareu0.jpg Graphic file (type jpg)
 Package pdftex.def Info: dos_compareu0.jpg used on input line 43.
 (pdftex.def)             Requested size: 250.93842pt x 193.907pt.
 
-[2 <./dos2_t0u4w12.jpg> <./dos_compareu0.jpg>] [3] (./validation.aux) ) 
+[2 <./dos2_t0u4w12.jpg> <./dos_compareu0.jpg>]
+<dos_compareu4.jpg, id=19, 794.97pt x 614.295pt>
+File: dos_compareu4.jpg Graphic file (type jpg)
+ <use dos_compareu4.jpg>
+Package pdftex.def Info: dos_compareu4.jpg used on input line 51.
+(pdftex.def)             Requested size: 250.93842pt x 193.907pt.
+
+Overfull \hbox (20.20218pt too wide) in paragraph at lines 51--51
+ [] 
+ []
+
+<gipr_compareu4.jpg, id=20, 794.97pt x 614.295pt>
+File: gipr_compareu4.jpg Graphic file (type jpg)
+ <use gipr_compareu4.jpg>
+Package pdftex.def Info: gipr_compareu4.jpg used on input line 54.
+(pdftex.def)             Requested size: 250.93842pt x 193.907pt.
+
+Overfull \hbox (20.20218pt too wide) in paragraph at lines 54--54
+ [] 
+ []
+
+[3 <./dos_compareu4.jpg> <./gipr_compareu4.jpg>] (./validation.aux) ) 
 Here is how much of TeX's memory you used:
- 1616 strings out of 493109
- 23436 string characters out of 6135005
- 84268 words of memory out of 5000000
- 5083 multiletter control sequences out of 15000+600000
+ 1627 strings out of 493109
+ 23659 string characters out of 6135005
+ 84276 words of memory out of 5000000
+ 5092 multiletter control sequences out of 15000+600000
  7934 words of font info for 28 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
- 37i,6n,23p,651b,189s stack positions out of 5000i,500n,10000p,200000b,80000s
-</usr/lo
-cal/texlive/2014/texmf-dist/fonts/type1/public/amsfonts/cm/cmbx10.pfb></usr/loc
-al/texlive/2014/texmf-dist/fonts/type1/public/amsfonts/cm/cmbx12.pfb></usr/loca
-l/texlive/2014/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi10.pfb></usr/local
-/texlive/2014/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi7.pfb></usr/local/t
-exlive/2014/texmf-dist/fonts/type1/public/amsfonts/cm/cmr10.pfb></usr/local/tex
-live/2014/texmf-dist/fonts/type1/public/amsfonts/cm/cmr12.pfb></usr/local/texli
-ve/2014/texmf-dist/fonts/type1/public/amsfonts/cm/cmr17.pfb></usr/local/texlive
-/2014/texmf-dist/fonts/type1/public/amsfonts/cm/cmr7.pfb></usr/local/texlive/20
-14/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy10.pfb></usr/local/texlive/201
-4/texmf-dist/fonts/type1/public/amsfonts/cm/cmti10.pfb>
-Output written on validation.pdf (3 pages, 192242 bytes).
+ 37i,6n,23p,651b,256s stack positions out of 5000i,500n,10000p,200000b,80000s
+</usr/loca
+l/texlive/2014/texmf-dist/fonts/type1/public/amsfonts/cm/cmbx10.pfb></usr/local
+/texlive/2014/texmf-dist/fonts/type1/public/amsfonts/cm/cmbx12.pfb></usr/local/
+texlive/2014/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi10.pfb></usr/local/t
+exlive/2014/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi7.pfb></usr/local/tex
+live/2014/texmf-dist/fonts/type1/public/amsfonts/cm/cmr10.pfb></usr/local/texli
+ve/2014/texmf-dist/fonts/type1/public/amsfonts/cm/cmr12.pfb></usr/local/texlive
+/2014/texmf-dist/fonts/type1/public/amsfonts/cm/cmr17.pfb></usr/local/texlive/2
+014/texmf-dist/fonts/type1/public/amsfonts/cm/cmr7.pfb></usr/local/texlive/2014
+/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy10.pfb></usr/local/texlive/2014/
+texmf-dist/fonts/type1/public/amsfonts/cm/cmti10.pfb>
+Output written on validation.pdf (3 pages, 261707 bytes).
 PDF statistics:
- 57 PDF objects out of 1000 (max. 8388607)
+ 59 PDF objects out of 1000 (max. 8388607)
  38 compressed objects within 1 object stream
  0 named destinations out of 1000 (max. 500000)
- 16 words of extra memory for PDF output out of 10000 (max. 10000000)
+ 26 words of extra memory for PDF output out of 10000 (max. 10000000)
 
