@@ -59,7 +59,19 @@ Figure \ref{int-comp}: The DOS and GIPR for the interacting case with hoping com
 \end{center}
 The two graphs are very similar as expected and contain all the same features. The small differences can be accounted for by the noise since the two random seeds are different.
 \section{Symmetry away from Half Filling}
-The program is run with hoping (t/=0) and onsite interactions(U/=0) away from half filling (mu/=$\frac{U}{2}$). There is little published work at the moment for this simulation and it is impossible to calculate analytically however the DOS and GIPR for a filling of $0.5-n$ should be the reflection about the y axis of the DOS and GIPR with filling $0.5+n$.
+The program is run with hoping (t/=0) and onsite interactions(U/=0) away from half filling (mu/=$\frac{U}{2}$). There is little published work at the moment for this simulation and it is impossible to calculate analytically however the DOS and GIPR for a filling of $0.5-n$ should be the reflection about the y axis of the DOS and GIPR with filling $0.5+n$. Figure \ref{filling} shows the DOS and GIPR for filling 0.4 and 0.6. We expect them to be reflections of each other.
+\begin{multicols}{2}
+\begin{center}
+	\includegraphics[width=250px]{dos_comparef.jpg} \\ \label{filling}
+\end{center}
+\begin{center}
+	\includegraphics[width=250px]{gipr_comparef.jpg} \\
+\end{center}
+\end{multicols}
+\begin{center}
+Figure \ref{filling}: The DOS and GIPR away from half filling. 
+\end{center}
+The graphs look extremely symmetric as expected. Any minuet differences can be accounted for by random noise since they did not use the same seed. 
 \begin{center}
 	\line(1,0){400}
 \end{center}
