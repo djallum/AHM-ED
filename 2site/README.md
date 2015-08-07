@@ -42,8 +42,10 @@ Green's Function: <br>
 <br>
 DOS from LDOS: <br>
 <br>
-
+![equation](http://www.sciweavers.org/tex2img.php?eq=%5Crho%28%5Comega%29%20%3D%20%5Cfrac%7B1%7D%7BN%7D%5Csum_%7Bi%3D1%7D%5E%7BN%7D%20%5Crho_i%28%5Comega%29&bc=White&fc=Black&im=jpg&fs=12&ff=mathpazo&edit=0) <br>
+<br>
 GIPR from LDOS: <br>
 <br>
-
+![equation](http://www.sciweavers.org/tex2img.php?eq=I%28%5Comega%29%20%3D%20%5Cfrac%7B%5Csum_%7Bi%3D1%7D%5E%7BN%7D%20%5Crho_i%5E%7B2%7D%28%5Comega%29%7D%7B%5Cbig%5B%20%5Csum_%7Bi%3D1%7D%5E%7BN%7D%20%5Crho_%7Bi%7D%28%5Comega%29%5Cbig%5D%5E2%7D&bc=White&fc=Black&im=jpg&fs=12&ff=mathpazo&edit=0) <br>
+<br>
 </html>
