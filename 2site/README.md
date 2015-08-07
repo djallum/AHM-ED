@@ -38,7 +38,7 @@ Anderson-Hubbard Hamiltonian with Interactions: <br>
 <br>
 Green's Function: <br>
 <br>
-![equation](http://www.sciweavers.org/tex2img.php?eq=%5Crho_i%20%3D%20%5Csum_%7B%5Csigma%2Cq%7D%5Cbigg%28%20%5Cbig%20%7C%5Cleft%3C%5CPsi_%7Bq%7D%7Cc_%7Bi%5Csigma%7D%5E%7B%5Cdagger%7D%7C%5CPsi_0%5Cright%3E%20%5Cbig%7C%5E2%20%5C%20%5Cdelta%20%5Cbig%28%5Comega%20-%20%28%5COmega_q%20-%20%5COmega_0%29%5Cbig%29%20%2B%20%5Cbig%7C%20%5Cleft%3C%7B%5CPsi_%7Bq%7D%7Cc_%7Bi%5Csigma%7D%7C%5CPsi_0%5Cright%3E%20%5Cbig%7C%5E2%20%5C%20%5Cdelta%20%5Cbig%28%5Comega%20%2B%20%28%5COmega_q%20-%20%5COmega_0%29%5Cbig%29%20%5Cbigg%29&bc=White&fc=Black&im=jpg&fs=12&ff=mathpazo&edit=0) <br>
+![equation](http://www.sciweavers.org/tex2img.php?eq=%5Crho_i%20%3D%20%5Csum_%7B%5Csigma%2Cq%7D%5Cbigg%28%20%5Cbig%7C%5Cleft%3C%5CPsi_%7Bq%7D%7Cc_%7Bi%5Csigma%7D%5E%7B%5Cdagger%7D%7C%5CPsi_0%5Cright%3E%5Cbig%7C%5E2%20%5C%20%5Cdelta%20%5Cbig%28%5Comega%20-%20%28%5COmega_q%20-%20%5COmega_0%29%5Cbig%29%20%2B%20%5Cbig%7C%5Cleft%3C%5CPsi_%7Bq%7D%7Cc_%7Bi%5Csigma%7D%7C%5CPsi_0%5Cright%3E%5Cbig%7C%5E2%20%5C%20%5Cdelta%20%5Cbig%28%5Comega%20%2B%20%28%5COmega_q%20-%20%5COmega_0%29%5Cbig%29%20%5Cbigg%29&bc=White&fc=Black&im=jpg&fs=12&ff=arev&edit=0) <br>
 <br>
 DOS from LDOS: <br>
 <br>
