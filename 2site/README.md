@@ -10,7 +10,7 @@
 <body>
 <h1>2 Site Model</h1>
 <p> The files contained in the directory are for the simulation of the tight binding hubbard model with interactions for an ensemble of 2 site systems. The program will calculate the density of states (DOS), generalized inverse participaion ratio (GIPR) and the filling of the DOS.</p> 
-<p>Information regarding the use and structure of the code can be found in this README file. Addiontianal information regarding terminology and the problem being solved refer to the README in the AH-onsite directory (the parent directory of this one). The directory <em>validation</em> contains a pdf and .tex file (and images used in the files) that outlines the tests conducted and validation of the program.</p>
+<p>Information regarding the use and structure of the code can be found in this README file. Addiontianal information regarding terminology and the problem being solved refer to the README in the AH-onsite directory (the parent directory of this one). The directory <em>validation</em> contains a pdf and .tex file (and images used in the files) that outlines the tests conducted and validation of the program. Many of the equations used are found in the file <em>equation.pdf</em>.</p>
 <h3>1. Downloading files</h3>
 <p>Fork the repository AH-onsite to your GitHub account if you have not already done so. If would do not wish to use GitHub the files can be individually downloaded. The files needed to create the executable are <em>routines.f90, main.f90, makefile</em>. If you plan on modifying the files and wanting the update the files on GitHub we highly recommend forking the repository (information on how to use GitHub to create your personal repository can be found in the README in the AH-onsite directory). </p>
 <h3>2. Compilling and Running</h3>
@@ -40,10 +40,5 @@ The file main.f90 contains the main program. This file is where the parameters a
 <p> The program now averages the LDOS contributions for each energy and then puts them into energy bins (in order to get a smooth graph) and makes a contribution to the DOS. The GIPR is also calculated at the same time using the LDOS.</p>
 <h4>Final Calculations</h4>
 <p>The total area underneath the DOS is calculated and then normalized to 1 and the filling is also calcuated at this time. The ensemble averages GIPR is also calcutated from the GIPR. The DOS and GIPR are outputted to the data file as well as the filling. The program is now complete.</p>
-<h3>5. Equations Used</h3>
-Anderson-Hubbard Hamiltonian with Interactions: <br>
-<br>
-when $a \ne 0$
-
 </body>
 </html>
