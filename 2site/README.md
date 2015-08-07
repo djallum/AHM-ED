@@ -1,4 +1,13 @@
 <html>
+<head>
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+</script>
+<script type="text/javascript"
+  src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+</script>
+</head>
+<body>
 <h1>2 Site Model</h1>
 <p> The files contained in the directory are for the simulation of the tight binding hubbard model with interactions for an ensemble of 2 site systems. The program will calculate the density of states (DOS), generalized inverse participaion ratio (GIPR) and the filling of the DOS.</p> 
 <p>Information regarding the use and structure of the code can be found in this README file. Addiontianal information regarding terminology and the problem being solved refer to the README in the AH-onsite directory (the parent directory of this one). The directory <em>validation</em> contains a pdf and .tex file (and images used in the files) that outlines the tests conducted and validation of the program.</p>
@@ -34,18 +43,7 @@ The file main.f90 contains the main program. This file is where the parameters a
 <h3>5. Equations Used</h3>
 Anderson-Hubbard Hamiltonian with Interactions: <br>
 <br>
-![equation](http://www.sciweavers.org/tex2img.php?eq=H%20%3D%20%5Csum_%7Bi%2C%5Csigma%7D%28e_%7Bi%7D%20-%20%5Cmu%29%5Chat%7Bn%7D_%7Bi%5Csigma%7D%20%2B%20t%5Csum_%7B%5Cleft%3Ci%2Cj%5Cright%3E%2C%5Csigma%7D%20%5Chat%7Bc%7D_%7Bi%5Csigma%7D%5E%7B%5Cdagger%7D%5Chat%7Bc%7D_%7Bj%5Csigma%7D%20%2B%20U%5Csum_%7Bi%7D%20%5Chat%7Bn%7D_%7Bi%5Cuparrow%7D%5Chat%7Bn%7D_%7Bi%5Cdownarrow%7D&bc=White&fc=Black&im=jpg&fs=12&ff=mathpazo&edit=0) <br>
-<br>
-Green's Function: <br>
-<br>
-![equation](http://www.sciweavers.org/tex2img.php?eq=%5Crho_i%20%3D%20%5Csum_%7B%5Csigma%2Cq%7D%5Cbigg%28%20%5Cbig%20%7C%5Cleft%3C%5CPsi_%7Bq%7D%7Cc_%7Bi%5Csigma%7D%5E%7B%5Cdagger%7D%7C%5CPsi_0%5Cright%3E%20%5Cbig%7C%5E2%20%5C%20%5Cdelta%20%5Cbig%28%5Comega%20-%20%28%5COmega_q%20-%20%5COmega_0%29%5Cbig%29%20%2B%20%5Cbig%7C%20%5Cleft%3C%7B%5CPsi_%7Bq%7D%7Cc_%7Bi%5Csigma%7D%7C%5CPsi_0%5Cright%3E%20%5Cbig%7C%5E2%20%5C%20%5Cdelta%20%5Cbig%28%5Comega%20%2B%20%28%5COmega_q%20-%20%5COmega_0%29%5Cbig%29%20%5Cbigg%29&bc=White&fc=Black&im=jpg&fs=12&ff=mathpazo&edit=0) <br>
-<br>
-DOS from LDOS: <br>
-<br>
-![equation](http://www.sciweavers.org/tex2img.php?eq=%5Crho%28%5Comega%29%20%3D%20%5Cfrac%7B1%7D%7BN%7D%5Csum_%7Bi%3D1%7D%5E%7BN%7D%20%5Crho_i%28%5Comega%29&bc=White&fc=Black&im=jpg&fs=12&ff=mathpazo&edit=0) <br>
-<br>
-GIPR from LDOS: <br>
-<br>
-![equation](http://www.sciweavers.org/tex2img.php?eq=I%28%5Comega%29%20%3D%20%5Cfrac%7B%5Csum_%7Bi%3D1%7D%5E%7BN%7D%20%5Crho_i%5E%7B2%7D%28%5Comega%29%7D%7B%5Cbig%5B%20%5Csum_%7Bi%3D1%7D%5E%7BN%7D%20%5Crho_%7Bi%7D%28%5Comega%29%5Cbig%5D%5E2%7D&bc=White&fc=Black&im=jpg&fs=12&ff=mathpazo&edit=0) <br>
-<br>
+when $a \ne 0$
+
+</body>
 </html>
