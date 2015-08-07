@@ -34,7 +34,7 @@ The file main.f90 contains the main program. This file is where the parameters a
 <h3>5. Equations Used</h3>
 Anderson-Hubbard Hamiltonian with Interactions: <br>
 <br>
-![equation](http://www.sciweavers.org/tex2img.php?eq=H%20%3D%20%5Csum_%7Bi%2C%5Csigma%7D%28e_%7Bi%7D%20-%20%5Cmu%29%5Chat%7Bn%7D_%7Bi%5Csigma%7D%20%2B%20t%5Csum_%7B%5Cleft%3Ci%2Cj%5Cright%3E%2C%5Csigma%7D%20%5Chat%7Bc%7D_%7Bi%5Csigma%7D%5E%7B%5Cdagger%7D%5Chat%7Bc%7D_%7Bj%5Csigma%7D%20%2B%20U%5Csum_%7Bi%7D%20%5Chat%7Bn%7D_%7Bi%5Cuparrow%7D%5Chat%7Bn%7D_%7Bi%5Cdownarrow%7D&bc=White&fc=Black&im=jpg&fs=12&ff=mathpazo&edit=0) <br>
+![equation]http://www.sciweavers.org/tex2img.php?eq=H%20%3D%20%5Csum_%7Bi%2C%5Csigma%7D%28e_%7Bi%7D%20-%20%5Cmu%29%5Chat%7Bn%7D_%7Bi%5Csigma%7D%20%2B%20t%5Csum_%7B%5Cleft%3Ci%2Cj%5Cright%3E%2C%5Csigma%7D%20%5Chat%7Bc%7D_%7Bi%5Csigma%7D%5E%7B%5Cdagger%7D%5Chat%7Bc%7D_%7Bj%5Csigma%7D%20%2B%20U%5Csum_%7Bi%7D%20%5Chat%7Bn%7D_%7Bi%5Cuparrow%7D%5Chat%7Bn%7D_%7Bi%5Cdownarrow%7D&bc=White&fc=Black&im=jpg&fs=12&ff=mathpazo&edit=0) <br>
 <br>
 Green's Function: <br>
 <br>
