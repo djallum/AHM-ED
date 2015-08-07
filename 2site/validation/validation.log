@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.15 (TeX Live 2014) (preloaded format=pdflatex 2015.2.9)  7 AUG 2015 15:58
+This is pdfTeX, Version 3.14159265-2.6-1.40.15 (TeX Live 2014) (preloaded format=pdflatex 2015.2.9)  7 AUG 2015 16:17
 entering extended mode
  restricted \write18 enabled.
  file:line:error style messages enabled.
@@ -202,7 +202,7 @@ Package pdftex.def Info: dos2_t0u0w4.jpg used on input line 26.
 <dos2_t0u4w12.jpg, id=2, 794.97pt x 614.295pt>
 File: dos2_t0u4w12.jpg Graphic file (type jpg)
  <use dos2_t0u4w12.jpg>
-Package pdftex.def Info: dos2_t0u4w12.jpg used on input line 36.
+Package pdftex.def Info: dos2_t0u4w12.jpg used on input line 34.
 (pdftex.def)             Requested size: 250.93842pt x 193.907pt.
  [1
 
@@ -210,47 +210,47 @@ Package pdftex.def Info: dos2_t0u4w12.jpg used on input line 36.
 t0u0w4.jpg>] <dos_compareu0.jpg, id=15, 794.97pt x 614.295pt>
 File: dos_compareu0.jpg Graphic file (type jpg)
  <use dos_compareu0.jpg>
-Package pdftex.def Info: dos_compareu0.jpg used on input line 43.
+Package pdftex.def Info: dos_compareu0.jpg used on input line 41.
 (pdftex.def)             Requested size: 250.93842pt x 193.907pt.
 
 [2 <./dos2_t0u4w12.jpg> <./dos_compareu0.jpg>]
 <dos_compareu4.jpg, id=19, 794.97pt x 614.295pt>
 File: dos_compareu4.jpg Graphic file (type jpg)
  <use dos_compareu4.jpg>
-Package pdftex.def Info: dos_compareu4.jpg used on input line 51.
+Package pdftex.def Info: dos_compareu4.jpg used on input line 49.
 (pdftex.def)             Requested size: 250.93842pt x 193.907pt.
 
-Overfull \hbox (20.20218pt too wide) in paragraph at lines 51--51
+Overfull \hbox (20.20218pt too wide) in paragraph at lines 49--49
  [] 
  []
 
 <gipr_compareu4.jpg, id=20, 794.97pt x 614.295pt>
 File: gipr_compareu4.jpg Graphic file (type jpg)
  <use gipr_compareu4.jpg>
-Package pdftex.def Info: gipr_compareu4.jpg used on input line 54.
+Package pdftex.def Info: gipr_compareu4.jpg used on input line 52.
 (pdftex.def)             Requested size: 250.93842pt x 193.907pt.
 
-Overfull \hbox (20.20218pt too wide) in paragraph at lines 54--54
+Overfull \hbox (20.20218pt too wide) in paragraph at lines 52--52
  [] 
  []
 
 <dos_comparef.jpg, id=21, 794.97pt x 614.295pt>
 File: dos_comparef.jpg Graphic file (type jpg)
  <use dos_comparef.jpg>
-Package pdftex.def Info: dos_comparef.jpg used on input line 65.
+Package pdftex.def Info: dos_comparef.jpg used on input line 63.
 (pdftex.def)             Requested size: 250.93842pt x 193.907pt.
 
-Overfull \hbox (20.20218pt too wide) in paragraph at lines 65--65
+Overfull \hbox (20.20218pt too wide) in paragraph at lines 63--63
  [] 
  []
 
 <gipr_comparef.jpg, id=22, 794.97pt x 614.295pt>
 File: gipr_comparef.jpg Graphic file (type jpg)
  <use gipr_comparef.jpg>
-Package pdftex.def Info: gipr_comparef.jpg used on input line 68.
+Package pdftex.def Info: gipr_comparef.jpg used on input line 66.
 (pdftex.def)             Requested size: 250.93842pt x 193.907pt.
 
-Overfull \hbox (20.20218pt too wide) in paragraph at lines 68--68
+Overfull \hbox (20.20218pt too wide) in paragraph at lines 66--66
  [] 
  []
 
@@ -275,7 +275,7 @@ lic/amsfonts/cm/cmr17.pfb></usr/local/texlive/2014/texmf-dist/fonts/type1/publi
 c/amsfonts/cm/cmr7.pfb></usr/local/texlive/2014/texmf-dist/fonts/type1/public/a
 msfonts/cm/cmsy10.pfb></usr/local/texlive/2014/texmf-dist/fonts/type1/public/am
 sfonts/cm/cmti10.pfb>
-Output written on validation.pdf (4 pages, 333500 bytes).
+Output written on validation.pdf (4 pages, 333580 bytes).
 PDF statistics:
  64 PDF objects out of 1000 (max. 8388607)
  40 compressed objects within 1 object stream
