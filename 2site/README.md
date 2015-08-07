@@ -31,4 +31,5 @@ The file main.f90 contains the main program. This file is where the parameters a
 <p> The program now averages the LDOS contributions for each energy and then puts them into energy bins (in order to get a smooth graph) and makes a contribution to the DOS. The GIPR is also calculated at the same time using the LDOS.</p>
 <h4>Final Calculations</h4>
 <p>The total area underneath the DOS is calculated and then normalized to 1 and the filling is also calcuated at this time. The DOS and GIPR are outputted to the data file as well as the filling. The program is now complete.</p>
+<h3>5. Equations Used</h3>
 </html>
