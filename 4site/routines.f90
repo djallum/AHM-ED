@@ -5,14 +5,16 @@ implicit none
 
 integer, parameter :: sp = kind(1.0)      !single precison kind
 integer, parameter :: dp = kind(1.0d0)    !double precision kind
-real(dp) :: grand_potential(256)=0.0_dp                    ! grand potentials (eigenenergies - mu*number electrons)
-real(dp) :: grand_potential_ground=0.0_dp                 ! the lowest grand ensemble energy
-real(dp) :: eigenvectors(256,256)=0.0_dp                    ! the 64 eigenvectors
-real(dp) :: v_ground(256)=0.0_dp                           ! the ground state eigenvector
+real :: grand_potential(256)=0.0                    ! grand potentials (eigenenergies - mu*number electrons)
+real :: grand_potential_ground=0.0                 ! the lowest grand ensemble energy
+real :: eigenvectors(256,256)=0.0                    ! the 64 eigenvectors
+real :: v_ground(256)=0.0                           ! the ground state eigenvector
 integer, dimension(4,256) :: PES_down=0, PES_up=0, IPES_down=0, IPES_up=0  !matrices for PES and IPES 
 integer, dimension(4,256) :: phase_PES_down=0, phase_PES_up=0, phase_IPES_down=0, phase_IPES_up=0  !do get anticommutation sign right
 
 contains
+
+!************************************************************************************
 
 subroutine random_gen_seed()
 
@@ -31,58 +33,87 @@ subroutine random_gen_seed()
 
 end subroutine random_gen_seed
 
+!************************************************************************************
+
 subroutine site_potentials(delta,E)
 
   implicit none
 
-  real(dp), intent(in) :: delta
-  real(dp), intent(out) :: E(4)
+  real, intent(in) :: delta
+  real, intent(out) :: E(4)
   real :: random
   integer :: i ! counter
 
   do i=1,4
-     call random_number(random)              ! gives a random number between 0 and 1
-     E(i) = delta*(random - 0.5_dp)          ! centers the random numbers about 0
+    call random_number(random)              ! gives a random number between 0 and 1
+    E(i) = delta*(random - 0.5)          ! centers the random numbers about 0
   end do
 
 end subroutine site_potentials
+
+!************************************************************************************
+
+subroutine make_filename(filename,t,U,mu,delta)
+
+  ! assigns a filename for the output file based on parameters of the simulation
+
+  implicit none
+
+  character(len=50), intent(out) :: filename
+  character(len=10) :: mu_str, t_str, U_str, W_str
+  real, intent(in) :: t,U,mu,delta
+
+  write(mu_str,'(F4.1)') mu
+  write(t_str,'(I2)') nint(t)
+  write(W_str,'(I2)') nint(delta) 
+  write(U_str,'(I2)') nint(U)
+
+  write(filename,'(A)') trim(adjustl('4-dos+ipr_'))
+  write(filename,'(A)') trim(adjustl(filename)) // 't' // trim(adjustl(t_str)) 
+  write(filename,'(A)') trim(adjustl(filename)) // 'U' // trim(adjustl(U_str)) 
+  write(filename,'(A)') trim(adjustl(filename)) // 'W' // trim(adjustl(W_str)) 
+  write(filename,'(A)') trim(adjustl(filename)) // 'mu' // trim(adjustl(mu_str)) // '.dat'
+
+end subroutine make_filename
+
+!************************************************************************************
 
 subroutine hamiltonian(E,t,U,mu)
 
   implicit none
 
-  real(dp), intent(in) :: E(4)
-  real(dp), intent(in) :: mu 
-  real(dp), intent(in) :: t
-  real(dp), intent(in) :: U
-  real(dp) :: H00=0.0_dp, W00=0.0_dp, H40=0.0_dp, W40=0.0_dp, H44=0.0_dp
-  real(dp) :: W10(4)=0.0_dp, W30(4)=0.0_dp, W41(4)=0.0_dp, W43(4)=0.0_dp
-  real(dp) :: W20(6)=0.0_dp, W42(6)=0.0_dp, W11(16)=0.0_dp, W31(16)=0.0_dp
-  real(dp) :: W33(16)=0.0_dp, W21(24)=0.0_dp, W12(24)=0.0_dp, W32(24)=0.0_dp
-  real(dp) :: W23(24)=0.0_dp, W22(36)=0.0_dp, W13(16)=0.0_dp
-  real(dp), dimension(4,4) :: H10=0.0_dp, H30=0.0_dp, H41=0.0_dp, H43=0.0_dp
-  real(dp), dimension(6,6) :: H20=0.0_dp, H42=0.0_dp
-  real(dp), dimension(16,16) :: H11=0.0_dp, H31=0.0_dp, H13=0.0_dp, H33=0.0_dp
-  real(dp), dimension(24,24) :: H21=0.0_dp, H12=0.0_dp, H32=0.0_dp, H23=0.0_dp
-  real(dp), dimension(36,36) :: H22=0.0_dp
+  real, intent(in) :: E(4)
+  real, intent(in) :: mu 
+  real, intent(in) :: t
+  real, intent(in) :: U
+  real :: H00=0.0, W00=0.0, H40=0.0, W40=0.0, H44=0.0
+  real :: W10(4)=0.0, W30(4)=0.0, W41(4)=0.0, W43(4)=0.0
+  real :: W20(6)=0.0, W42(6)=0.0, W11(16)=0.0, W31(16)=0.0
+  real :: W33(16)=0.0, W21(24)=0.0, W12(24)=0.0, W32(24)=0.0
+  real :: W23(24)=0.0, W22(36)=0.0, W13(16)=0.0
+  real, dimension(4,4) :: H10=0.0, H30=0.0, H41=0.0, H43=0.0
+  real, dimension(6,6) :: H20=0.0, H42=0.0
+  real, dimension(16,16) :: H11=0.0, H31=0.0, H13=0.0, H33=0.0
+  real, dimension(24,24) :: H21=0.0, H12=0.0, H32=0.0, H23=0.0
+  real, dimension(36,36) :: H22=0.0
   integer :: i,j ! counter
 
   !------for lapack------------
   integer :: INFO = 0
   integer :: LWORK
-  real(dp), allocatable, dimension(:) :: WORK
+  real, allocatable, dimension(:) :: WORK
 
   !-------------zero all the matrices---------------------------------------------
-  H10=0.0_dp; H30=0.0_dp; H41=0.0_dp; H43=0.0_dp
-  H20=0.0_dp; H42=0.0_dp; H22=0.0_dp
-  H11=0.0_dp; H31=0.0_dp; H13=0.0_dp; H33=0.0_dp
-  H21=0.0_dp; H12=0.0_dp; H32=0.0_dp; H23=0.0_dp
+  H10=0.0; H30=0.0; H41=0.0; H43=0.0
+  H20=0.0; H42=0.0; H22=0.0
+  H11=0.0; H31=0.0; H13=0.0; H33=0.0
+  H21=0.0; H12=0.0; H32=0.0; H23=0.0
 
   !-------------zero electron states---------------------------------------------
 
   W00=H00
 
-  eigenvectors(1,1) = 1.0_dp
+  eigenvectors(1,1) = 1.0
 
   grand_potential(1) = W00 - mu*0
 
@@ -108,7 +139,7 @@ subroutine hamiltonian(E,t,U,mu)
   LWORK = 12
   allocate(WORK(12))
 
-  call dsyev('v','u',4,H10,4,W10,WORK,LWORK,INFO)
+  call ssyev('v','u',4,H10,4,W10,WORK,LWORK,INFO)
   if (INFO /= 0) then
      write(*,*) 'Problem with Lapack for H10 matrix. Error code:', INFO
      stop
@@ -153,7 +184,7 @@ subroutine hamiltonian(E,t,U,mu)
   LWORK = 18
   allocate(WORK(18))
 
-  call dsyev('v','u',6,H20,6,W20,WORK,LWORK,INFO)
+  call ssyev('v','u',6,H20,6,W20,WORK,LWORK,INFO)
   if (INFO /= 0) then
      write(*,*) 'Problem with Lapack for H20 matrix. Error code:', INFO
      stop
@@ -210,7 +241,7 @@ subroutine hamiltonian(E,t,U,mu)
   LWORK = 50
   allocate(WORK(50))
 
-  call dsyev('v','u',16,H11,16,W11,WORK,LWORK,INFO)
+  call ssyev('v','u',16,H11,16,W11,WORK,LWORK,INFO)
   if (INFO /= 0) then
      write(*,*) 'Problem with Lapack for H11 matrix. Error code:', INFO
      stop
@@ -247,7 +278,7 @@ subroutine hamiltonian(E,t,U,mu)
   LWORK = 12
   allocate(WORK(12))
 
-  call dsyev('v','u',4,H30,4,W30,WORK,LWORK,INFO)
+  call ssyev('v','u',4,H30,4,W30,WORK,LWORK,INFO)
   if (INFO /= 0) then
      write(*,*) 'Problem with Lapack for H30 matrix. Error code:', INFO
      stop
@@ -323,13 +354,13 @@ subroutine hamiltonian(E,t,U,mu)
   LWORK = 75
   allocate(WORK(75))
 
-  call dsyev('v','u',24,H21,24,W21,WORK,LWORK,INFO)
+  call ssyev('v','u',24,H21,24,W21,WORK,LWORK,INFO)
   if (INFO /= 0) then
      write(*,*) 'Problem with Lapack for H21 matrix. Error code:', INFO
      stop
   end if 
 
-  call dsyev('v','u',24,H12,24,W12,WORK,LWORK,INFO)
+  call ssyev('v','u',24,H12,24,W12,WORK,LWORK,INFO)
   if (INFO /= 0) then
      write(*,*) 'Problem with Lapack for H12 matrix. Error code:', INFO
      stop
@@ -417,13 +448,13 @@ subroutine hamiltonian(E,t,U,mu)
   LWORK = 48
   allocate(WORK(48))
 
-  call dsyev('v','u',16,H31,16,W31,WORK,LWORK,INFO)
+  call ssyev('v','u',16,H31,16,W31,WORK,LWORK,INFO)
   if (INFO /= 0) then
      write(*,*) 'Problem with Lapack for H31 matrix. Error code:', INFO
      stop
   end if 
 
-  call dsyev('v','u',16,H13,16,W13,WORK,LWORK,INFO)
+  call ssyev('v','u',16,H13,16,W13,WORK,LWORK,INFO)
   if (INFO /= 0) then
      write(*,*) 'Problem with Lapack for H13 matrix. Error code:', INFO
      stop
@@ -502,7 +533,7 @@ subroutine hamiltonian(E,t,U,mu)
   LWORK = 108
   allocate(WORK(108))
 
-  call dsyev('v','u',36,H22,36,W22,WORK,LWORK,INFO)
+  call ssyev('v','u',36,H22,36,W22,WORK,LWORK,INFO)
   if (INFO /= 0) then
      write(*,*) 'Problem with Lapack for H22 matrix. Error code:', INFO
      stop
@@ -540,7 +571,7 @@ subroutine hamiltonian(E,t,U,mu)
   LWORK = 12
   allocate(WORK(12))
 
-  call dsyev('v','u',4,H41,4,W41,WORK,LWORK,INFO)
+  call ssyev('v','u',4,H41,4,W41,WORK,LWORK,INFO)
   if (INFO /= 0) then
      write(*,*) 'Problem with Lapack for H41 matrix. Error code:', INFO
      stop
@@ -616,13 +647,13 @@ subroutine hamiltonian(E,t,U,mu)
   LWORK = 75
   allocate(WORK(75))
 
-  call dsyev('v','u',24,H32,24,W32,WORK,LWORK,INFO)
+  call ssyev('v','u',24,H32,24,W32,WORK,LWORK,INFO)
   if (INFO /= 0) then
      write(*,*) 'Problem with Lapack for H32 matrix. Error code:', INFO
      stop
   end if 
 
-  call dsyev('v','u',24,H23,24,W23,WORK,LWORK,INFO)
+  call ssyev('v','u',24,H23,24,W23,WORK,LWORK,INFO)
   if (INFO /= 0) then
      write(*,*) 'Problem with Lapack for H23 matrix. Error code:', INFO
      stop
@@ -665,7 +696,7 @@ subroutine hamiltonian(E,t,U,mu)
   LWORK = 18
   allocate(WORK(18))
 
-  call dsyev('v','u',6,H42,6,W42,WORK,LWORK,INFO)
+  call ssyev('v','u',6,H42,6,W42,WORK,LWORK,INFO)
   if (INFO /= 0) then
      write(*,*) 'Problem with Lapack for H42 matrix. Error code:', INFO
      stop
@@ -720,7 +751,7 @@ subroutine hamiltonian(E,t,U,mu)
   LWORK = 48
   allocate(WORK(48))
 
-  call dsyev('v','u',16,H33,16,W33,WORK,LWORK,INFO)
+  call ssyev('v','u',16,H33,16,W33,WORK,LWORK,INFO)
   if (INFO /= 0) then
      write(*,*) 'Problem with Lapack for H33 matrix. Error code:', INFO
      stop
@@ -758,7 +789,7 @@ subroutine hamiltonian(E,t,U,mu)
   LWORK = 15
   allocate(WORK(15))
 
-  call dsyev('v','u',4,H43,4,W43,WORK,LWORK,INFO)
+  call ssyev('v','u',4,H43,4,W43,WORK,LWORK,INFO)
   if (INFO /= 0) then
      write(*,*) 'Problem with Lapack for H43 matrix. Error code:', INFO
      stop
@@ -785,6 +816,8 @@ subroutine hamiltonian(E,t,U,mu)
   eigenvectors(256,256) = 1              ! eigenvectors of H44
 
 end subroutine hamiltonian
+
+!************************************************************************************
 
 subroutine transformations()
 
