@@ -5,28 +5,28 @@ program main
 
 	implicit none
 
-	integer, parameter :: npairs=100000
-	real, parameter :: t = -1.0
-	real :: E(nsites)
-	real, parameter :: U=4.0
-  	real, parameter :: mu = U/2
-  	real, parameter :: delta=12.0
+	integer, parameter :: npairs=100   ! size of the ensemble
+	real, parameter :: t = -1.0         ! the hoping intergral
+	real :: E(nsites)                   ! array to hold the site potentials
+	real, parameter :: U=0.0            ! the on site interactions
+  	real, parameter :: mu = U/2         ! the chemical potential
+  	real, parameter :: delta=12.0       ! the size of the disorder
   	real, dimension(nsites,total_states) :: PES_down_ground=0.0, PES_up_ground=0.0, IPES_down_ground=0.0, IPES_up_ground=0.0
   	real, dimension(total_states) :: v_ground
 	real, dimension(nsites,2*total_states,2) :: LDOS=0.0
 	real :: inner_product_up=0.0, inner_product_down=0.0
 	real :: IPR(2*total_states)=0.0
-	integer, parameter :: nbins = 300                  ! number of bins for energy bining to get smooth curves
+	integer, parameter :: nbins = 240                  ! number of bins for energy bining to get smooth curves
 	real, parameter :: frequency_max = 12              ! maximum energy considered in energy bining
 	real, parameter :: frequency_min = -12             ! lowest energy considered in energy bining
 	real :: frequency_delta=0.0                        ! step size between different energy bins
 	integer :: bin=0                                   ! index for the bin number the peak goes in
-	real, dimension(nbins,2) :: DOS=0.0                                      ! array that stores the DOS peaks and all the frequencies of the energy bins
+	real, dimension(nbins,2) :: DOS=0.0                                ! array that stores the DOS peaks and all the frequencies of the energy bins
 	real, dimension(nbins) :: GIPR_num=0.0, GIPR_den=0.0, GIPR=0.0     ! arrays that store the numerator and denominator and the GIPR
 	real :: dos_sum=0.0, half_sum=0.0
 	integer :: i,j, pair
 	integer :: g_up,g_dn,low,high,n_up,n_dn, min_up,min_dn, max_up, max_dn
-	integer :: error=0                     ! variable for error message
+	integer :: error=0                     ! variable for error message when opening file
  	integer :: location(1)=0, groundloc(2)               ! stores the location in the grand_potential array of the lowest energy 
  	character(len=50) :: filename, str_npairs
  	!---------- Time machine ----------
@@ -63,8 +63,12 @@ program main
 
 	pairs: do pair=1,npairs
 
-		if (MOD(pair,npairs/100) == 0) then
-     		write(*,'(I3,A1)') nint(real(pair)/npairs*100), "%"
+		if (npairs < 100) then
+			write(*,*) pair
+     	else 
+     		if (MOD(pair,npairs/100) == 0) then
+     			write(*,'(I3,A1)') nint(real(pair)/npairs*100), "%"
+     		end if
     	end if
 
 		v_ground=0.0
@@ -75,7 +79,9 @@ program main
     	eigenvectors = 0
     	e_ground = 0
 
-		call site_potentials(delta,E) 
+		call site_potentials(delta,E)
+		!E(1) = -3.53660488; E(2) = -0.580926418; E(3) = 5.30663109; E(4) = -1.62454677
+		!E(5) = -1.57661963; E(6) = 4.26862812; E(7) = 1.39825273; E(8) = 3.73524213 
 		call solve_hamiltonian1(E,U,mu)
 
 		!call time_elapsed(hh,mm,ss,mss) ! timer ends here
@@ -100,6 +106,7 @@ program main
 
 	    !write(*,*) g_up, g_dn
 
+	    if (pair == 22) write(*,*) E
 	    call solve_hamiltonian2(E,U,mu,g_up,g_dn)
 	    if (g_up /= 0) call solve_hamiltonian2(E,U,mu,g_up-1,g_dn)
 	    if (g_dn /= 0) call solve_hamiltonian2(E,U,mu,g_up,g_dn-1)

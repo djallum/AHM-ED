@@ -1,6 +1,6 @@
 #!/bin/bash
 
-nsites=4
+nsites=8
 nstates="$(echo "$((4**$nsites))")"
 
 echo "module routines

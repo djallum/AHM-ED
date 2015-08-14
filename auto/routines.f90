@@ -7,8 +7,8 @@ module routines
 	integer, parameter :: sp = kind(1.0)      !single precison kind
 	integer, parameter :: dp = kind(1.0d0)    !double precision kind
 	real :: grand_potential_ground=0.0                 ! the lowest grand ensemble energy
-	integer, parameter :: nsites = 4
-	integer, parameter :: total_states = 256
+	integer, parameter :: nsites = 8
+	integer, parameter :: total_states = 65536
 	integer, parameter :: int_kind = 4
 	integer, parameter :: STDOUT = 10
 
@@ -19,15 +19,19 @@ module routines
 	integer, dimension(nsites,total_states) :: PES_down=0, PES_up=0, IPES_down=0, IPES_up=0  !matrices for PES and IPES 
 	integer, dimension(nsites,total_states) :: phase_PES_down=0, phase_PES_up=0, phase_IPES_down=0, phase_IPES_up=0  !to get anticommutation sign right
 	
-	real :: H00(1,1),H01(4,4),H02(6,6),H03(4,4),H04(1,1)
-	real :: H10(4,4),H11(16,16),H12(24,24),H13(16,16),H14(4,4)
-	real :: H20(6,6),H21(24,24),H22(36,36),H23(24,24),H24(6,6)
-	real :: H30(4,4),H31(16,16),H32(24,24),H33(16,16),H34(4,4)
-	real :: H40(1,1),H41(4,4),H42(6,6),H43(4,4),H44(1,1)
+	real :: H00(1,1),H01(8,8),H02(28,28),H03(56,56),H04(70,70),H05(56,56),H06(28,28),H07(8,8),H08(1,1)
+	real :: H10(8,8),H11(64,64),H12(224,224),H13(448,448),H14(560,560),H15(448,448),H16(224,224),H17(64,64),H18(8,8)
+	real :: H20(28,28),H21(224,224),H22(784,784),H23(1568,1568),H24(1960,1960),H25(1568,1568),H26(784,784),H27(224,224),H28(28,28)
+	real :: H30(56,56),H31(448,448),H32(1568,1568),H33(3136,3136),H34(3920,3920),H35(3136,3136),H36(1568,1568),H37(448,448),H38(56,56)
+	real :: H40(70,70),H41(560,560),H42(1960,1960),H43(3920,3920),H44(4900,4900),H45(3920,3920),H46(1960,1960),H47(560,560),H48(70,70)
+	real :: H50(56,56),H51(448,448),H52(1568,1568),H53(3136,3136),H54(3920,3920),H55(3136,3136),H56(1568,1568),H57(448,448),H58(56,56)
+	real :: H60(28,28),H61(224,224),H62(784,784),H63(1568,1568),H64(1960,1960),H65(1568,1568),H66(784,784),H67(224,224),H68(28,28)
+	real :: H70(8,8),H71(64,64),H72(224,224),H73(448,448),H74(560,560),H75(448,448),H76(224,224),H77(64,64),H78(8,8)
+	real :: H80(1,1),H81(8,8),H82(28,28),H83(56,56),H84(70,70),H85(56,56),H86(28,28),H87(8,8),H88(1,1)
 
 	real, dimension(0:nsites,0:nsites) :: e_ground
 	real, dimension(total_states) :: grand_potential      ! grand potentials (eigenenergies - mu*number electrons)
-	real, dimension(total_states,36) :: eigenvectors                  ! the eigenvectors
+	real, dimension(total_states,4900) :: eigenvectors                  ! the eigenvectors
 	integer, dimension(0:nsites) :: block, temp_block
 	integer, dimension(0:nsites) :: nstates_up
 	integer, allocatable, dimension(:,:) :: neighbours
@@ -302,11 +306,15 @@ contains
 
 		integer :: istate,isite, inbr,new_state(2),phase, ne, i, trans_site(2), new_index,j,state_index,y,n_up,n_dn
 		
-		H00=0.0; H01=0.0; H02=0.0; H03=0.0; H04=0.0; 
-		H10=0.0; H11=0.0; H12=0.0; H13=0.0; H14=0.0; 
-		H20=0.0; H21=0.0; H22=0.0; H23=0.0; H24=0.0; 
-		H30=0.0; H31=0.0; H32=0.0; H33=0.0; H34=0.0; 
-		H40=0.0; H41=0.0; H42=0.0; H43=0.0; H44=0.0; 
+		H00=0.0; H01=0.0; H02=0.0; H03=0.0; H04=0.0; H05=0.0; H06=0.0; H07=0.0; H08=0.0; 
+		H10=0.0; H11=0.0; H12=0.0; H13=0.0; H14=0.0; H15=0.0; H16=0.0; H17=0.0; H18=0.0; 
+		H20=0.0; H21=0.0; H22=0.0; H23=0.0; H24=0.0; H25=0.0; H26=0.0; H27=0.0; H28=0.0; 
+		H30=0.0; H31=0.0; H32=0.0; H33=0.0; H34=0.0; H35=0.0; H36=0.0; H37=0.0; H38=0.0; 
+		H40=0.0; H41=0.0; H42=0.0; H43=0.0; H44=0.0; H45=0.0; H46=0.0; H47=0.0; H48=0.0; 
+		H50=0.0; H51=0.0; H52=0.0; H53=0.0; H54=0.0; H55=0.0; H56=0.0; H57=0.0; H58=0.0; 
+		H60=0.0; H61=0.0; H62=0.0; H63=0.0; H64=0.0; H65=0.0; H66=0.0; H67=0.0; H68=0.0; 
+		H70=0.0; H71=0.0; H72=0.0; H73=0.0; H74=0.0; H75=0.0; H76=0.0; H77=0.0; H78=0.0; 
+		H80=0.0; H81=0.0; H82=0.0; H83=0.0; H84=0.0; H85=0.0; H86=0.0; H87=0.0; H88=0.0; 
 
 		call matrix_sizes()
 
@@ -352,6 +360,14 @@ contains
 											H03(state_index,new_index) = t*phase
 										case(4)
 											H04(state_index,new_index) = t*phase
+										case(5)
+											H05(state_index,new_index) = t*phase
+										case(6)
+											H06(state_index,new_index) = t*phase
+										case(7)
+											H07(state_index,new_index) = t*phase
+										case(8)
+											H08(state_index,new_index) = t*phase
 									end select
 								case(1)
 									select case (n_dn)
@@ -365,6 +381,14 @@ contains
 											H13(state_index,new_index) = t*phase
 										case(4)
 											H14(state_index,new_index) = t*phase
+										case(5)
+											H15(state_index,new_index) = t*phase
+										case(6)
+											H16(state_index,new_index) = t*phase
+										case(7)
+											H17(state_index,new_index) = t*phase
+										case(8)
+											H18(state_index,new_index) = t*phase
 									end select
 								case(2)
 									select case (n_dn)
@@ -378,6 +402,14 @@ contains
 											H23(state_index,new_index) = t*phase
 										case(4)
 											H24(state_index,new_index) = t*phase
+										case(5)
+											H25(state_index,new_index) = t*phase
+										case(6)
+											H26(state_index,new_index) = t*phase
+										case(7)
+											H27(state_index,new_index) = t*phase
+										case(8)
+											H28(state_index,new_index) = t*phase
 									end select
 								case(3)
 									select case (n_dn)
@@ -391,6 +423,14 @@ contains
 											H33(state_index,new_index) = t*phase
 										case(4)
 											H34(state_index,new_index) = t*phase
+										case(5)
+											H35(state_index,new_index) = t*phase
+										case(6)
+											H36(state_index,new_index) = t*phase
+										case(7)
+											H37(state_index,new_index) = t*phase
+										case(8)
+											H38(state_index,new_index) = t*phase
 									end select
 								case(4)
 									select case (n_dn)
@@ -404,6 +444,98 @@ contains
 											H43(state_index,new_index) = t*phase
 										case(4)
 											H44(state_index,new_index) = t*phase
+										case(5)
+											H45(state_index,new_index) = t*phase
+										case(6)
+											H46(state_index,new_index) = t*phase
+										case(7)
+											H47(state_index,new_index) = t*phase
+										case(8)
+											H48(state_index,new_index) = t*phase
+									end select
+								case(5)
+									select case (n_dn)
+										case(0)
+											H50(state_index,new_index) = t*phase
+										case(1)
+											H51(state_index,new_index) = t*phase
+										case(2)
+											H52(state_index,new_index) = t*phase
+										case(3)
+											H53(state_index,new_index) = t*phase
+										case(4)
+											H54(state_index,new_index) = t*phase
+										case(5)
+											H55(state_index,new_index) = t*phase
+										case(6)
+											H56(state_index,new_index) = t*phase
+										case(7)
+											H57(state_index,new_index) = t*phase
+										case(8)
+											H58(state_index,new_index) = t*phase
+									end select
+								case(6)
+									select case (n_dn)
+										case(0)
+											H60(state_index,new_index) = t*phase
+										case(1)
+											H61(state_index,new_index) = t*phase
+										case(2)
+											H62(state_index,new_index) = t*phase
+										case(3)
+											H63(state_index,new_index) = t*phase
+										case(4)
+											H64(state_index,new_index) = t*phase
+										case(5)
+											H65(state_index,new_index) = t*phase
+										case(6)
+											H66(state_index,new_index) = t*phase
+										case(7)
+											H67(state_index,new_index) = t*phase
+										case(8)
+											H68(state_index,new_index) = t*phase
+									end select
+								case(7)
+									select case (n_dn)
+										case(0)
+											H70(state_index,new_index) = t*phase
+										case(1)
+											H71(state_index,new_index) = t*phase
+										case(2)
+											H72(state_index,new_index) = t*phase
+										case(3)
+											H73(state_index,new_index) = t*phase
+										case(4)
+											H74(state_index,new_index) = t*phase
+										case(5)
+											H75(state_index,new_index) = t*phase
+										case(6)
+											H76(state_index,new_index) = t*phase
+										case(7)
+											H77(state_index,new_index) = t*phase
+										case(8)
+											H78(state_index,new_index) = t*phase
+									end select
+								case(8)
+									select case (n_dn)
+										case(0)
+											H80(state_index,new_index) = t*phase
+										case(1)
+											H81(state_index,new_index) = t*phase
+										case(2)
+											H82(state_index,new_index) = t*phase
+										case(3)
+											H83(state_index,new_index) = t*phase
+										case(4)
+											H84(state_index,new_index) = t*phase
+										case(5)
+											H85(state_index,new_index) = t*phase
+										case(6)
+											H86(state_index,new_index) = t*phase
+										case(7)
+											H87(state_index,new_index) = t*phase
+										case(8)
+											H88(state_index,new_index) = t*phase
 									end select
 							end select
 						end if
@@ -447,6 +579,14 @@ contains
 											H03(state_index,new_index) = t*phase
 										case(4)
 											H04(state_index,new_index) = t*phase
+										case(5)
+											H05(state_index,new_index) = t*phase
+										case(6)
+											H06(state_index,new_index) = t*phase
+										case(7)
+											H07(state_index,new_index) = t*phase
+										case(8)
+											H08(state_index,new_index) = t*phase
 									end select
 								case(1)
 									select case (n_dn)
@@ -460,6 +600,14 @@ contains
 											H13(state_index,new_index) = t*phase
 										case(4)
 											H14(state_index,new_index) = t*phase
+										case(5)
+											H15(state_index,new_index) = t*phase
+										case(6)
+											H16(state_index,new_index) = t*phase
+										case(7)
+											H17(state_index,new_index) = t*phase
+										case(8)
+											H18(state_index,new_index) = t*phase
 									end select
 								case(2)
 									select case (n_dn)
@@ -473,6 +621,14 @@ contains
 											H23(state_index,new_index) = t*phase
 										case(4)
 											H24(state_index,new_index) = t*phase
+										case(5)
+											H25(state_index,new_index) = t*phase
+										case(6)
+											H26(state_index,new_index) = t*phase
+										case(7)
+											H27(state_index,new_index) = t*phase
+										case(8)
+											H28(state_index,new_index) = t*phase
 									end select
 								case(3)
 									select case (n_dn)
@@ -486,6 +642,14 @@ contains
 											H33(state_index,new_index) = t*phase
 										case(4)
 											H34(state_index,new_index) = t*phase
+										case(5)
+											H35(state_index,new_index) = t*phase
+										case(6)
+											H36(state_index,new_index) = t*phase
+										case(7)
+											H37(state_index,new_index) = t*phase
+										case(8)
+											H38(state_index,new_index) = t*phase
 									end select
 								case(4)
 									select case (n_dn)
@@ -499,6 +663,98 @@ contains
 											H43(state_index,new_index) = t*phase
 										case(4)
 											H44(state_index,new_index) = t*phase
+										case(5)
+											H45(state_index,new_index) = t*phase
+										case(6)
+											H46(state_index,new_index) = t*phase
+										case(7)
+											H47(state_index,new_index) = t*phase
+										case(8)
+											H48(state_index,new_index) = t*phase
+									end select
+								case(5)
+									select case (n_dn)
+										case(0)
+											H50(state_index,new_index) = t*phase
+										case(1)
+											H51(state_index,new_index) = t*phase
+										case(2)
+											H52(state_index,new_index) = t*phase
+										case(3)
+											H53(state_index,new_index) = t*phase
+										case(4)
+											H54(state_index,new_index) = t*phase
+										case(5)
+											H55(state_index,new_index) = t*phase
+										case(6)
+											H56(state_index,new_index) = t*phase
+										case(7)
+											H57(state_index,new_index) = t*phase
+										case(8)
+											H58(state_index,new_index) = t*phase
+									end select
+								case(6)
+									select case (n_dn)
+										case(0)
+											H60(state_index,new_index) = t*phase
+										case(1)
+											H61(state_index,new_index) = t*phase
+										case(2)
+											H62(state_index,new_index) = t*phase
+										case(3)
+											H63(state_index,new_index) = t*phase
+										case(4)
+											H64(state_index,new_index) = t*phase
+										case(5)
+											H65(state_index,new_index) = t*phase
+										case(6)
+											H66(state_index,new_index) = t*phase
+										case(7)
+											H67(state_index,new_index) = t*phase
+										case(8)
+											H68(state_index,new_index) = t*phase
+									end select
+								case(7)
+									select case (n_dn)
+										case(0)
+											H70(state_index,new_index) = t*phase
+										case(1)
+											H71(state_index,new_index) = t*phase
+										case(2)
+											H72(state_index,new_index) = t*phase
+										case(3)
+											H73(state_index,new_index) = t*phase
+										case(4)
+											H74(state_index,new_index) = t*phase
+										case(5)
+											H75(state_index,new_index) = t*phase
+										case(6)
+											H76(state_index,new_index) = t*phase
+										case(7)
+											H77(state_index,new_index) = t*phase
+										case(8)
+											H78(state_index,new_index) = t*phase
+									end select
+								case(8)
+									select case (n_dn)
+										case(0)
+											H80(state_index,new_index) = t*phase
+										case(1)
+											H81(state_index,new_index) = t*phase
+										case(2)
+											H82(state_index,new_index) = t*phase
+										case(3)
+											H83(state_index,new_index) = t*phase
+										case(4)
+											H84(state_index,new_index) = t*phase
+										case(5)
+											H85(state_index,new_index) = t*phase
+										case(6)
+											H86(state_index,new_index) = t*phase
+										case(7)
+											H87(state_index,new_index) = t*phase
+										case(8)
+											H88(state_index,new_index) = t*phase
 									end select
 							end select
 						end if
@@ -547,6 +803,14 @@ contains
 								htemp=H03
 							case(4)
 								htemp=H04
+							case(5)
+								htemp=H05
+							case(6)
+								htemp=H06
+							case(7)
+								htemp=H07
+							case(8)
+								htemp=H08
 						end select
 					case(1)
 						select case (n_dn)
@@ -560,6 +824,14 @@ contains
 								htemp=H13
 							case(4)
 								htemp=H14
+							case(5)
+								htemp=H15
+							case(6)
+								htemp=H16
+							case(7)
+								htemp=H17
+							case(8)
+								htemp=H18
 						end select
 					case(2)
 						select case (n_dn)
@@ -573,6 +845,14 @@ contains
 								htemp=H23
 							case(4)
 								htemp=H24
+							case(5)
+								htemp=H25
+							case(6)
+								htemp=H26
+							case(7)
+								htemp=H27
+							case(8)
+								htemp=H28
 						end select
 					case(3)
 						select case (n_dn)
@@ -586,6 +866,14 @@ contains
 								htemp=H33
 							case(4)
 								htemp=H34
+							case(5)
+								htemp=H35
+							case(6)
+								htemp=H36
+							case(7)
+								htemp=H37
+							case(8)
+								htemp=H38
 						end select
 					case(4)
 						select case (n_dn)
@@ -599,6 +887,98 @@ contains
 								htemp=H43
 							case(4)
 								htemp=H44
+							case(5)
+								htemp=H45
+							case(6)
+								htemp=H46
+							case(7)
+								htemp=H47
+							case(8)
+								htemp=H48
+						end select
+					case(5)
+						select case (n_dn)
+							case(0)
+								htemp=H50
+							case(1)
+								htemp=H51
+							case(2)
+								htemp=H52
+							case(3)
+								htemp=H53
+							case(4)
+								htemp=H54
+							case(5)
+								htemp=H55
+							case(6)
+								htemp=H56
+							case(7)
+								htemp=H57
+							case(8)
+								htemp=H58
+						end select
+					case(6)
+						select case (n_dn)
+							case(0)
+								htemp=H60
+							case(1)
+								htemp=H61
+							case(2)
+								htemp=H62
+							case(3)
+								htemp=H63
+							case(4)
+								htemp=H64
+							case(5)
+								htemp=H65
+							case(6)
+								htemp=H66
+							case(7)
+								htemp=H67
+							case(8)
+								htemp=H68
+						end select
+					case(7)
+						select case (n_dn)
+							case(0)
+								htemp=H70
+							case(1)
+								htemp=H71
+							case(2)
+								htemp=H72
+							case(3)
+								htemp=H73
+							case(4)
+								htemp=H74
+							case(5)
+								htemp=H75
+							case(6)
+								htemp=H76
+							case(7)
+								htemp=H77
+							case(8)
+								htemp=H78
+						end select
+					case(8)
+						select case (n_dn)
+							case(0)
+								htemp=H80
+							case(1)
+								htemp=H81
+							case(2)
+								htemp=H82
+							case(3)
+								htemp=H83
+							case(4)
+								htemp=H84
+							case(5)
+								htemp=H85
+							case(6)
+								htemp=H86
+							case(7)
+								htemp=H87
+							case(8)
+								htemp=H88
 						end select
 				end select
 
@@ -660,6 +1040,14 @@ contains
 						htemp=H03
 					case(4)
 						htemp=H04
+					case(5)
+						htemp=H05
+					case(6)
+						htemp=H06
+					case(7)
+						htemp=H07
+					case(8)
+						htemp=H08
 				end select
 			case(1)
 				select case (n_dn)
@@ -673,6 +1061,14 @@ contains
 						htemp=H13
 					case(4)
 						htemp=H14
+					case(5)
+						htemp=H15
+					case(6)
+						htemp=H16
+					case(7)
+						htemp=H17
+					case(8)
+						htemp=H18
 				end select
 			case(2)
 				select case (n_dn)
@@ -686,6 +1082,14 @@ contains
 						htemp=H23
 					case(4)
 						htemp=H24
+					case(5)
+						htemp=H25
+					case(6)
+						htemp=H26
+					case(7)
+						htemp=H27
+					case(8)
+						htemp=H28
 				end select
 			case(3)
 				select case (n_dn)
@@ -699,6 +1103,14 @@ contains
 						htemp=H33
 					case(4)
 						htemp=H34
+					case(5)
+						htemp=H35
+					case(6)
+						htemp=H36
+					case(7)
+						htemp=H37
+					case(8)
+						htemp=H38
 				end select
 			case(4)
 				select case (n_dn)
@@ -712,6 +1124,98 @@ contains
 						htemp=H43
 					case(4)
 						htemp=H44
+					case(5)
+						htemp=H45
+					case(6)
+						htemp=H46
+					case(7)
+						htemp=H47
+					case(8)
+						htemp=H48
+				end select
+			case(5)
+				select case (n_dn)
+					case(0)
+						htemp=H50
+					case(1)
+						htemp=H51
+					case(2)
+						htemp=H52
+					case(3)
+						htemp=H53
+					case(4)
+						htemp=H54
+					case(5)
+						htemp=H55
+					case(6)
+						htemp=H56
+					case(7)
+						htemp=H57
+					case(8)
+						htemp=H58
+				end select
+			case(6)
+				select case (n_dn)
+					case(0)
+						htemp=H60
+					case(1)
+						htemp=H61
+					case(2)
+						htemp=H62
+					case(3)
+						htemp=H63
+					case(4)
+						htemp=H64
+					case(5)
+						htemp=H65
+					case(6)
+						htemp=H66
+					case(7)
+						htemp=H67
+					case(8)
+						htemp=H68
+				end select
+			case(7)
+				select case (n_dn)
+					case(0)
+						htemp=H70
+					case(1)
+						htemp=H71
+					case(2)
+						htemp=H72
+					case(3)
+						htemp=H73
+					case(4)
+						htemp=H74
+					case(5)
+						htemp=H75
+					case(6)
+						htemp=H76
+					case(7)
+						htemp=H77
+					case(8)
+						htemp=H78
+				end select
+			case(8)
+				select case (n_dn)
+					case(0)
+						htemp=H80
+					case(1)
+						htemp=H81
+					case(2)
+						htemp=H82
+					case(3)
+						htemp=H83
+					case(4)
+						htemp=H84
+					case(5)
+						htemp=H85
+					case(6)
+						htemp=H86
+					case(7)
+						htemp=H87
+					case(8)
+						htemp=H88
 				end select
 		end select
 
