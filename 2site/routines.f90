@@ -72,7 +72,7 @@ subroutine make_filename(filename,t,U,mu,delta)
 	write(W_str,'(I2)') nint(delta) 
 	write(U_str,'(I2)') nint(U)
 
-	write(filename,'(A)') trim(adjustl('dos+ipr_'))
+	write(filename,'(A)') trim(adjustl('2-dos+ipr_'))
 	write(filename,'(A)') trim(adjustl(filename)) // 't' // trim(adjustl(t_str)) 
 	write(filename,'(A)') trim(adjustl(filename)) // 'U' // trim(adjustl(U_str)) 
 	write(filename,'(A)') trim(adjustl(filename)) // 'W' // trim(adjustl(W_str)) 
