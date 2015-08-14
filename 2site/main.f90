@@ -12,10 +12,10 @@ program main
 ! The matrices are solved using lapack. The wieght of peaks for the LDOS is found by multiplying the ground state vector by matrices representing PES and 
 ! IPES from both cites and computed its inner product with each eigenstate. The location of the peaks is calculated by subtracting or adding (depending
 ! if PES or IPES) the lowest grandpotential with the grandpotential of that eigenstate. The DOS and GIPR are calculated using the two LDOS with the 
-! formulas in J. Perera and R. Wortis's paper "Energy dependence of localization with interactons and disorder: The ...". The GIPR is also weighted with 
+! formulas in isite. Perera and R. Wortis's paper "Energy dependence of localization with interactons and disorder: The ...". The GIPR is also weighted with 
 ! the equation found in the paper.
 !
-! The fock state basis used in order is (+ is up, - is down) :
+! The fock state basis used in order is (+ is up, - is down and 2 means both up and down) :
 ! 00,0+,+0,0-,-0,++,--,-+,+-,02,20,+2,2+,-2,2-,22
 
 	use routines
@@ -24,23 +24,23 @@ program main
 
 	!-------------------Input Parameters---------------------------------
 	integer, parameter :: npairs = 10000000  ! size of the ensemble
-	real, parameter :: t = -1                 ! nearest neighbour hoping 
-	real, parameter :: delta = 12.0           ! width of disorder for the site potentials 
-  	real, parameter :: U = 4.0                ! on-site interactions
- 	real :: mu = U/2               ! chemical potential (half filling)
+	real, parameter :: t = 0                 ! nearest neighbour hoping 
+	real, parameter :: delta = 4.0           ! width of disorder for the site potentials 
+  	real, parameter :: U = 0.0                ! on-site interactions
+ 	real :: mu = 3.2               ! chemical potential (half filling)
  	integer, parameter :: nbins = 600         ! number of bins for energy bining to get smooth curves
   	real, parameter :: frequency_max = 12     ! maximum energy considered in energy bining
   	real, parameter :: frequency_min = -12    ! lowest energy considered in energy bining
 
   	!-------------------Dependent Variables------------------------------
- 	integer :: pair, i, j                        ! counters for loops
+ 	integer :: pair, istate, isite, i            ! counters for loops
   	integer :: error                    		 ! variable for error message
   	integer :: location(1)                       ! stores the location in the grand_potential array of the lowest energy
   	integer :: bin=0                             ! index for the bin number the peak goes in
   	real, dimension(nsites) :: E                 ! site potentials
   	real, dimension(nsites,nstates) :: PES_dn_ground, PES_up_ground   ! ground state vector after an down or up photo emmision respectively
   	real, dimension(nsites,nstates) :: IPES_dn_ground, IPES_up_ground ! ground state vector after an down or up inverse photo emmision respectively
-  	real, dimension(nsites,2*nstates,2) :: LDOS     ! Local DOS (LDOS(i,j,1) is the energy of state j's contribution LDOS for site i and LDOS(i,j,2) is the weight of the contribution)
+  	real, dimension(nsites,2*nstates,2) :: LDOS     ! Local DOS (LDOS(i,isite,1) is the energy of state isite's contribution LDOS for site i and LDOS(i,isite,2) is the weight of the contribution)
   	real :: inner_product_up, inner_product_dn   ! used in the calculation of the weight of LDOS contributions
   	real :: frequency_delta                      ! step size between different energy bins
   	real, dimension(nbins,2) :: DOS=0            ! array that stores the DOS peaks and all the frequencies of the energy bins (DOS(i,1) is frequency of bin i and DOS(i,2) is the weight)
@@ -103,58 +103,58 @@ program main
 
 	    !-----multiply v_ground by the PES and IPES matrices-------------
 
-	    do j=1,nsites
-	       	do i=1,nstates
-	          	if (PES_up(j,i)==0) then
-	             	PES_up_ground(j,i) = 0.0
+	    do isite=1,nsites
+	       	do istate=1,nstates
+	          	if (PES_up(isite,istate)==0) then
+	             	PES_up_ground(isite,istate) = 0.0
 	          	else 
-	             	PES_up_ground(j,i) = v_ground(PES_up(j,i))*phase_PES_up(j,i)
+	             	PES_up_ground(isite,istate) = v_ground(PES_up(isite,istate))*phase_PES_up(isite,istate)
 	          	end if
-	          	if (PES_dn(j,i)==0) then
-	             	PES_dn_ground(j,i) = 0.0
+	          	if (PES_dn(isite,istate)==0) then
+	             	PES_dn_ground(isite,istate) = 0.0
 	          	else 
-	             	PES_dn_ground(j,i) = v_ground(PES_dn(j,i))*phase_PES_dn(j,i)
+	             	PES_dn_ground(isite,istate) = v_ground(PES_dn(isite,istate))*phase_PES_dn(isite,istate)
 	          	end if
-	          	if (IPES_up(j,i)==0) then
-	             	IPES_up_ground(j,i) = 0.0
+	          	if (IPES_up(isite,istate)==0) then
+	             	IPES_up_ground(isite,istate) = 0.0
 	          	else 
-	             	IPES_up_ground(j,i) = v_ground(IPES_up(j,i))*phase_IPES_up(j,i)
+	             	IPES_up_ground(isite,istate) = v_ground(IPES_up(isite,istate))*phase_IPES_up(isite,istate)
 	          	end if
-	          	if (IPES_dn(j,i)==0) then
-	             	IPES_dn_ground(j,i) = 0.0
+	          	if (IPES_dn(isite,istate)==0) then
+	             	IPES_dn_ground(isite,istate) = 0.0
 	          	else 
-	             	IPES_dn_ground(j,i) = v_ground(IPES_dn(j,i))*phase_IPES_dn(j,i)
+	             	IPES_dn_ground(isite,istate) = v_ground(IPES_dn(isite,istate))*phase_IPES_dn(isite,istate)
 	          	end if
 	       	end do
 	    end do 
 
 	    ! calculate the LDOS for each site
 
-	    do j=1,nsites
-	       	do i=1,nstates
-	          	inner_product_up = (dot_product(PES_up_ground(j,:),eigenvectors(i,:)))**2   ! dot product the PES up ground vector with each eigenstate
-	          	inner_product_dn =  (dot_product(PES_dn_ground(j,:),eigenvectors(i,:)))**2  ! dot product the PES down ground vector with each eigenstate
-	          	LDOS(j,i,1) = grand_potential_ground - grand_potential(i)                   ! location of the contribution
-	          	LDOS(j,i,2) = (inner_product_up + inner_product_dn)*0.5                     ! weight of the contribution (average up and down spin components)
+	    do isite=1,nsites
+	       	do istate=1,nstates
+	          	inner_product_up = (dot_product(PES_up_ground(isite,:),eigenvectors(istate,:)))**2   ! dot product the PES up ground vector with each eigenstate
+	          	inner_product_dn =  (dot_product(PES_dn_ground(isite,:),eigenvectors(istate,:)))**2  ! dot product the PES down ground vector with each eigenstate
+	          	LDOS(isite,istate,1) = grand_potential_ground - grand_potential(istate)                   ! location of the contribution
+	          	LDOS(isite,istate,2) = (inner_product_up + inner_product_dn)*0.5                     ! weight of the contribution (average up and down spin components)
 	       	end do
 	    end do
 
-	    do j=1,nsites
-	       	do i=1,nstates
-	          	inner_product_up = (dot_product(IPES_up_ground(j,:),eigenvectors(i,:)))**2
-	          	inner_product_dn =  (dot_product(IPES_dn_ground(j,:),eigenvectors(i,:)))**2
-	          	LDOS(j,i+nstates,1) = grand_potential(i) - grand_potential_ground           ! location of the contribution
-	          	LDOS(j,i+nstates,2) = (inner_product_up + inner_product_dn)*0.5           ! weight of the contribution (average up and down spin components)
+	    do isite=1,nsites
+	       	do istate=1,nstates
+	          	inner_product_up = (dot_product(IPES_up_ground(isite,:),eigenvectors(istate,:)))**2
+	          	inner_product_dn =  (dot_product(IPES_dn_ground(isite,:),eigenvectors(istate,:)))**2
+	          	LDOS(isite,istate+nstates,1) = grand_potential(istate) - grand_potential_ground           ! location of the contribution
+	          	LDOS(isite,istate+nstates,2) = (inner_product_up + inner_product_dn)*0.5           ! weight of the contribution (average up and down spin components)
 	       	end do
 	    end do
 
-	    do i=1,2*nstates
-	       	bin = floor(LDOS(1,i,1)/frequency_delta) + nbins/2  + 1              ! find the bin number for energy bining
-	       	DOS(bin,2) = DOS(bin,2) + (SUM(LDOS(:,i,2)))/real(nsites)            ! make the contribution to that bin
-	       	if (SUM(LDOS(:,i,2)) /= 0) then
-	          	IPR(i) = SUM(LDOS(:,i,2)**2)/(SUM(LDOS(:,i,2))**2)
-	          	GIPR_num(bin) = GIPR_num(bin) + IPR(i)*(SUM(LDOS(:,i,2)))/real(nsites)  ! numerator of the weighted GIPR
-	          	GIPR_den(bin) = GIPR_den(bin) + (SUM(LDOS(:,i,2)))/real(nsites)         ! denominator of the weighted GIPR
+	    do istate=1,2*nstates
+	       	bin = floor(LDOS(1,istate,1)/frequency_delta) + nbins/2  + 1              ! find the bin number for energy bining
+	       	DOS(bin,2) = DOS(bin,2) + (SUM(LDOS(:,istate,2)))/real(nsites)            ! make the contribution to that bin
+	       	if (SUM(LDOS(:,istate,2)) /= 0) then
+	          	IPR(i) = SUM(LDOS(:,istate,2)**2)/(SUM(LDOS(:,istate,2))**2)
+	          	GIPR_num(bin) = GIPR_num(bin) + IPR(i)*(SUM(LDOS(:,istate,2)))/real(nsites)  ! numerator of the weighted GIPR
+	          	GIPR_den(bin) = GIPR_den(bin) + (SUM(LDOS(:,istate,2)))/real(nsites)         ! denominator of the weighted GIPR
 	       	end if
 	    end do
 
