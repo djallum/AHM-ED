@@ -1,6 +1,6 @@
 #!/bin/bash
 
-nsites=8
+nsites=4
 nstates="$(echo "$((4**$nsites))")"
 
 echo "module routines
@@ -69,8 +69,8 @@ contains
 		write(U_str,'(I2)') nint(U)
 		write(s_str,'(I1)') nsites
 
-		write(filename,'(A)') trim(adjustl('auto')) // trim(adjustl(s_str)) 
-		write(filename,'(A)') trim(adjustl(filename)) // '_t' // trim(adjustl(t_str)) 
+		write(filename,'(A)') trim(adjustl('data/a')) // trim(adjustl(s_str)) 
+		write(filename,'(A)') trim(adjustl(filename)) // '-dos+ipr_t' // trim(adjustl(t_str)) 
 		write(filename,'(A)') trim(adjustl(filename)) // 'U' // trim(adjustl(U_str)) 
 		write(filename,'(A)') trim(adjustl(filename)) // 'W' // trim(adjustl(W_str)) 
 		write(filename,'(A)') trim(adjustl(filename)) // 'mu' // trim(adjustl(mu_str)) // '.dat'
