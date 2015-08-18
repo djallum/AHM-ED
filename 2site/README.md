@@ -2,7 +2,7 @@
 <body>
 <h1>2 Site Model</h1>
 <p> The files contained in the directory are for simulations of the Anderson-Hubbard model using an ensemble of 2 site systems. The program will calculate the density of states (DOS), generalized inverse participaion ratio (GIPR) and the filling.</p> 
-<p>Information regarding the use and structure of the code can be found in this README file. The directory <em>validation</em> contains a pdf and .tex file (and images used in the files) that outlines the tests conducted and validation of the program. Many of the equations used are found in the file <em>math_equations.pdf</em>.</p>
+<p>Information regarding the use and structure of the code can be found in this README file. The directory <em>validation</em> contains a pdf and .tex file (and images used in the files) that outlines the tests conducted and validation of the program. Many of the equations used are found in the file <em>math_equations.pdf</em> in the parent directory <em>AHM-ED</em>.</p>
 <h3>1. Downloading files</h3>
 <p>Fork the repository AH-onsite to your GitHub account if you have not already done so. If would do not wish to use GitHub the files can be individually downloaded. The files needed to create the executable are <em>routines.f90, main.f90, makefile</em>. If you plan on modifying the files and wanting the update the files on GitHub we highly recommend forking the repository (information on how to use GitHub to create your personal repository can be found in the README in the AH-onsite directory). </p>
 <h3>2. Compilling and Running</h3>
