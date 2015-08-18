@@ -13,16 +13,16 @@ echo "module routines
 	integer, parameter :: dp = kind(1.0d0)    !double precision kind
 	real :: grand_potential_ground=0.0                 ! the lowest grand ensemble energy
 	integer, parameter :: nsites = $nsites
-	integer, parameter :: total_states = $nstates
+	integer, parameter :: nstates = $nstates
 	integer, parameter :: int_kind = 4
 	integer, parameter :: STDOUT = 10
 
-	integer, dimension(2,total_states) :: fock_states
+	integer, dimension(2,nstates) :: fock_states
 	integer, dimension(0:2**nsites) :: states_order
 	integer :: ne
 	integer :: total_states_up
-	integer, dimension(nsites,total_states) :: PES_down=0, PES_up=0, IPES_down=0, IPES_up=0  !matrices for PES and IPES 
-	integer, dimension(nsites,total_states) :: phase_PES_down=0, phase_PES_up=0, phase_IPES_down=0, phase_IPES_up=0  !to get anticommutation sign right
+	integer, dimension(nsites,nstates) :: PES_down=0, PES_up=0, IPES_down=0, IPES_up=0  !matrices for PES and IPES 
+	integer, dimension(nsites,nstates) :: phase_PES_down=0, phase_PES_up=0, phase_IPES_down=0, phase_IPES_up=0  !to get anticommutation sign right
 	"
 max=0
 for ((n_up=0; n_up<=nsites; n_up++)); do
@@ -44,8 +44,8 @@ done
 
 echo "
 	real, dimension(0:nsites,0:nsites) :: e_ground
-	real, dimension(total_states) :: grand_potential      ! grand potentials (eigenenergies - mu*number electrons)
-	real, dimension(total_states,$max) :: eigenvectors                  ! the eigenvectors
+	real, dimension(nstates) :: grand_potential      ! grand potentials (eigenenergies - mu*number electrons)
+	real, dimension(nstates,$max) :: eigenvectors                  ! the eigenvectors
 	integer, dimension(0:nsites) :: block, temp_block
 	integer, dimension(0:nsites) :: nstates_up
 	integer, allocatable, dimension(:,:) :: neighbours
@@ -176,7 +176,7 @@ contains
 		! make the PES_up matrices
 
 		do position = 1,nsites
-			do i=1,total_states
+			do i=1,nstates
 				ne = 0
 				if (ibits(fock_states(1,i),position-1,1) == 1) then
 					PES_up(position,i) = 0
@@ -195,7 +195,7 @@ contains
 					end if
 					new_state(1) = ibset(fock_states(1,i),position-1)
 					new_state(2) = fock_states(2,i)
-					do j=1,total_states
+					do j=1,nstates
 						if(fock_states(1,j) == new_state(1) .and. fock_states(2,j) == new_state(2)) then
 							new_index = j
 						end if
@@ -206,7 +206,7 @@ contains
 		end do
 
 		do position = 1,nsites
-			do i=1,total_states
+			do i=1,nstates
 				ne = 0
 				if (ibits(fock_states(2,i),position-1,1) == 1) then
 					PES_down(position,i) = 0
@@ -225,7 +225,7 @@ contains
 					end if
 					new_state(2) = ibset(fock_states(2,i),position-1)
 					new_state(1) = fock_states(1,i)
-					do j=1,total_states
+					do j=1,nstates
 						if(fock_states(1,j) == new_state(1) .and. fock_states(2,j) == new_state(2)) then
 							new_index = j
 						end if
@@ -236,7 +236,7 @@ contains
 		end do
 
 		sites: do j=1,nsites  ! calculating the IPES matrices by making them the opposite of the PES
-         do i=1,total_states
+         do i=1,nstates
             if (PES_down(j,i) /= 0) then
                phase_IPES_down(j,PES_down(j,i)) = phase_PES_down(j,i)
                IPES_down(j,PES_down(j,i)) = i
@@ -356,7 +356,7 @@ echo "
 								phase = -1
 							end if
 							new_state(1) = ibset(new_state(1),inbr-1)
-							do j=1,total_states
+							do j=1,nstates
 								if(fock_states(1,j) == new_state(1) .and. fock_states(2,j) == new_state(2)) then
 								new_index = j
 								end if
@@ -398,7 +398,7 @@ echo "
 								phase = -1
 							end if
 							new_state(2) = ibset(new_state(2),inbr-1)
-							do j=1,total_states
+							do j=1,nstates
 								if(fock_states(1,j) == new_state(1) .and. fock_states(2,j) == new_state(2)) then
 								new_index = j
 								end if
