@@ -9,20 +9,20 @@ echo "module routines
 
 	implicit none
 
-	!	  %-------------------------------------------------------------------------------------%
-	!	  |  Fock states are represented in binary. Each one is represented with two integers:  |
-	!	  |       - First integer is assosiated with up electrons                               |
-	!	  |       - Second integer is assosiated with down electrons                            |
-	!     |  An example: The two integers are 7, 22 and it's an 8 site simulation               |
-	!	  |  	   7 in binary:  00000111													    |
-	!	  |       22 in binary:  00010110														|
-	!     |  This means the fock state is (+ is up - is down and 2 is both):					|	
-	!	  |                      000-022+ 														|
-	!	  %-------------------------------------------------------------------------------------%
+	!    %-------------------------------------------------------------------------------------%
+	!    |  Fock states are represented in binary. Each one is represented with two integers:  |
+	!    |       - First integer is assosiated with up electrons                               |
+	!    |       - Second integer is assosiated with down electrons                            |
+	!    |  An example: The two integers are 7, 22 and it's an 8 site simulation               |
+	!    |       7 in binary:  00000111                                                        |
+	!    |      22 in binary:  00010110                                                        |
+	!    |  This means the fock state is (+ is up - is down and 2 is both):                    |	
+	!    |                     000-022+                                                        |
+	!    %-------------------------------------------------------------------------------------%
 
 	!--------------Other Parameters and Variables-------------------------------
 	integer, parameter :: nsites = $nsites             ! number of states
-	integer, parameter :: nstates = $nstates           ! size of the fock state (FS) basis
+	integer, parameter :: nstates$nstates           ! size of the fock state (FS) basis
 	real :: grand_potential_ground=0.0                 ! the lowest grand ensemble energy
 	integer, dimension(2,nstates) :: fock_states       ! array that stores each FS represented in binary (see above)
 	integer, dimension(0:2**nsites) :: states_order    ! orders the up part of FS and down part of FS before combining them
@@ -136,14 +136,14 @@ subroutine num_sites()
 
 	!    %----------------------------------------------------------------------------------------------%
 	!    | Creates and orders the fock state basis. As an example the order for 2 site system is:       |
-	!    | 																							    |
-	!	 |								                   i=											|
-	!	 |			         | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 	|
+	!    |                                                                                              |
+	!    |                                                 i=                                           |
+	!    |                   | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 	|
 	!    |   ----------------|---|---|---|---|---|---|---|---|---|----|----|----|----|----|----|----|   |
 	!    |   fock_states(1,i)| 0 | 0 | 0 | 0 | 1 | 2 | 1 | 2 | 1 | 2  | 1  | 2  | 3	 | 3  | 3  | 3  |	|
 	!    |   ----------------|---|---|---|---|---|---|---|---|---|----|----|----|----|----|----|----|   |
 	!    |   fock_states(2,i)| 0 | 1 | 2 | 3 | 0 | 0 | 1 | 1 | 2 | 2  | 3  | 3  | 0  | 1  | 2  | 3  |   |
-	!    |																								|
+	!    |                                                                                              |
 	!    %----------------------------------------------------------------------------------------------%
 	!
 	!    * details of the order are not particularily important and specifics can be found by working through source code
@@ -182,10 +182,10 @@ subroutine num_sites()
  	
  	! %-----------------------------------------------------------------------%
  	! |	Order intergers by number of ones (electrons) they have in binary     |
- 	! | 																	  |
+ 	! |                                                                       |
  	! | Example for nsite=4:  0, 1,2,4,8, 3,5,6,9,10,12, 7,11,13,14, 15)      |
- 	! |						 |0||   1   ||      2      |     3     | 4 |      |
- 	! |																		  |
+ 	! |	                     |0||   1   ||      2      |     3     | 4 |      |
+ 	! |                                                                       |
  	! %-----------------------------------------------------------------------%
 
 	do istate=0,total_states_up-1
@@ -219,11 +219,11 @@ subroutine transformations()
 	
 	!  %---------------------------------------------------------------------------------------------------%
 	!  |  Creates the lookup tables needed to calculate c_{i,sigma}|Psi0> and cc_{i,sigma}^{dagger}|Psi0>  |
-	!  |	   - Psi0 is the many-body ground state 													   |
+	!  |       - Psi0 is the many-body ground state                                                        |
 	!  |       - c_{i,sigma} is removable of electron of spin sigma from site i                            |
 	!  |       - c_{i,sigma}^{dagger} is addition of electron of spin sigma on site i                      |
 	!  %---------------------------------------------------------------------------------------------------%
-	
+
 	implicit none
 	
 	integer :: i,j,new_state(2), new_index, position, isite
