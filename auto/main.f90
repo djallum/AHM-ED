@@ -22,41 +22,53 @@ program main
 	implicit none
 
 	!-------------------Input Parameters---------------------------------
-	integer, parameter :: npairs=100000      ! size of the ensemble
-	real, parameter :: t = -1.0         ! nearest neighbour hoping 
-	real, parameter :: U = 4.0          ! the on site interactions
-  	real, parameter :: mu = U/2         ! the chemical potential (U/2 is half filling)
-  	real, parameter :: delta=12.0       ! the width of the disorder
-
-  	!-------------------Dependent Variables------------------------------
-  	real :: E(nsites)                   ! array to hold the site potentials
-  	real, dimension(nsites,total_states) :: PES_down_ground=0.0, PES_up_ground=0.0, IPES_down_ground=0.0, IPES_up_ground=0.0
-  	real, dimension(total_states) :: v_ground
-	real, dimension(nsites,2*total_states,2) :: LDOS=0.0
-	real :: inner_product_up=0.0, inner_product_down=0.0
-	real :: IPR(2*total_states)=0.0
-	integer, parameter :: nbins = 300                  ! number of bins for energy bining to get smooth curves
+	integer, parameter :: npairs=100000    ! size of the ensemble
+	real, parameter :: t = -1.0            ! nearest neighbour hoping 
+	real, parameter :: U = 4.0             ! the on site interactions
+	real, parameter :: delta=12.0          ! the width of the disorder
+  	real, parameter :: mu = U/2            ! the chemical potential (U/2 is half filling)
+  	integer, parameter :: nbins = 300                  ! number of bins for energy bining to get smooth curves
 	real, parameter :: frequency_max = 12              ! maximum energy considered in energy bining
 	real, parameter :: frequency_min = -12             ! lowest energy considered in energy bining
-	real :: frequency_delta=0.0                        ! step size between different energy bins
-	integer :: bin=0                                   ! index for the bin number the peak goes in
-	real, dimension(nbins,2) :: DOS=0.0                                ! array that stores the DOS peaks and all the frequencies of the energy bins
-	real, dimension(nbins) :: GIPR_num=0.0, GIPR_den=0.0, GIPR=0.0     ! arrays that store the numerator and denominator and the GIPR
-	real :: dos_sum=0.0, half_sum=0.0
-	integer :: i,j, pair
-	integer :: g_up,g_dn,low,high,n_up,n_dn, min_up,min_dn, max_up, max_dn
-	integer :: error=0                     ! variable for error message when opening file
- 	integer :: location(1)=0, groundloc(2)               ! stores the location in the grand_potential array of the lowest energy 
- 	character(len=50) :: filename 
- 	character(len=50) :: str_npairs, str_nbins, str_ver   
- 	integer :: version
- 	integer :: file_count          
- 	!---------- Time machine ----------
-  	integer :: dd,hh,mm,ss,mss    !these variables will represent the amount of time elapsed
+
+  	!-------------------Dependent Variables------------------------------
+  	integer :: pair, i, j                        ! counters for loops
+  	integer :: bin=0                             ! index for the bin number the peak goes in DOS
+  	integer :: error                             ! variable for error message when opening file
+  	integer :: n_up, n_dn                        ! counters for loops (number of up or down electrons)
+  	integer :: g_up,g_dn                         ! number of electrons in the many-body ground state
+  	integer :: min_up, min_dn, max_up, max_dn    ! max/min number of electrons that a many-body eigenstate that can be transitioned to can have
+  	integer :: low, high                         ! range in array grand_potentials of states with a specified n_up, n_dn electrons
+  	integer :: groundloc(2)                      ! stores the location in array e_ground of minimum energy (this will find g_up, g_dn)
+  	integer :: location(1)                       ! stores the location in the grand_potential array of the lowest energy
+  	integer :: version                           ! the version number for the data file (multiple simulations with same parameters)
+ 	integer :: file_count                        ! counts amount of times the program has tried to open output file (gives error if > 12)
+  	real :: E(nsites)                            ! array to hold the site potentials
+  	real, dimension(total_states) :: v_ground    ! many-body ground state vector (MBG) written in fock basis (v_ground(i) is coefficient in front of fock state number "i")
+  	real, dimension(nsites,total_states) :: PES_down_ground, PES_up_ground   ! MBG after an down or up photo emmision respectively (PES_down_ground(i,:) is  c_{i,down}|Psi0> )
+  	real, dimension(nsites,total_states) :: IPES_down_ground, IPES_up_ground ! MBG after an down or up inverse photo emmision respectively (IPES_down_ground(i,:) is  c^{dagger}_{i,down}|Psi0> )
+	real, dimension(nsites,2*total_states,2) :: LDOS ! local density of states (LDOS(i,:) is LDOS of site i)
+	real :: inner_product_up, inner_product_down     ! inner products used when calculating the weight of LDOS contributions (<Psi|PES_down_ground> or <Psi|IPES_down_ground>)
+	real :: IPR(2*total_states)                          ! generalized inverse participation ratio before being ensemble averaged
+	real :: frequency_delta                              ! step size between different energy bins for DOS and GIPR
+	real, dimension(nbins,2) :: DOS                      ! array that stores the DOS (DOS(i,1) is energy of bin i and DOS(i,2) is the weight of it)
+	real, dimension(nbins) :: GIPR_num, GIPR_den, GIPR   ! arrays that store the numerator and denominator and the ensemble averaged GIPR
+	real :: dos_sum                                      ! sums the entire DOS so that area under it can be normalized to 1
+	real :: half_sum                                     ! sums DOS from -W/2 to 0 to find the filling
+ 	character(len=50) :: filename                        ! variable that stores the output filename
+ 	character(len=50) :: str_npairs, str_nbins           ! strings for information at top of output file
+ 	character(len=50) :: str_ver                         ! string for version number of output file
+
+ 	!------------------Variables for Time machine-------------------------
+  	integer :: dd,hh,mm,ss,mss                           ! these variables will represent the amount of time elapsed
+
+  	!-----------------Preparations for the main loop----------------------
 
   	call time_starter()
 
 	frequency_delta = (frequency_max - frequency_min)/nbins   ! calculating the step size between bins for the energy bining process
+
+	!-----------------------Assigning filename----------------------------
 
 	call make_filename(filename,t,U,mu,delta)
 
@@ -73,12 +85,14 @@ program main
     		write(str_ver,'(I1)') version
     		write(filename,'(A)') trim(adjustl(filename(1:LEN_TRIM(filename) - 5))) // trim(adjustl(str_ver)) // ".dat"
     	end if
-    	if (file_count > 10) then
+    	if (file_count > 12) then
     		write(*,*) 'error opening output file. Error number:', error
     		stop
 		end if
     	go to 15
   	end if
+
+  	!------------------Writing info to data file---------------------------
 
   	write(str_npairs,'(I15)') npairs
   	write(str_nbins, '(I10)') nbins
@@ -90,6 +104,8 @@ program main
   	write(10,*) " ensemble size=" // adjustl(trim(str_npairs)) 
   	write(10,*) "#" 
 
+  	!------------Calling subroutines needed to start loop-------------------
+
 	call num_sites()
 	call random_gen_seed()
 	call transformations()
@@ -98,6 +114,8 @@ program main
 
 	!call time_elapsed(hh,mm,ss,mss) ! timer ends here
 	!write(*,*) "pre:", mm,ss
+
+	!---------------------------Main loop-----------------------------------
 
 	pairs: do pair=1,npairs
 
@@ -144,7 +162,6 @@ program main
 
 	    !write(*,*) g_up, g_dn
 
-	    if (pair == 22) write(*,*) E
 	    call solve_hamiltonian2(E,U,mu,g_up,g_dn)
 	    if (g_up /= 0) call solve_hamiltonian2(E,U,mu,g_up-1,g_dn)
 	    if (g_dn /= 0) call solve_hamiltonian2(E,U,mu,g_up,g_dn-1)
