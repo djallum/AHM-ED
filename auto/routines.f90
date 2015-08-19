@@ -30,15 +30,15 @@ module routines
 
 	!------------------Hamiltonian Submatrices---------------------------------
 	
-	real :: H00(1,1),H01(4,4),H02(6,6),H03(4,4),H04(1,1)
-	real :: H10(4,4),H11(16,16),H12(24,24),H13(16,16),H14(4,4)
-	real :: H20(6,6),H21(24,24),H22(36,36),H23(24,24),H24(6,6)
-	real :: H30(4,4),H31(16,16),H32(24,24),H33(16,16),H34(4,4)
-	real :: H40(1,1),H41(4,4),H42(6,6),H43(4,4),H44(1,1)
+	real :: H00(,),H01(,),H02(,),H03(,),H04(,)
+	real :: H10(,),H11(,),H12(,),H13(,),H14(,)
+	real :: H20(,),H21(,),H22(,),H23(,),H24(,)
+	real :: H30(,),H31(,),H32(,),H33(,),H34(,)
+	real :: H40(,),H41(,),H42(,),H43(,),H44(,)
 
 	real, dimension(nstates) :: grand_potential          ! grand potentials (eigenenergies - mu*number electrons)
 	real, dimension(0:nsites,0:nsites) :: e_ground       ! array of the lowest grand potential (Gpot) of each submatrix (e_ground(i,j) is lowest Gpot of Hij) 
-	real, dimension(nstates,36) :: eigenvectors          ! the many body eigenvectors (MBE) only coefficients of basis states with same n_up,n_dn as it
+	real, dimension(nstates,0) :: eigenvectors          ! the many body eigenvectors (MBE) only coefficients of basis states with same n_up,n_dn as it
 	integer, dimension(0:nsites) :: block, temp_block    ! block(i) is index of the first state with i electrons (when only looking at states with n_dn=0)
 	integer, dimension(0:nsites) :: nstates_up           ! nstates_up(i) is the number of states with i up electrons and n_dn = 0   
 	integer, allocatable, dimension(:,:) :: neighbours   ! neighbours(i,:) is all the site that are nearest neighbours to site i
