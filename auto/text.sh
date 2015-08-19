@@ -4,15 +4,13 @@ nsites=8
 nstates="$(echo "$((4**$nsites))")"
 
 echo "module routines
+
 	use lapack
 	implicit none
-	integer, parameter :: sp = kind(1.0)      !single precison kind
-	integer, parameter :: dp = kind(1.0d0)    !double precision kind
+
 	real :: grand_potential_ground=0.0                 ! the lowest grand ensemble energy
 	integer, parameter :: nsites = $nsites
 	integer, parameter :: total_states = $nstates
-	integer, parameter :: int_kind = 4
-	integer, parameter :: STDOUT = 10
 	integer, dimension(2,total_states) :: fock_states
 	integer, dimension(0:2**nsites) :: states_order
 	integer :: ne
@@ -46,9 +44,13 @@ echo "
 	integer, dimension(0:nsites) :: nstates_up
 	integer, allocatable, dimension(:,:) :: neighbours
 	integer, dimension(0:nsites,0:nsites) :: msize, mblock
+
 contains
+
 	!------------------------------------------------------
+
 	subroutine make_filename(filename,t,U,mu,delta)
+
 		implicit none
 		character(len=50), intent(out) :: filename
 		character(len=10) :: mu_str, t_str, U_str, W_str, s_str
@@ -63,9 +65,13 @@ contains
 		write(filename,'(A)') trim(adjustl(filename)) // 'U' // trim(adjustl(U_str)) 
 		write(filename,'(A)') trim(adjustl(filename)) // 'W' // trim(adjustl(W_str)) 
 		write(filename,'(A)') trim(adjustl(filename)) // 'mu' // trim(adjustl(mu_str)) // '.dat'
+
 	end subroutine make_filename
+
 	!------------------------------------------------------
+
 	subroutine random_gen_seed()
+
 	  implicit none
 	  integer :: seed_size, clock, i
 	  integer, allocatable, dimension(:) :: seed
@@ -75,9 +81,13 @@ contains
 	  seed=clock + 37*(/(i-1,i=1,seed_size)/)
 	  call random_seed(put=seed)
 	  deallocate(seed)
+
 	end subroutine random_gen_seed
+
 	!------------------------------------------------------
+
 	subroutine site_potentials(delta,E)
+
 	  implicit none
 	  real, intent(in) :: delta
 	  real, intent(out) :: E(nsites)

@@ -17,27 +17,26 @@ program main
 ! 00,0+,+0,0-,-0,++,--,-+,+-,02,20,+2,2+,-2,2-,22
 
 	use routines
-	use timemachine
 
 	implicit none
 
 	!-------------------Input Parameters---------------------------------
-	integer, parameter :: npairs=10      ! size of the ensemble
-	real, parameter :: t = -1.0         ! nearest neighbour hoping 
-	real, parameter :: U = 4.0          ! the on site interactions
-  	real, parameter :: mu = U/2         ! the chemical potential (U/2 is half filling)
-  	real, parameter :: delta=12.0       ! the width of the disorder
+	integer, parameter :: npairs=10    ! size of the ensemble
+	real, parameter :: t = -1.0            ! nearest neighbour hoping 
+	real, parameter :: U = 4             ! the on site interactions
+	real, parameter :: delta=12.0          ! the width of the disorder
+  	real, parameter :: mu = U/2            ! the chemical potential (U/2 is half filling)
+  	integer, parameter :: nbins = 300             ! number of bins for energy bining to get smooth curves
+	real, parameter :: frequency_max = 12         ! maximum energy considered in energy bining
+	real, parameter :: frequency_min = -12        ! lowest energy considered in energy bining
 
   	!-------------------Dependent Variables------------------------------
   	real :: E(nsites)                   ! array to hold the site potentials
-  	real, dimension(nsites,total_states) :: PES_down_ground=0.0, PES_up_ground=0.0, IPES_down_ground=0.0, IPES_up_ground=0.0
-  	real, dimension(total_states) :: v_ground
+  	real, dimension(nsites,total_states) :: PESdn_MBG=0.0, PESup_MBG=0.0, IPESdn_MBG=0.0, IPESup_MBG=0.0
+  	real, dimension(total_states) :: MBGvec
 	real, dimension(nsites,2*total_states,2) :: LDOS=0.0
-	real :: inner_product_up=0.0, inner_product_down=0.0
+	real :: inner_prod_up=0.0, inner_prod_dn=0.0
 	real :: IPR(2*total_states)=0.0
-	integer, parameter :: nbins = 300                  ! number of bins for energy bining to get smooth curves
-	real, parameter :: frequency_max = 12              ! maximum energy considered in energy bining
-	real, parameter :: frequency_min = -12             ! lowest energy considered in energy bining
 	real :: frequency_delta=0.0                        ! step size between different energy bins
 	integer :: bin=0                                   ! index for the bin number the peak goes in
 	real, dimension(nbins,2) :: DOS=0.0                                ! array that stores the DOS peaks and all the frequencies of the energy bins
@@ -51,10 +50,6 @@ program main
  	character(len=50) :: str_npairs, str_nbins, str_ver   
  	integer :: version
  	integer :: file_count          
- 	!---------- Time machine ----------
-  	integer :: dd,hh,mm,ss,mss    !these variables will represent the amount of time elapsed
-
-  	call time_starter()
 
 	frequency_delta = (frequency_max - frequency_min)/nbins   ! calculating the step size between bins for the energy bining process
 
@@ -96,9 +91,6 @@ program main
 	call make_neighbours()
 	call make_hamiltonian2(t)
 
-	!call time_elapsed(hh,mm,ss,mss) ! timer ends here
-	!write(*,*) "pre:", mm,ss
-
 	pairs: do pair=1,npairs
 
 		if (npairs < 100) then
@@ -109,21 +101,16 @@ program main
      		end if
     	end if
 
-		v_ground=0.0
+		MBGvec=0.0
     	grand_potential_ground = 0.0
     	LDOS = 0.0
-    	PES_down_ground=0.0; PES_up_ground=0.0; IPES_down_ground=0.0; IPES_up_ground=0.0
+    	PESdn_MBG=0.0; PESup_MBG=0.0; IPESdn_MBG=0.0; IPESup_MBG=0.0
     	grand_potential = 0
     	eigenvectors = 0
     	e_ground = 0
 
 		call site_potentials(delta,E)
-		!E(1) = -3.53660488; E(2) = -0.580926418; E(3) = 5.30663109; E(4) = -1.62454677
-		!E(5) = -1.57661963; E(6) = 4.26862812; E(7) = 1.39825273; E(8) = 3.73524213 
 		call solve_hamiltonian1(E,U,mu)
-
-		!call time_elapsed(hh,mm,ss,mss) ! timer ends here
-		!write(*,*) "hamiltonian1:", mm,ss
 
 		!-----find ground state energy------------------------
 
@@ -144,42 +131,38 @@ program main
 
 	    !write(*,*) g_up, g_dn
 
-	    if (pair == 22) write(*,*) E
 	    call solve_hamiltonian2(E,U,mu,g_up,g_dn)
 	    if (g_up /= 0) call solve_hamiltonian2(E,U,mu,g_up-1,g_dn)
 	    if (g_dn /= 0) call solve_hamiltonian2(E,U,mu,g_up,g_dn-1)
 	    if (g_up /= nsites) call solve_hamiltonian2(E,U,mu,g_up+1,g_dn)
 	    if (g_dn /= nsites) call solve_hamiltonian2(E,U,mu,g_up,g_dn+1)
 
-	   	!call time_elapsed(hh,mm,ss,mss) ! timer ends here
-		!write(*,*) "hamiltonian2:", mm,ss
-
 	   	high = mblock(g_up,g_dn) + msize(g_up,g_dn) - 1
-	   	v_ground(mblock(g_up,g_dn):high) = eigenvectors(location(1),1:msize(g_up,g_dn))      ! set v ground to the eigenvector corresponding to the lowest energy
+	   	MBGvec(mblock(g_up,g_dn):high) = eigenvectors(location(1),1:msize(g_up,g_dn))      ! set v ground to the eigenvector corresponding to the lowest energy
 
 	    !multiply ground state vector by the matrices
 
 	    do j=1,nsites
 	       do i=1,total_states
 	          if (PES_up(j,i)==0) then
-	             PES_up_ground(j,i) = 0.0
+	             PESup_MBG(j,i) = 0.0
 	          else 
-	             PES_up_ground(j,i) = v_ground(PES_up(j,i))*phase_PES_up(j,i)
+	             PESup_MBG(j,i) = MBGvec(PES_up(j,i))*phase_PES_up(j,i)
 	          end if
 	          if (PES_down(j,i)==0) then
-	             PES_down_ground(j,i) = 0.0
+	             PESdn_MBG(j,i) = 0.0
 	          else 
-	             PES_down_ground(j,i) = v_ground(PES_down(j,i))*phase_PES_down(j,i)
+	             PESdn_MBG(j,i) = MBGvec(PES_down(j,i))*phase_PES_down(j,i)
 	          end if
 	          if (IPES_up(j,i)==0) then
-	             IPES_up_ground(j,i) = 0.0
+	             IPESup_MBG(j,i) = 0.0
 	          else 
-	             IPES_up_ground(j,i) = v_ground(IPES_up(j,i))*phase_IPES_up(j,i)
+	             IPESup_MBG(j,i) = MBGvec(IPES_up(j,i))*phase_IPES_up(j,i)
 	          end if
 	          if (IPES_down(j,i)==0) then
-	             IPES_down_ground(j,i) = 0.0
+	             IPESdn_MBG(j,i) = 0.0
 	          else 
-	             IPES_down_ground(j,i) = v_ground(IPES_down(j,i))*phase_IPES_down(j,i)
+	             IPESdn_MBG(j,i) = MBGvec(IPES_down(j,i))*phase_IPES_down(j,i)
 	          end if
 	       end do
 	    end do 
@@ -196,33 +179,30 @@ program main
 			    high = mblock(n_up,n_dn) + msize(n_up,n_dn) - 1
 			    do j=1,nsites
 			       	do i=low,high
-			       		inner_product_up = 0
-			       		inner_product_down = 0
+			       		inner_prod_up = 0
+			       		inner_prod_dn = 0
 			       		if (n_up == min_up) then
-			          		inner_product_up = (dot_product(PES_up_ground(j,low:high),eigenvectors(i,1:msize(n_up,n_dn))))**2
+			          		inner_prod_up = (dot_product(PESup_MBG(j,low:high),eigenvectors(i,1:msize(n_up,n_dn))))**2
 			          	end if
 			          	if (n_dn == min_dn) then
-			          		inner_product_down =  (dot_product(PES_down_ground(j,low:high),eigenvectors(i,1:msize(n_up,n_dn))))**2
+			          		inner_prod_dn =  (dot_product(PESdn_MBG(j,low:high),eigenvectors(i,1:msize(n_up,n_dn))))**2
 			          	end if
 			          	LDOS(j,i,1) = grand_potential_ground - grand_potential(i)              ! location of the peak
-			          	LDOS(j,i,2) = (inner_product_up + inner_product_down)*0.5           ! weight of the peak (average up and down spin components)
-			          	inner_product_up = 0
-			       		inner_product_down = 0
+			          	LDOS(j,i,2) = (inner_prod_up + inner_prod_dn)*0.5           ! weight of the peak (average up and down spin components)
+			          	inner_prod_up = 0
+			       		inner_prod_dn = 0
 			          	if (n_up == max_up) then
-			          		inner_product_up = (dot_product(IPES_up_ground(j,low:high),eigenvectors(i,1:msize(n_up,n_dn))))**2
+			          		inner_prod_up = (dot_product(IPESup_MBG(j,low:high),eigenvectors(i,1:msize(n_up,n_dn))))**2
 			          	end if
 			          	if (n_dn == max_dn) then
-			          		inner_product_down =  (dot_product(IPES_down_ground(j,low:high),eigenvectors(i,1:msize(n_up,n_dn))))**2
+			          		inner_prod_dn =  (dot_product(IPESdn_MBG(j,low:high),eigenvectors(i,1:msize(n_up,n_dn))))**2
 			          	end if
 			         	LDOS(j,i+total_states,1) = grand_potential(i) - grand_potential_ground           ! location of the peak
-			         	LDOS(j,i+total_states,2) = (inner_product_up + inner_product_down)*0.5        ! weight of the peak
+			         	LDOS(j,i+total_states,2) = (inner_prod_up + inner_prod_dn)*0.5        ! weight of the peak
 			       	end do
 			    end do
 		    end do
 	    end do
-
-	    !call time_elapsed(hh,mm,ss,mss) ! timer ends here
-		!write(*,*) "LDOS", mm,ss
 
 	    do i=1,2*total_states
 	       bin = floor(LDOS(2,i,1)/frequency_delta) + nbins/2  +1              !find the bin number for energy bining
