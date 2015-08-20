@@ -71,15 +71,16 @@ contains
 
   !---------- Evaluate dependent parameters ----------
 
-  subroutine evaluate_parameters()
+  subroutine evaluate_parameters(n_up,n_dn)
     integer :: ict
     real(kind=8) :: U_tmp
+    integer, intent(in) :: n_up, n_dn
 
     U_tmp=pars%U(1)                          ! % sign means the element called U from the variable pars. (Pars is of type list parameter which is a user defined data type). The type is defined at the top of this file.
     if (pars%lattice<3) then                 ! if lattice < 3 then it is a single band hubbard model
        pars%nsite = pars%nx * pars%ny        ! the number of sites is equal to the x dimension times the y dimension (it's a square)
        deallocate(pars%U)                    ! deallocate the array U so that the size can be respecified. Previous value is stored as U_temp
-       allocate(pars%U(pars%nsite),pars%Ei(pars%nsite)) ! allocate the array U (on-site interactions) and Ei(site potentials) to be of size nsite.
+       allocate(pars%U(pars%nsite)) ! allocate the array U (on-site interactions) and Ei(site potentials) to be of size nsite.
        pars%U(:) = U_tmp                     ! set all the values in the array U equal to the value specified in the input file
     else if (pars%lattice==3) then           ! if this is true then it is a three band hubbard model so it will need 3 times as many sites
        pars%nsite = pars%nx * pars%ny * 3    
@@ -91,12 +92,12 @@ contains
           pars%U(ict*3+3) = 0d0
        end do
     end if
-    print *,"U: ",U_tmp                ! print the values that you calculated to the screen to make sure the new value is same as the inputed one.
-    print *,"U: ",pars%U
+    !print *,"U: ",U_tmp                ! print the values that you calculated to the screen to make sure the new value is same as the inputed one.
+    !print *,"U: ",pars%U
 
     if (pars%delta.eq.0) pars%iconfig = 1  ! if there is no disorder (delta=0) then all configurations will be the same so only need to do 1.
     pars%ensemble = pars%nsite * pars%iconfig  ! the size of the ensemble is the number of sites times the amount of configurations you want to do.
-    call filename_parameter()      ! assign file names based on what the input values into the program are.
+    call filename_parameter(n_up,n_dn)      ! assign file names based on what the input values into the program are.
 
   end subroutine evaluate_parameters
 
@@ -139,10 +140,10 @@ contains
 
   subroutine print_parameters()
     write(*,100)
-    write(*,210) pars%nx,pars%ny,pars%lattice
+    !write(*,210) pars%nx,pars%ny,pars%lattice
     write(*,220) pars%t,pars%t1
-    write(*,230) pars%U(1),pars%V,pars%delta,pars%mu
-    write(*,270) pars%iconfig
+    !write(*,230) pars%U(1),pars%V,pars%delta,pars%mu
+    !write(*,270) pars%iconfig
     write(*,280) pars%file1
     write(*,280) pars%file2
     write(*,100)
@@ -163,15 +164,16 @@ contains
     deallocate(pars%Ei)
   end subroutine cleanup_parameters
 
-  subroutine filename_parameter(iconfig)
-    character(len=4) :: config,ui,uf,vi,vf,di,df,mi,mf,nsite,ic
-    integer, optional :: iconfig
+  subroutine filename_parameter(n_up,n_dn)
+    character(len=4) :: upe,dne,ui,uf,vi,vf,di,df,mi,mf,nsite,ic
+    integer, intent(in) :: n_up, n_dn
     integer :: u1,u2,v1,v2,d1,d2,m1,m2
     call r2i(pars%U(1),u1,u2)
     call r2i(pars%V,v1,v2)
     call r2i(pars%Delta,d1,d2)
     call r2i(pars%mu,m1,m2)
-    write(config,'(i4)') pars%iconfig
+    write(upe,'(i4)') n_up
+    write(dne,'(i4)') n_dn
     write(ui,'(i4)') u1
     write(uf,'(i4)') u2
     write(vi,'(i4)') v1
@@ -189,10 +191,8 @@ contains
     if (d2.ne.0) pars%file1 = trim(pars%file1)//"."//trim(adjustl(df))
     pars%file1 = trim(pars%file1)//"m"//trim(adjustl(mi))
     if (m2.ne.0) pars%file1 = trim(pars%file1)//"."//trim(adjustl(mf))
-    if (present(iconfig)) then
-       write(ic,'(i4)') iconfig
-       if (iconfig.ne.0) pars%file1 = trim(pars%file1)//"c"//trim(adjustl(ic))
-    end if
+    pars%file1 = trim(pars%file1)//"n_up"//trim(adjustl(upe))
+    pars%file1 = trim(pars%file1)//"n_dn"//trim(adjustl(dne))
     pars%file1 = trim(pars%file1)//".dat"
 
     pars%file2 = "spectrum"//trim(adjustl(nsite))//"u"//trim(adjustl(ui))
@@ -203,9 +203,6 @@ contains
     if (d2.ne.0) pars%file2 = trim(pars%file2)//"."//trim(adjustl(df))
     pars%file2 = trim(pars%file2)//"m"//trim(adjustl(mi))
     if (m2.ne.0) pars%file2 = trim(pars%file2)//"."//trim(adjustl(mf))
-    if (present(iconfig)) then
-       if (iconfig.ne.0) pars%file2 = trim(pars%file1)//"c"//trim(adjustl(ic))
-    end if
     pars%file2 = trim(pars%file2)//".dat"
     contains
       subroutine r2i(a,i1,i2)

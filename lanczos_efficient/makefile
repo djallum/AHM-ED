@@ -14,7 +14,7 @@ libs  = -llapack
 opts  = -O2 
 #opts +=	-fbounds-check # check bounds
 #opts += -fno-range-check # turn off range checking so that "complement=254" doesn't cause an overflow error
-#opts +=	-g  # debug
+opts +=	-g -fbacktrace -ffpe-trap=zero,overflow,underflow # debug
 opts +=	-pg # gprofile for timing
 #opts += -fopenmp
 cc = gfortran

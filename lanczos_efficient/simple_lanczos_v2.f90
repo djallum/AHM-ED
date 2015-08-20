@@ -44,6 +44,7 @@ contains
   !########## PUBLIC ##########
 
 !***********************************
+
   subroutine parameters_lanczos(max,acc,cut)  ! use the default value when zero
     integer :: max
     real (real_kind) :: acc,cut
@@ -54,19 +55,22 @@ contains
 
 
 !***********************************
+
   integer function iteration_lanczos()
     iteration_lanczos = it_
   end function iteration_lanczos
 
 !***********************************
+
   subroutine groundVec_lanczos(j,vec)
     real (real_kind), dimension(:) :: vec
-    integer :: j
+    integer :: j,i
     vec = matmul(Q_(:,1:j),vec_(1:j,1))
     vec = vec / sqrt(dot_product(vec,vec))
   end subroutine groundVec_lanczos
 
 !***********************************
+
   subroutine eigenstates_lanczos(val,vec)
     real (real_kind), dimension(:), pointer :: val
     real (real_kind), dimension(:,:), pointer :: vec
@@ -75,18 +79,22 @@ contains
   end subroutine eigenstates_lanczos
 
 !***********************************
+
   subroutine restarted_lanczos(n,r,groundenergy_lanczos)
     implicit none
-    integer, intent (in) :: n
+    integer, intent (in) :: n    ! number of fock states for the designated amount of electrons (set in main program)
     real (real_kind), dimension(n), intent (out) :: r        !ground state vector
-    real (real_kind), intent (out) :: groundenergy_lanczos
-    integer :: j,k
+    real (real_kind), intent (out) :: groundenergy_lanczos 
+    integer :: j,k  ! counters
     real (real_kind) :: b
 
-    if (n.eq.1) return
+    if (n.eq.1) return  ! matrix of size 1,1 can't is already diagonalized
+
     call new_lanczos(n)
+
     allocate(val_(iteration_),vec_(iteration_,iteration_))
     allocate(a_(iteration_),b_(iteration_))
+
     j = 1
     converged: do while (.not.converged_)
        !print *,it_,j,groundE_
@@ -117,6 +125,7 @@ contains
   end subroutine restarted_lanczos
 
 !***********************************
+
   subroutine delete_lanczos()
     if (allocated(Q_)) deallocate(Q_)
     if (allocated(val_)) deallocate(val_)
@@ -126,8 +135,10 @@ contains
   !########## PRIVATE ##########
 
 !***********************************
+
   subroutine new_lanczos(n)
-    integer :: n
+    
+    integer :: n   ! number of fock states for the designated amount of electrons (set in main program)
     integer :: i
     real  (real_kind) :: b
 
@@ -146,6 +157,7 @@ contains
   end subroutine new_lanczos
 
 !***********************************
+
   subroutine diagonalize_restarted(step)
     real (real_kind) :: WORK(2*iteration_),tmp(iteration_)
     integer :: info
@@ -168,6 +180,7 @@ contains
 
 
 !***********************************
+
   subroutine single_recursion_step(j,r,Q,a,b)
     integer :: j
     real (real_kind), dimension(:) :: r,a,b

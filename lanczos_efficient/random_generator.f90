@@ -13,7 +13,7 @@ contains
 !    sd = (/ 0,-1535653932,1223659432,-311994500,-1847648432,911664932,-623989000,2135324364 /)
 
     call random_seed(put=sd)
-    print 100,sd
+    !print 100,sd
     deallocate(sd)
 100 format("# random seed ",40(i12,1x))
   end subroutine random_gen

@@ -13,6 +13,7 @@ module simple_recursion_routines
   real (real_kind), save :: spectrum_(nw_,4)
 
 contains
+  
   !**************************************
 
   subroutine simple_recursion(q0,maxit,E0,icase,A,B,k)

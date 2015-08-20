@@ -16,11 +16,12 @@ contains
   subroutine read_groundstate(input_file,n_up,n_dn,n)
     integer, intent (out) :: n_up,n_dn
     integer, intent (out) :: n
-    character (5) :: jnk1,jnk2
+    character (15) :: jnk1,jnk2
     character (32) :: input_file
 
     integer :: istate
 
+    allocate(pars%Ei(4))
     open(99,file=input_file,status='old')
     read(99,*) jnk1,jnk2,n_up,n_dn
     call num_states(n_up,n_dn,n)
@@ -111,16 +112,17 @@ program MAIN
   integer :: dd,hh,mm,ss,mss
 
 
-
   !---------------------
   ! Initialise everything
   !---------------------
+
   time1_ = 0.0
   time2_ = 0.0
   time3_ = 0.0
+  read(*,*) n_up, n_dn
   call random_gen()
   call read_parameters()
-  call evaluate_parameters()
+  call evaluate_parameters(n_up,n_dn)
   call make_hilbert_space(pars%nx,pars%ny,pars%lattice)
   !call print_hilbert_space()
   call make_h_index(pars%lattice)  ! Index of the columns of the Hamiltonian, stored in h_index.  
@@ -128,7 +130,8 @@ program MAIN
   ! Everything else in this code is generic.
   call initialise_spectrum()
   do iconfig = 1,pars%iconfig
-     call filename_parameter(iconfig)
+    write(*,*) n_up, n_dn
+     call filename_parameter(n_up,n_dn)
      print *,"FILE:",pars%file1
      call read_groundstate(pars%file1,n_up,n_dn,n)
 
@@ -154,11 +157,13 @@ program MAIN
      end do
      deallocate(groundstatevec)
   end do
+
   !---------------------
   ! Finalize everything
   !---------------------
-  call filename_parameter()      ! parameters module in parameters.f90 
-  call print_spectrum(pars%file2)  !
+
+  call filename_parameter(n_up,n_dn)      ! parameters module in parameters.f90 
+  call print_spectrum(pars%file2) 
   call cleanup_hilbert_space()
   STOP
 200 format(:,"# ne=",i3,1x,"sz=",i4,1x,"n=",i7,1x,"(",i8,")",1x, &
