@@ -1,7 +1,6 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.15 (TeX Live 2014) (preloaded format=pdflatex 2015.2.9)  5 AUG 2015 11:27
+This is pdfTeX, Version 3.14159265-2.6-1.40.15 (TeX Live 2014) (preloaded format=pdflatex 2015.2.9)  20 AUG 2015 15:26
 entering extended mode
  restricted \write18 enabled.
- file:line:error style messages enabled.
  %&-line parsing enabled.
 **4site_debugging.tex
 (./4site_debugging.tex
@@ -103,81 +102,4 @@ Package pdftexcmds Info: \pdf@ifprimitive is available.
 Package pdftexcmds Info: \pdfdraftmode found.
 )
 (/usr/local/texlive/2014/texmf-dist/tex/latex/oberdiek/epstopdf-base.sty
-Package: epstopdf-base 2010/02/09 v2.5 Base part for package epstopdf
-
-(/usr/local/texlive/2014/texmf-dist/tex/latex/oberdiek/grfext.sty
-Package: grfext 2010/08/19 v1.1 Manage graphics extensions (HO)
-
-(/usr/local/texlive/2014/texmf-dist/tex/generic/oberdiek/kvdefinekeys.sty
-Package: kvdefinekeys 2011/04/07 v1.3 Define keys (HO)
-))
-(/usr/local/texlive/2014/texmf-dist/tex/latex/oberdiek/kvoptions.sty
-Package: kvoptions 2011/06/30 v3.11 Key value format for package options (HO)
-
-(/usr/local/texlive/2014/texmf-dist/tex/generic/oberdiek/kvsetkeys.sty
-Package: kvsetkeys 2012/04/25 v1.16 Key value parser (HO)
-
-(/usr/local/texlive/2014/texmf-dist/tex/generic/oberdiek/etexcmds.sty
-Package: etexcmds 2011/02/16 v1.5 Avoid name clashes with e-TeX commands (HO)
-Package etexcmds Info: Could not find \expanded.
-(etexcmds)             That can mean that you are not using pdfTeX 1.50 or
-(etexcmds)             that some package has redefined \expanded.
-(etexcmds)             In the latter case, load this package earlier.
-)))
-Package grfext Info: Graphics extension search list:
-(grfext)             [.png,.pdf,.jpg,.mps,.jpeg,.jbig2,.jb2,.PNG,.PDF,.JPG,.JPE
-G,.JBIG2,.JB2,.eps]
-(grfext)             \AppendGraphicsExtensions on input line 452.
-
-(/usr/local/texlive/2014/texmf-dist/tex/latex/latexconfig/epstopdf-sys.cfg
-File: epstopdf-sys.cfg 2010/07/13 v1.3 Configuration of (r)epstopdf for TeX Liv
-e
-))
-LaTeX Font Info:    External font `cmex10' loaded for size
-(Font)              <12> on input line 16.
-LaTeX Font Info:    External font `cmex10' loaded for size
-(Font)              <8> on input line 16.
-LaTeX Font Info:    External font `cmex10' loaded for size
-(Font)              <6> on input line 16.
-
-<dos_t0u0w12.jpg, id=1, 794.97pt x 614.295pt>
-File: dos_t0u0w12.jpg Graphic file (type jpg)
- <use dos_t0u0w12.jpg>
-Package pdftex.def Info: dos_t0u0w12.jpg used on input line 25.
-(pdftex.def)             Requested size: 284.52756pt x 219.86188pt.
- [1
-
-{/usr/local/texlive/2014/texmf-var/fonts/map/pdftex/updmap/pdftex.map} <./dos_t
-0u0w12.jpg>] <dos_t0u4w12.jpg, id=11, 794.97pt x 614.295pt>
-File: dos_t0u4w12.jpg Graphic file (type jpg)
- <use dos_t0u4w12.jpg>
-Package pdftex.def Info: dos_t0u4w12.jpg used on input line 36.
-(pdftex.def)             Requested size: 284.52756pt x 219.86188pt.
-
-[2 <./dos_t0u4w12.jpg>] <dos_t-1u0w12.jpg, id=15, 794.97pt x 614.295pt>
-File: dos_t-1u0w12.jpg Graphic file (type jpg)
-
-<use dos_t-1u0w12.jpg>
-Package pdftex.def Info: dos_t-1u0w12.jpg used on input line 52.
-(pdftex.def)             Requested size: 284.52756pt x 219.86188pt.
- [3 <./dos_t-1u0w12.jpg>] (./4site_debugging.aux) ) 
-Here is how much of TeX's memory you used:
- 1495 strings out of 493109
- 21668 string characters out of 6135005
- 80984 words of memory out of 5000000
- 4968 multiletter control sequences out of 15000+600000
- 6982 words of font info for 25 fonts, out of 8000000 for 9000
- 1141 hyphenation exceptions out of 8191
- 37i,6n,23p,1117b,189s stack positions out of 5000i,500n,10000p,200000b,80000s
-</usr/local/texlive/2014/tex
-mf-dist/fonts/type1/public/amsfonts/cm/cmbx12.pfb></usr/local/texlive/2014/texm
-f-dist/fonts/type1/public/amsfonts/cm/cmr10.pfb></usr/local/texlive/2014/texmf-
-dist/fonts/type1/public/amsfonts/cm/cmr12.pfb></usr/local/texlive/2014/texmf-di
-st/fonts/type1/public/amsfonts/cm/cmr17.pfb>
-Output written on 4site_debugging.pdf (3 pages, 142531 bytes).
-PDF statistics:
- 33 PDF objects out of 1000 (max. 8388607)
- 20 compressed objects within 1 object stream
- 0 named destinations out of 1000 (max. 500000)
- 16 words of extra memory for PDF output out of 10000 (max. 10000000)
-
+Package: epstopdf-base 2010/02/09 v2
