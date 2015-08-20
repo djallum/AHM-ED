@@ -116,178 +116,244 @@ subroutine random_gen_seed()
 end subroutine random_gen_seed
 
 !************************************************************************************
-	subroutine site_potentials(delta,E)
-	  implicit none
-	  real, intent(in) :: delta
-	  real, intent(out) :: E(nsites)
-	  real :: random
-	  integer :: i ! counter
-	  do i=1,nsites
-	     call random_number(random)              ! gives a random number between 0 and 1
-	     E(i) = delta*(random - 0.5)          ! centers the random numbers about 0
-	  end do
-	end subroutine site_potentials
-	!------------------------------------------------------
+
+subroutine site_potentials(delta,E)
+
+  	implicit none
+
+  	real, intent(in) :: delta                ! width of the disorder (distribution from which site potentials are chosen)
+  	real, intent(out) :: E(nsites)           ! the site potentials
+  	real :: random                           ! random number used in intermediate step
+  	integer :: i                             ! counter for loop
+
+  	do i=1,nsites
+     	call random_number(random)           ! gives a random number between 0 and 1
+     	E(i) = delta*(random - 0.5)          ! centers the random numbers about 0
+  	end do
+
+end subroutine site_potentials
+	
+!************************************************************************************
+
 	subroutine num_sites()
-		implicit none
-		integer :: i,j, istate, isite
-		integer :: max_electrons
-		tot_states_up = 2**nsites
-		max_electrons = nsites
-		block = 0  
-	    nstates_up = 0
-	    block(0) = 1
-	    nstates_up(0) = 1
-		do ne = 1, max_electrons
-       		nstates_up(ne) = choose(nsites,ne)          ! number of spin-up fock states with ne electrons
-       		block(ne) = block(ne-1) + nstates_up(ne-1) ! block index updating
-    	end do
-    	temp_block = block
-		do istate=0,tot_states_up-1
+
+	implicit none
+
+	integer :: i,j, istate, isite
+	integer :: max_electrons
+	tot_states_up = 2**nsites
+	max_electrons = nsites
+
+	block = 0  
+    nstates_up = 0
+    block(0) = 1
+    nstates_up(0) = 1
+
+	do ne = 1, max_electrons
+   		nstates_up(ne) = choose(nsites,ne)          ! number of spin-up fock states with ne electrons
+   		block(ne) = block(ne-1) + nstates_up(ne-1) ! block index updating
+	end do
+
+	temp_block = block
+	do istate=0,tot_states_up-1
+		ne = 0
+		do isite=1,nsites
+			ne = ne + ibits(istate,isite-1,1)     ! count the number of electrons in that state
+		end do 
+		states_order(temp_block(ne)) = istate
+		temp_block(ne) = temp_block(ne) + 1
+	end do
+
+	istate = 1
+	do ne=0,max_electrons
+		do j=1,tot_states_up
+			do i=block(ne), block(ne) + nstates_up(ne) - 1
+				fock_states(1,istate) = states_order(i)
+				fock_states(2,istate) = states_order(j)
+				istate = istate + 1
+			end do
+		end do
+	end do
+
+end subroutine num_sites
+
+!************************************************************************************
+
+subroutine transformations()
+
+	!  %---------------------------------------------------------------------------------------------------%
+	!  |  Creates the lookup tables needed to calculate c_{i,sigma}|Psi0> and cc_{i,sigma}^{dagger}|Psi0>  |
+	!  |       - Psi0 is the many-body ground state                                                        |
+	!  |       - c_{i,sigma} is removable of electron of spin sigma from site i                            |
+	!  |       - c_{i,sigma}^{dagger} is addition of electron of spin sigma on site i                      |
+	!  |  Shows which fock state each of the basis vectors will transfer to after the specified removable  |
+	!  |  or addition of up/dn electron from specified site.                                               |
+	!  |                                                                                                   |
+	!  |  PES_up(j,i) is the state (as in its index within the basis) that after removing an up electron   |
+	!  |  from site j of it, will become state i.                                                          |
+	!  |                                                                                                   |
+	!  |  It does this by adding a '1' (binary) to the site then checking what fock state it now became    |
+	!  |  by compairing the new integers to the FS basis. To get anticommutation sign right it counts the  |
+	!  |  amount of up and dn electrons starting at the site the electron was added and going to           |
+	!  |  site=nsites. This gives the number of anti-commutations that the creation operator would have    |
+	!  |  to do.                                                                                           | 
+	!  |                                                                                                   |
+	!  |  The program then uses the PES tables to calculate the IPES tables since they are opposites       |
+	!  %---------------------------------------------------------------------------------------------------%
+
+	implicit none
+	
+	integer :: i, j                           ! counters for loops
+	integer :: new_state(2)                   ! new fock state integers after the transition 
+	integer :: new_index                      ! index of the new state in the array fock_states
+	integer :: position, isite                ! both counters for loops
+
+	!------------------Zero all the variables-------------------------
+	PES_up = 0; PES_down = 0
+    IPES_up = 0; IPES_down = 0
+    phase_PES_up = 0; phase_PES_down = 0
+    phase_IPES_up = 0; phase_IPES_down = 0
+
+	!------------------Make the PES_up tables-------------------------
+
+	do position = 1,nsites                                         ! loop over all the sites (make PES_up for PE from each site)
+		do i=1,nstates                                             ! loop over each state
 			ne = 0
-			do isite=1,nsites
-				ne = ne + ibits(istate,isite-1,1)     ! count the number of electrons in that state
-			end do 
-			states_order(temp_block(ne)) = istate
-			temp_block(ne) = temp_block(ne) + 1
-		end do
-		istate = 1
-		do ne=0,max_electrons
-			do j=1,tot_states_up
-				do i=block(ne), block(ne) + nstates_up(ne) - 1
-					fock_states(1,istate) = states_order(i)
-					fock_states(2,istate) = states_order(j)
-					istate = istate + 1
+			if (ibits(fock_states(1,i),position-1,1) == 1) then    ! if there is an electron on that site it can't be the result of PE
+				PES_up(position,i) = 0                             ! zero everything then because it's not possible
+				phase_PES_up(position,i) = 0                       ! zero everything then because it's not possible
+			else
+				do isite=position,nsites                           ! loop over all sites greater then site of PE (count number of anti-commutations)
+					ne = ne + ibits(fock_states(1,i),isite-1,1)    ! count the number of up electrons it will have to commute with to be removed
 				end do
-			end do
-		end do
-	end subroutine num_sites
-	!------------------------------------------------------
-	subroutine transformations()
-		implicit none
-		
-		integer :: i,j,new_state(2), new_index, position, isite
-		PES_up = 0; PES_down = 0
-	    IPES_up = 0; IPES_down = 0
-	    phase_PES_up = 0; phase_PES_down = 0
-	    phase_IPES_up = 0; phase_IPES_down = 0
-		! make the PES_up matrices
-		do position = 1,nsites
-			do i=1,nstates
-				ne = 0
-				if (ibits(fock_states(1,i),position-1,1) == 1) then
-					PES_up(position,i) = 0
-					phase_PES_up(position,i) = 0 
+				do isite=position,nsites
+					ne = ne + ibits(fock_states(2,i),isite-1,1)    ! count the number of dn electrons it will have to commute with to be removed
+				end do
+				if (MOD(ne,2) == 0) then 
+					phase_PES_up(position,i) = 1                   ! if it had to do even number of anti-commutations it is positive
 				else
-					do isite=position,nsites
-						ne = ne + ibits(fock_states(1,i),isite-1,1)     ! count the number of up electrons in that state
-						end do
-					do isite=position,nsites
-						ne = ne + ibits(fock_states(2,i),isite-1,1)     ! count the number of down electrons in that state
-					end do
-					if (MOD(ne,2) == 0) then 
-						phase_PES_up(position,i) = 1
-					else
-						phase_PES_up(position,i) = -1
-					end if
-					new_state(1) = ibset(fock_states(1,i),position-1)
-					new_state(2) = fock_states(2,i)
-					do j=1,nstates
-						if(fock_states(1,j) == new_state(1) .and. fock_states(2,j) == new_state(2)) then
-							new_index = j
-						end if
-					end do
-					PES_up(position,i) = new_index
+					phase_PES_up(position,i) = -1                  ! if it had to do odd number of anti-commutations it is positive
 				end if
-			end do
+				new_state(1) = ibset(fock_states(1,i),position-1)  ! add up electron to that site 
+				new_state(2) = fock_states(2,i)                    ! the down portion remains the same
+				do j=1,nstates
+					if(fock_states(1,j) == new_state(1) .and. fock_states(2,j) == new_state(2)) then 
+						new_index = j                              ! find the index of the new state by compairing it to the entire FS basis
+					end if
+				end do
+				PES_up(position,i) = new_index                     ! record the state that will when PE will become state i
+			end if
 		end do
-		do position = 1,nsites
-			do i=1,nstates
-				ne = 0
-				if (ibits(fock_states(2,i),position-1,1) == 1) then
-					PES_down(position,i) = 0
-					phase_PES_down(position,i) = 0 
+	end do
+
+	!------------------Make the PES_dn tables-------------------------
+
+	do position = 1,nsites
+		do i=1,nstates
+			ne = 0
+			if (ibits(fock_states(2,i),position-1,1) == 1) then    ! if there is an electron on that site it can't be the result of PE
+				PES_down(position,i) = 0                           ! zero everything then because it's not possible
+				phase_PES_down(position,i) = 0                     ! zero everything then because it's not possible
+			else
+				do isite=position+1,nsites                         ! +1 sicne the order is dn,up so wouldn't commute with the up electron on site=position
+					ne = ne + ibits(fock_states(1,i),isite-1,1)    ! count the number of up electrons it will have to commute with to be removed
+				end do
+				do isite=position,nsites
+					ne = ne + ibits(fock_states(2,i),isite-1,1)    ! count the number of dn electrons it will have to commute with to be removed
+				end do
+				if (MOD(ne,2) == 0) then 
+					phase_PES_down(position,i) = 1                 ! if it had to do even number of anti-commutations it is positive
 				else
-					do isite=position+1,nsites
-						ne = ne + ibits(fock_states(1,i),isite-1,1)     ! count the number of up electrons in that state
-					end do
-					do isite=position,nsites
-						ne = ne + ibits(fock_states(2,i),isite-1,1)     ! count the number of down electrons in that state
-					end do
-					if (MOD(ne,2) == 0) then 
-						phase_PES_down(position,i) = 1
-					else
-						phase_PES_down(position,i) = -1
+					phase_PES_down(position,i) = -1
+				end if
+				new_state(2) = ibset(fock_states(2,i),position-1)  ! add dn electron to that site 
+				new_state(1) = fock_states(1,i)                    ! the up portion remains the same
+				do j=1,nstates
+					if(fock_states(1,j) == new_state(1) .and. fock_states(2,j) == new_state(2)) then
+						new_index = j                               ! find the index of the new state by compairing it to the entire FS basis
 					end if
-					new_state(2) = ibset(fock_states(2,i),position-1)
-					new_state(1) = fock_states(1,i)
-					do j=1,nstates
-						if(fock_states(1,j) == new_state(1) .and. fock_states(2,j) == new_state(2)) then
-							new_index = j
-						end if
-					end do
-					PES_down(position,i) = new_index
-				end if
-			end do
+				end do
+				PES_down(position,i) = new_index                    ! record the state that will when PE will become state i
+			end if
 		end do
-		sites: do j=1,nsites  ! calculating the IPES matrices by making them the opposite of the PES
-         do i=1,nstates
-            if (PES_down(j,i) /= 0) then
-               phase_IPES_down(j,PES_down(j,i)) = phase_PES_down(j,i)
-               IPES_down(j,PES_down(j,i)) = i
-            end if
-            if (PES_up(j,i) /= 0) then
-               IPES_up(j,PES_up(j,i)) = i
-               phase_IPES_up(j,PES_up(j,i)) = phase_PES_up(j,i)
-            end if
-         end do
-      end do sites
-	end subroutine transformations
-	!-------------------------------------------------------
-	subroutine make_neighbours()
-	! makes matrix that containes information about which sites are nearest neighbours
-	! neighbours(i,:) is a list of all the neighbours of site i. Each site has 4 nearest neighbours normally.
-		if (nsites == 8) then                  ! betts lattice for 8 sites
-			allocate(neighbours(nsites,4))
-			neighbours(1,1) = 8; neighbours(1,2) = 7; neighbours(1,3) = 5; neighbours(1,4) = 3
-			neighbours(2,1) = 7; neighbours(2,2) = 8; neighbours(2,3) = 3; neighbours(2,4) = 5
-			neighbours(3,1) = 1; neighbours(3,2) = 2; neighbours(3,3) = 4; neighbours(3,4) = 6
-			neighbours(4,1) = 5; neighbours(4,2) = 3; neighbours(4,3) = 8; neighbours(4,4) = 7
-			neighbours(5,1) = 2; neighbours(5,2) = 1; neighbours(5,3) = 6; neighbours(5,4) = 4
-			neighbours(6,1) = 3; neighbours(6,2) = 5; neighbours(6,3) = 7; neighbours(6,4) = 8
-			neighbours(7,1) = 4; neighbours(7,2) = 6; neighbours(7,3) = 1; neighbours(7,4) = 2
-			neighbours(8,1) = 6; neighbours(8,2) = 4; neighbours(8,3) = 2; neighbours(8,4) = 1
-		end if
-		if (nsites == 4) then                  ! linear 4 site lattice
-			allocate(neighbours(nsites,2))
-			neighbours(1,1) = 4; neighbours(1,2) = 2
-			neighbours(2,1) = 1; neighbours(2,2) = 3
-			neighbours(3,1) = 2; neighbours(3,2) = 4
-			neighbours(4,1) = 3; neighbours(4,2) = 1
-		end if
-		if (nsites == 2) then                 ! linear 2 site lattice
-			allocate(neighbours(nsites,1))
-			neighbours(1,1) = 2; neighbours(2,1) = 1
-		end if
-	end subroutine make_neighbours
-	!-------------------------------------------------------
-	subroutine matrix_sizes()
-		implicit none
-		integer :: n_up,n_dn
-		do n_up=0,nsites
-			do n_dn=0,nsites
-				msize(n_up,n_dn) = choose(nsites,n_up)*choose(nsites,n_dn)
-				if (n_dn == 0 .and. n_up == 0) then
-					mblock(n_up,n_dn) = 1
-				else if (n_dn == 0) then
-					mblock(n_up,n_dn) = mblock(n_up-1,nsites) + msize(n_up-1,nsites)
-				else 
-					mblock(n_up,n_dn) = mblock(n_up,n_dn-1) + msize(n_up,n_dn-1)
-				end if
-			end do
+	end do
+
+	!-------Find the IPES tables----------
+
+	sites: do j=1,nsites  
+     	do i=1,nstates
+        	if (PES_down(j,i) /= 0) then
+           		phase_IPES_down(j,PES_down(j,i)) = phase_PES_down(j,i)
+           		IPES_down(j,PES_down(j,i)) = i
+        	end if
+        	if (PES_up(j,i) /= 0) then
+           		IPES_up(j,PES_up(j,i)) = i
+           		phase_IPES_up(j,PES_up(j,i)) = phase_PES_up(j,i)
+        	end if
+     	end do
+ 	end do sites
+
+end subroutine transformations
+
+!************************************************************************************
+
+subroutine make_neighbours()
+
+! makes matrix that containes information about which sites are nearest neighbours
+! neighbours(i,:) is a list of all the neighbours of site i. Each site has 4 nearest neighbours normally.
+
+	if (nsites == 8) then                  ! betts lattice for 8 sites
+		allocate(neighbours(nsites,4))
+		neighbours(1,1) = 8; neighbours(1,2) = 7; neighbours(1,3) = 5; neighbours(1,4) = 3
+		neighbours(2,1) = 7; neighbours(2,2) = 8; neighbours(2,3) = 3; neighbours(2,4) = 5
+		neighbours(3,1) = 1; neighbours(3,2) = 2; neighbours(3,3) = 4; neighbours(3,4) = 6
+		neighbours(4,1) = 5; neighbours(4,2) = 3; neighbours(4,3) = 8; neighbours(4,4) = 7
+		neighbours(5,1) = 2; neighbours(5,2) = 1; neighbours(5,3) = 6; neighbours(5,4) = 4
+		neighbours(6,1) = 3; neighbours(6,2) = 5; neighbours(6,3) = 7; neighbours(6,4) = 8
+		neighbours(7,1) = 4; neighbours(7,2) = 6; neighbours(7,3) = 1; neighbours(7,4) = 2
+		neighbours(8,1) = 6; neighbours(8,2) = 4; neighbours(8,3) = 2; neighbours(8,4) = 1
+	end if
+
+	if (nsites == 4) then                  ! linear 4 site lattice
+		allocate(neighbours(nsites,2))
+		neighbours(1,1) = 4; neighbours(1,2) = 2
+		neighbours(2,1) = 1; neighbours(2,2) = 3
+		neighbours(3,1) = 2; neighbours(3,2) = 4
+		neighbours(4,1) = 3; neighbours(4,2) = 1
+	end if
+
+	if (nsites == 2) then                 ! linear 2 site lattice
+		allocate(neighbours(nsites,1))
+		neighbours(1,1) = 2; neighbours(2,1) = 1
+	end if
+
+end subroutine make_neighbours
+
+!************************************************************************************
+
+subroutine matrix_sizes()
+
+	implicit none
+
+	integer :: n_up,n_dn
+
+	do n_up=0,nsites
+		do n_dn=0,nsites
+			msize(n_up,n_dn) = choose(nsites,n_up)*choose(nsites,n_dn)
+			if (n_dn == 0 .and. n_up == 0) then
+				mblock(n_up,n_dn) = 1
+			else if (n_dn == 0) then
+				mblock(n_up,n_dn) = mblock(n_up-1,nsites) + msize(n_up-1,nsites)
+			else 
+				mblock(n_up,n_dn) = mblock(n_up,n_dn-1) + msize(n_up,n_dn-1)
+			end if
 		end do
-	end subroutine matrix_sizes
-	!-------------------------------------------------------
+	end do
+
+end subroutine matrix_sizes
+
+!************************************************************************************
+
 	subroutine make_hamiltonian2(t)
 		! this program makes the hamiltonians off diagonal terms. On diagonal terms are added during each loop
 		implicit none
