@@ -1,0 +1,68 @@
+\documentclass{article}
+
+\usepackage{amsmath}
+
+\title{Research Background}
+\author{Patrick Daley}
+
+\begin{document}
+
+\maketitle
+
+%% local definitions: %%
+\def\exp#1{\left<#1\right>}
+
+\section{Basic Quatum (Griffith)}
+
+\subsection{Introduction}
+In classical mechanics you attempt to find the position of a particle ($x(t)$) using $F=ma$ or equivalently $-\frac{\partial V}{\partial x} = m \frac{d^2x}{dt^2}$ for conservative systems. The use this information to find the velocity and kinetic energy and so on. In quantum mechanics you instead attempt to find the wave function ($\Psi(x,t)$) and you use Schrodinger's Equation (eq.\ref{schrodinger_eq}) to find it. 
+\begin{align} \label{schrodinger_eq}
+i\hbar \frac{\partial \Psi}{\partial t} = - \frac{\hbar^2}{2m}\frac{\partial^2 \Psi}{\partial x^2} + V\Psi
+\end{align}
+\subsection{Probability Introduction}
+You can never know exactly where a particle is in quantum mechanics. The wave function gives the probability  the particle will be found in one area. This is found by integrating the wave function from the two bounds. For example to find the probability of finding the particle between a and b you do:
+\begin{align}
+\int_a^b |\Psi(x,t)|^2 dx = \int_a^b \Psi^*\Psi dx
+\end{align}
+If this gives you the probability of finding the particle between a and b then the probability of finding the particle at an exact location (a=b) is zero! Also the probability of finding the particle anywhere should be 1. This means that the following equation must always be equal to 1.
+\begin{align}
+\int_{-\infty}^{\infty} \Psi^*\Psi dx = 1
+\end {align}
+A wave function must always have this property. If the integral of the norm squared of the wave function is equal to some value $a$ you must normalize the wave function by doing the following.
+\begin{align*}
+\frac{1}{a}\int_{-\infty}^{\infty} \Psi^*\Psi dx = 1
+\end{align*}
+\subsubsection{Expectation}
+Even though you can never you exactly where the particle is you can find the most likely location by finding the expectation value.
+\begin{align}
+\left<x\right> = \int_{-\infty}^{\infty} \Psi^*x\Psi dx
+\end{align}
+The expectation value of any variable can be found this way. 
+\begin{align}
+\left<f\right> = \int_{-\infty}^{\infty} \Psi^*(f)\Psi dx
+\end{align}
+\subsubsection{Variance and Standard Deviation}
+Another important property that would be nice to characterized is how localized the wave function is. (Most of wave function is concentrated in small area versus a wave function that is spread out). A good measurement of this would be the sum of how far each piece is from the average. 
+\begin{align}
+\sum_{i} x_i - \left< x\right> = \sum \Delta x
+\end{align}
+Unfortunately by definition this must be zero since there will be equally many negative components as positive. However, you can fix this by squaring it before summing. This is called that variance.
+\begin{align}
+var(x) = \exp{(\Delta x)^2} = \exp{(x_i - \exp{x})^2}
+\end{align}
+This can be simplified to the following form:
+\begin{align}
+var(x) = \exp{x^2} - \exp{x}^2
+\end{align}
+Since $\Delta x$ was squared before the calculation it makes sense to take the square root of the expression afterwards. This is called the standard deviation ($\sigma$).
+\begin{align}
+\sigma_x = \sqrt{\exp{x^2} - \exp{x}^2}
+\end{align}
+\section{Paper}
+\subsection{Strong Electron Correlations}
+This means that you can not represent the electrons as all being delocalized in a sea of electrons. This is because normally an electron is equally likely to go into a empty site as a site that contains an electron of opposite spin. But in the case of electron correlations the electron can feel the repulsion of the electron already in the site so is less likely to go there. Mathematically non correlated systems have the following property;
+\begin{align}
+ \exp{n_{\downarrow}n_{\uparrow}} = \exp{n_{\downarrow}} \exp{n_{\uparrow}}
+\end{align}
+For strongly correlated materials this is not true.
+\end{document}

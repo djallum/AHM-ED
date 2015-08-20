@@ -333,6 +333,14 @@ end subroutine make_neighbours
 
 subroutine matrix_sizes()
 
+	!  %------------------------------------------------------------------------------%
+	!  |  This subroutine makes the array matrix_sizes which contains the dimensions  |
+	!  |  of all the Hamiltonian submatrices                                          | 
+	!  |                                                                              |
+	!  |  matrix_sizes(i,j) is the size of the matrix for FS with i up electrons      |
+	!  |  and j down electrons.                                                       |
+	!  %------------------------------------------------------------------------------%
+
 	implicit none
 
 	integer :: n_up,n_dn
@@ -354,15 +362,24 @@ end subroutine matrix_sizes
 
 !************************************************************************************
 
-	subroutine make_hamiltonian2(t)
-		! this program makes the hamiltonians off diagonal terms. On diagonal terms are added during each loop
-		implicit none
-		real, intent(in) :: t
-		integer :: istate,isite, inbr,new_state(2),phase, ne, i, trans_site(2), new_index,j,state_index,y,n_up,n_dn
-		"
+subroutine make_hamiltonian2(t)
+		
+	!  %--------------------------------------------------------------------------------%	
+	!  |  This routine makes the hamiltonians off diagonal terms. On diagonal terms     | 
+	!  |  are added during each loop.                                                   |
+	!  |                                                                                |
+	!  |  Any terms in the Hamiltonians that are off the main diagonal should be added  |
+	!  |  here. Terms that don't depend on site potentials can also be added here.      |
+	!  %--------------------------------------------------------------------------------%
+		
+	implicit none
+
+	real, intent(in) :: t
+	integer :: istate,isite, inbr,new_state(2),phase, ne, i, trans_site(2), new_index,j,state_index,y,n_up,n_dn
+	"
 
 for ((n_up=0;n_up<=nsites;n_up++)); do
-	echo -n "		"
+	echo -n "	"
 	for ((n_dn=0;n_dn<=nsites;n_dn++)); do
 		echo -n "H$n_up$n_dn=0.0"
 		if [[ n_dn != $nsites ]]; then
@@ -373,214 +390,238 @@ for ((n_up=0;n_up<=nsites;n_up++)); do
 done
 
 echo "
-		call matrix_sizes()
-		do n_up = 0,nsites
-		do n_dn = 0,nsites
-		do istate = mblock(n_up,n_dn),mblock(n_up,n_dn) + msize(n_up,n_dn)-1
-			do isite = 1,nsites
-				if (ibits(fock_states(1,istate),isite-1,1) == 1) then
-					do y=1,size(neighbours,2)
-						new_state(1) = IBCLR(fock_states(1,istate),isite-1)
-						inbr = neighbours(isite,y)
-						if (ibits(new_state(1),inbr-1,1) == 0) then
-							new_state(2) = fock_states(2,istate)
-							ne = 0
-							trans_site(1) = inbr; trans_site(2) = isite
-							do i=MINVAL(trans_site),MAXVAL(trans_site)-1
-								ne = ne + ibits(new_state(1),i-1,1)     ! count the number of up electrons in that state
-								ne = ne + ibits(new_state(2),i-1,1)     ! count the number of down electrons in that state
-							end do
-							if (MOD(ne,2) == 0) then 
-								phase = 1
-							else
-								phase = -1
+	call matrix_sizes()
+	do n_up = 0,nsites
+	do n_dn = 0,nsites
+	do istate = mblock(n_up,n_dn),mblock(n_up,n_dn) + msize(n_up,n_dn)-1
+		do isite = 1,nsites
+			if (ibits(fock_states(1,istate),isite-1,1) == 1) then
+				do y=1,size(neighbours,2)
+					new_state(1) = IBCLR(fock_states(1,istate),isite-1)
+					inbr = neighbours(isite,y)
+					if (ibits(new_state(1),inbr-1,1) == 0) then
+						new_state(2) = fock_states(2,istate)
+						ne = 0
+						trans_site(1) = inbr; trans_site(2) = isite
+						do i=MINVAL(trans_site),MAXVAL(trans_site)-1
+							ne = ne + ibits(new_state(1),i-1,1)     ! count the number of up electrons in that state
+							ne = ne + ibits(new_state(2),i-1,1)     ! count the number of down electrons in that state
+						end do
+						if (MOD(ne,2) == 0) then 
+							phase = 1
+						else
+							phase = -1
+						end if
+						new_state(1) = ibset(new_state(1),inbr-1)
+						do j=1,nstates
+							if(fock_states(1,j) == new_state(1) .and. fock_states(2,j) == new_state(2)) then
+							new_index = j
 							end if
-							new_state(1) = ibset(new_state(1),inbr-1)
-							do j=1,nstates
-								if(fock_states(1,j) == new_state(1) .and. fock_states(2,j) == new_state(2)) then
-								new_index = j
-								end if
-							end do
-							state_index = istate + 1 - mblock(n_up,n_dn)
-							new_index = new_index + 1 - mblock(n_up,n_dn)"
+						end do
+						state_index = istate + 1 - mblock(n_up,n_dn)
+						new_index = new_index + 1 - mblock(n_up,n_dn)"
 
-echo "							select case (n_up)"
+echo "						select case (n_up)"
 for ((i=0; i<=nsites; i++)); do
-	echo "								case($i)"
-	echo "									select case (n_dn)"
+	echo "							case($i)"
+	echo "								select case (n_dn)"
 	for ((j=0; j<=nsites; j++)); do
-		echo "										case($j)"
-		echo "											H$i$j(state_index,new_index) = t*phase"
+		echo "									case($j)"
+		echo "										H$i$j(state_index,new_index) = t*phase"
 	done
-	echo "									end select"
+	echo "								end select"
 done
-echo -n "							end select"
+echo -n "						end select"
 
 echo "
-						end if
-					end do
-				end if
-				if (ibits(fock_states(2,istate),isite-1,1) == 1) then
-					do y=1,size(neighbours,2)
-						new_state(2) = IBCLR(fock_states(2,istate),isite-1)
-						inbr = neighbours(isite,y)
-						if (ibits(new_state(2),inbr-1,1) == 0) then
-							new_state(1) = fock_states(1,istate)
-							ne = 0
-							trans_site(1) = inbr; trans_site(2) = isite
-							do i=MINVAL(trans_site)+1,MAXVAL(trans_site)
-								ne = ne + ibits(new_state(1),i-1,1)     ! count the number of up electrons in that state
-								ne = ne + ibits(new_state(2),i-1,1)     ! count the number of down electrons in that state
-							end do
-							if (MOD(ne,2) == 0) then 
-								phase = 1
-							else
-								phase = -1
-							end if
-							new_state(2) = ibset(new_state(2),inbr-1)
-							do j=1,nstates
-								if(fock_states(1,j) == new_state(1) .and. fock_states(2,j) == new_state(2)) then
-								new_index = j
-								end if
-							end do
-							state_index = istate + 1 - mblock(n_up,n_dn)
-							new_index = new_index + 1 - mblock(n_up,n_dn)"
-
-echo "							select case (n_up)"
-for ((i=0; i<=nsites; i++)); do
-	echo "								case($i)"
-	echo "									select case (n_dn)"
-	for ((j=0; j<=nsites; j++)); do
-		echo "										case($j)"
-		echo "											H$i$j(state_index,new_index) = t*phase"
-	done
-	echo "									end select"
-done
-echo -n "							end select"
-
-echo "
-						end if
-					end do
-				end if
-			end do
-		end do
-		end do
-		end do
-	end subroutine make_hamiltonian2
-	!-------------------------------------------------------
-	subroutine solve_hamiltonian1(E,U,mu)
-		! this program makes the on diagonal terms and solves teh eigenenergies
-		implicit none
-		integer :: n_up, n_dn,i,j,ne,isite,istate
-		real, intent(in) :: E(nsites)
-  		real, intent(in) :: mu 
-  		real, intent(in) :: U
- 		real, allocatable, dimension(:) :: wtemp
- 		real, allocatable, dimension(:,:) :: htemp, vtemp
-		do n_up=0,nsites
-			do n_dn=0,nsites
-				
-				allocate(htemp(msize(n_up,n_dn),msize(n_up,n_dn)),wtemp(msize(n_up,n_dn)))
-				allocate(vtemp(msize(n_up,n_dn),msize(n_up,n_dn)))
-				"
-
-echo "				select case (n_up)"
-for ((i=0; i<=nsites; i++)); do
-	echo "					case($i)"
-	echo "						select case (n_dn)"
-	for ((j=0; j<=nsites; j++)); do
-		echo "							case($j)"
-		echo "								htemp=H$i$j"
-	done
-	echo "						end select"
-done
-echo "				end select"
-
-echo "
-				wtemp=0.0
-				do istate=1,msize(n_up,n_dn)
-					do isite=1,nsites
-						ne=0
-						ne = ne + IBITS(fock_states(1,istate+mblock(n_up,n_dn)-1),isite-1,1)
-						ne = ne + IBITS(fock_states(2,istate+mblock(n_up,n_dn)-1),isite-1,1)
-						htemp(istate,istate) = htemp(istate,istate) + ne*E(isite)
-						if (ne == 2) then 
-							htemp(istate,istate) = htemp(istate,istate) + U
-						end if
-					end do
+					end if
 				end do
-				call ssyevr_lapack1(msize(n_up,n_dn),htemp,wtemp,vtemp)
-				e_ground(n_up,n_dn) = wtemp(1) - mu*(n_up+n_dn)  ! grand potentials
-				deallocate(htemp,wtemp,vtemp)
-			end do
-		end do
-	end subroutine solve_hamiltonian1
-	!-------------------------------------------------------
-	subroutine solve_hamiltonian2(E,U,mu,n_up,n_dn)
-		! this program makes the on diagonal terms and solves it
-		implicit none
-		integer :: i,j,ne,isite,istate
-		real, intent(in) :: E(nsites)
-  		real, intent(in) :: mu 
-  		real, intent(in) :: U
-  		integer, intent(in) :: n_up,n_dn
- 		real, allocatable, dimension(:) :: wtemp
- 		real, allocatable, dimension(:,:) :: htemp, vtemp
-				
-		allocate(htemp(msize(n_up,n_dn),msize(n_up,n_dn)),wtemp(msize(n_up,n_dn)))
-		allocate(vtemp(msize(n_up,n_dn),msize(n_up,n_dn)))
-		"
+			end if
+			if (ibits(fock_states(2,istate),isite-1,1) == 1) then
+				do y=1,size(neighbours,2)
+					new_state(2) = IBCLR(fock_states(2,istate),isite-1)
+					inbr = neighbours(isite,y)
+					if (ibits(new_state(2),inbr-1,1) == 0) then
+						new_state(1) = fock_states(1,istate)
+						ne = 0
+						trans_site(1) = inbr; trans_site(2) = isite
+						do i=MINVAL(trans_site)+1,MAXVAL(trans_site)
+							ne = ne + ibits(new_state(1),i-1,1)     ! count the number of up electrons in that state
+							ne = ne + ibits(new_state(2),i-1,1)     ! count the number of down electrons in that state
+						end do
+						if (MOD(ne,2) == 0) then 
+							phase = 1
+						else
+							phase = -1
+						end if
+						new_state(2) = ibset(new_state(2),inbr-1)
+						do j=1,nstates
+							if(fock_states(1,j) == new_state(1) .and. fock_states(2,j) == new_state(2)) then
+							new_index = j
+							end if
+						end do
+						state_index = istate + 1 - mblock(n_up,n_dn)
+						new_index = new_index + 1 - mblock(n_up,n_dn)"
 
-echo "		select case (n_up)"
+echo "						select case (n_up)"
 for ((i=0; i<=nsites; i++)); do
-	echo "			case($i)"
-	echo "				select case (n_dn)"
+	echo "							case($i)"
+	echo "								select case (n_dn)"
 	for ((j=0; j<=nsites; j++)); do
-		echo "					case($j)"
-		echo "						htemp=H$i$j"
+		echo "									case($j)"
+		echo "										H$i$j(state_index,new_index) = t*phase"
 	done
-	echo "				end select"
+	echo "								end select"
 done
-echo "		end select"
+echo -n "						end select"
 
 echo "
-		wtemp=0.0
-		do istate=1,msize(n_up,n_dn)
-			do isite=1,nsites
-				ne=0
-				ne = ne + IBITS(fock_states(1,istate+mblock(n_up,n_dn)-1),isite-1,1)
-				ne = ne + IBITS(fock_states(2,istate+mblock(n_up,n_dn)-1),isite-1,1)
-				htemp(istate,istate) = htemp(istate,istate) + ne*E(isite)
-				if (ne == 2) then 
-					htemp(istate,istate) = htemp(istate,istate) + U
-				end if
+					end if
+				end do
+			end if
+		end do
+	end do
+	end do
+	end do
+
+end subroutine make_hamiltonian2
+
+!************************************************************************************
+
+subroutine solve_hamiltonian1(E,U,mu)
+
+	! this program makes the on diagonal terms and solves teh eigenenergies
+
+	implicit none
+
+	integer :: n_up, n_dn,i,j,ne,isite,istate
+	real, intent(in) :: E(nsites)
+	real, intent(in) :: mu 
+	real, intent(in) :: U
+	real, allocatable, dimension(:) :: wtemp
+	real, allocatable, dimension(:,:) :: htemp, vtemp
+
+	do n_up=0,nsites
+		do n_dn=0,nsites
+			
+			allocate(htemp(msize(n_up,n_dn),msize(n_up,n_dn)),wtemp(msize(n_up,n_dn)))
+			allocate(vtemp(msize(n_up,n_dn),msize(n_up,n_dn)))
+			"
+
+echo "			select case (n_up)"
+for ((i=0; i<=nsites; i++)); do
+	echo "				case($i)"
+	echo "					select case (n_dn)"
+	for ((j=0; j<=nsites; j++)); do
+		echo "						case($j)"
+		echo "							htemp=H$i$j"
+	done
+	echo "					end select"
+done
+echo "			end select"
+
+echo "
+			wtemp=0.0
+			do istate=1,msize(n_up,n_dn)
+				do isite=1,nsites
+					ne=0
+					ne = ne + IBITS(fock_states(1,istate+mblock(n_up,n_dn)-1),isite-1,1)
+					ne = ne + IBITS(fock_states(2,istate+mblock(n_up,n_dn)-1),isite-1,1)
+					htemp(istate,istate) = htemp(istate,istate) + ne*E(isite)
+					if (ne == 2) then 
+						htemp(istate,istate) = htemp(istate,istate) + U
+					end if
+				end do
 			end do
+			call ssyevr_lapack1(msize(n_up,n_dn),htemp,wtemp,vtemp)
+			e_ground(n_up,n_dn) = wtemp(1) - mu*(n_up+n_dn)  ! grand potentials
+			deallocate(htemp,wtemp,vtemp)
 		end do
-		call ssyevr_lapack(msize(n_up,n_dn),htemp,wtemp,vtemp)
-		do i=1,msize(n_up,n_dn)
-	   		grand_potential(i+mblock(n_up,n_dn)-1) = wtemp(i) - mu*(n_up+n_dn)  ! grand potentials
+	end do
+end subroutine solve_hamiltonian1
+
+!************************************************************************************
+
+subroutine solve_hamiltonian2(E,U,mu,n_up,n_dn)
+	! this program makes the on diagonal terms and solves it
+	implicit none
+	integer :: i,j,ne,isite,istate
+	real, intent(in) :: E(nsites)
+		real, intent(in) :: mu 
+		real, intent(in) :: U
+		integer, intent(in) :: n_up,n_dn
+		real, allocatable, dimension(:) :: wtemp
+		real, allocatable, dimension(:,:) :: htemp, vtemp
+			
+	allocate(htemp(msize(n_up,n_dn),msize(n_up,n_dn)),wtemp(msize(n_up,n_dn)))
+	allocate(vtemp(msize(n_up,n_dn),msize(n_up,n_dn)))
+	"
+
+echo "	select case (n_up)"
+for ((i=0; i<=nsites; i++)); do
+	echo "		case($i)"
+	echo "			select case (n_dn)"
+	for ((j=0; j<=nsites; j++)); do
+		echo "				case($j)"
+		echo "					htemp=H$i$j"
+	done
+	echo "			end select"
+done
+echo "	end select"
+
+echo "
+	wtemp=0.0
+	do istate=1,msize(n_up,n_dn)
+		do isite=1,nsites
+			ne=0
+			ne = ne + IBITS(fock_states(1,istate+mblock(n_up,n_dn)-1),isite-1,1)
+			ne = ne + IBITS(fock_states(2,istate+mblock(n_up,n_dn)-1),isite-1,1)
+			htemp(istate,istate) = htemp(istate,istate) + ne*E(isite)
+			if (ne == 2) then 
+				htemp(istate,istate) = htemp(istate,istate) + U
+			end if
 		end do
-		do i=1,msize(n_up,n_dn)
-	   		eigenvectors(i+mblock(n_up,n_dn)-1,1:msize(n_up,n_dn)) = vtemp(1:msize(n_up,n_dn),i)  ! eigenvectors
-		end do
-		deallocate(htemp,wtemp,vtemp)
-	end subroutine solve_hamiltonian2
-	!-------------------------------------------------------
-	integer function choose(j,k)
-	    implicit none
-	    
-	    integer :: j,k,i2
-	    integer (kind=8) :: tj,tk,tchoose
-	    tchoose = 1
-	    tj = j
-	    tk = k
-	    do i2 = tj-tk+1,tj
-	       tchoose = tchoose * i2
-	    end do
-	    do i2 = 2, tk
-	       tchoose = tchoose / i2
-	    end do
-	    choose = tchoose
-	end function choose
-	!------------------------------------------------------
+	end do
+	call ssyevr_lapack(msize(n_up,n_dn),htemp,wtemp,vtemp)
+	do i=1,msize(n_up,n_dn)
+   		grand_potential(i+mblock(n_up,n_dn)-1) = wtemp(i) - mu*(n_up+n_dn)  ! grand potentials
+	end do
+	do i=1,msize(n_up,n_dn)
+   		eigenvectors(i+mblock(n_up,n_dn)-1,1:msize(n_up,n_dn)) = vtemp(1:msize(n_up,n_dn),i)  ! eigenvectors
+	end do
+	deallocate(htemp,wtemp,vtemp)
+end subroutine solve_hamiltonian2
+
+!************************************************************************************
+
+integer function choose(j,k)
+
+    ! %---------------------------------------------%
+	! |  simple choose function from statistics:    |
+	! |                                             |
+	! |                         i!                  |
+	! |       choose(i,j) =  --------               |
+	! |                      j!(i-j)!               |
+	! %---------------------------------------------%
+
+    implicit none
+    
+    integer :: j,k,i2
+    integer (kind=8) :: tj,tk,tchoose
+
+    tchoose = 1
+    tj = j
+    tk = k
+    do i2 = tj-tk+1,tj
+       tchoose = tchoose * i2
+    end do
+    do i2 = 2, tk
+       tchoose = tchoose / i2
+    end do
+    choose = tchoose
+
+end function choose
+
+!************************************************************************************
+
 end module"
