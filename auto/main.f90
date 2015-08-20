@@ -21,7 +21,7 @@ program main
 	implicit none
 
 	!-------------------Input Parameters---------------------------------
-	integer, parameter :: npairs=100000   	 ! size of the ensemble
+	integer, parameter :: npairs=100   	 ! size of the ensemble
 	real, parameter :: t = -1.0            ! nearest neighbour hoping 
 	real, parameter :: U = 4             ! the on site interactions
 	real, parameter :: delta=12.0          ! the width of the disorder
