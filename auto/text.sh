@@ -15,20 +15,25 @@ echo "module routines
 	!    |  This means the fock state is (+ is up - is down and 2 is both):                    |	
 	!    |                     000-022+                                                        |
 	!    %-------------------------------------------------------------------------------------%
-	
+
 	use lapack
 
 	implicit none
 
+	!--------------Other Parameters and Variables-------------------------------
+	integer, parameter :: nsites = $nsites             ! number of states
+	integer, parameter :: nstates = $nstates           ! size of the fock state (FS) basis
 	real :: grand_potential_ground=0.0                 ! the lowest grand ensemble energy
-	integer, parameter :: nsites = $nsites
-	integer, parameter :: nstates = $nstates
-	integer, dimension(2,nstates) :: fock_states
-	integer, dimension(0:2**nsites) :: states_order
-	integer :: ne
-	integer :: tot_states_up
-	integer, dimension(nsites,nstates) :: PES_down=0, PES_up=0, IPES_down=0, IPES_up=0  !matrices for PES and IPES 
-	integer, dimension(nsites,nstates) :: phase_PES_down=0, phase_PES_up=0, phase_IPES_down=0, phase_IPES_up=0  !to get anticommutation sign right
+	integer, dimension(2,nstates) :: fock_states       ! array that stores each FS represented in binary (see above)
+	integer, dimension(0:2**nsites) :: states_order    ! orders the up part of FS and down part of FS before combining them
+	integer :: ne                                      ! number of electrons (counts electrons in various routines)
+	integer :: tot_states_up                         ! total number of states with no down electrons
+	integer, dimension(nsites,nstates) :: PES_down, PES_up   ! lookup tables for PES of many-body groundstate (MBG) transformations (ex. c|Psi0>)
+	integer, dimension(nsites,nstates) :: IPES_down, IPES_up ! lookup tables for PES of MBG transformations (ex. c^{dagger}|Psi0>)
+	integer, dimension(nsites,nstates) :: phase_PES_down, phase_PES_up    ! to get anticommutation sign right
+	integer, dimension(nsites,nstates) :: phase_IPES_down, phase_IPES_up  ! to get anticommutation sign right
+
+	!------------------Hamiltonian Submatrices---------------------------------
 	"
 max=0
 for ((n_up=0; n_up<=nsites; n_up++)); do
@@ -49,13 +54,14 @@ for ((n_up=0; n_up<=nsites; n_up++)); do
 done
 
 echo "
-	real, dimension(0:nsites,0:nsites) :: e_ground
-	real, dimension(nstates) :: grand_potential      ! grand potentials (eigenenergies - mu*number electrons)
-	real, dimension(nstates,$max) :: eigenvectors                  ! the eigenvectors
-	integer, dimension(0:nsites) :: block, temp_block
-	integer, dimension(0:nsites) :: nstates_up
-	integer, allocatable, dimension(:,:) :: neighbours
-	integer, dimension(0:nsites,0:nsites) :: msize, mblock
+	real, dimension(nstates) :: grand_potential          ! grand potentials (eigenenergies - mu*number electrons)
+	real, dimension(0:nsites,0:nsites) :: e_ground       ! array of the lowest grand potential (Gpot) of each submatrix (e_ground(i,j) is lowest Gpot of Hij) 
+	real, dimension(nstates,$max) :: eigenvectors        ! the many body eigenvectors (MBE) only coefficients of basis states with same n_up,n_dn as it
+	integer, dimension(0:nsites) :: block, temp_block    ! block(i) is index of the first state with i electrons (when only looking at states with n_dn=0)
+	integer, dimension(0:nsites) :: nstates_up           ! nstates_up(i) is the number of states with i up electrons and n_dn = 0   
+	integer, allocatable, dimension(:,:) :: neighbours   ! neighbours(i,:) is all the site that are nearest neighbours to site i
+	integer, dimension(0:nsites,0:nsites) :: msize       ! msize(i,j) is size of submatrix with n_up=i and n_dn=j
+	integer, dimension(0:nsites,0:nsites) :: mblock      ! mblock(i,j) is index in fock_states array of first state with n_up=i,n_dn=j
 
 contains
 
@@ -63,15 +69,22 @@ contains
 
 subroutine make_filename(filename,t,U,mu,delta)
 
+	! assigns a filename for the output file based on parameters of the simulation. Naming convention found in README in the folder data
+
 	implicit none
-	character(len=50), intent(out) :: filename
-	character(len=10) :: mu_str, t_str, U_str, W_str, s_str
-	real, intent(in) :: t,U,mu,delta
-	write(mu_str,'(F4.1)') mu
+
+	character(len=50), intent(out) :: filename                ! output data file name
+	character(len=10) :: mu_str, t_str, U_str, W_str, s_str   ! string to hold values of parameters
+	real, intent(in) :: t,U,mu,delta                          ! values of the parameters
+
+	!--------------Convert the parameters to strings--------------------
+	write(mu_str,'(F4.1)') mu 
 	write(t_str,'(I2)') nint(t)
 	write(W_str,'(I2)') nint(delta) 
 	write(U_str,'(I2)') nint(U)
 	write(s_str,'(I1)') nsites
+
+	!-------------Contruct the file name from strings-------------------
 	write(filename,'(A)') trim(adjustl('data/a')) // trim(adjustl(s_str)) 
 	write(filename,'(A)') trim(adjustl(filename)) // '-dos+ipr_t' // trim(adjustl(t_str)) 
 	write(filename,'(A)') trim(adjustl(filename)) // 'U' // trim(adjustl(U_str)) 
@@ -84,15 +97,22 @@ end subroutine make_filename
 
 subroutine random_gen_seed()
 
-  implicit none
-  integer :: seed_size, clock, i
-  integer, allocatable, dimension(:) :: seed
-  call random_seed(size=seed_size)
-  allocate(seed(seed_size))
-  call system_clock(count = clock)
-  seed=clock + 37*(/(i-1,i=1,seed_size)/)
-  call random_seed(put=seed)
-  deallocate(seed)
+	! seeds the randome number generator (used for assigning site potentials) with system clock
+
+	implicit none
+
+  	integer :: seed_size         ! the size of the random generators seed
+	integer :: clock             ! the system clock (used to seed random generator) 
+	integer :: i                 ! counter for loop
+	integer, allocatable, dimension(:) :: seed    ! will store our seed
+
+	call random_seed(size = seed_size)       ! find the size of the random generators seed
+	allocate(seed(seed_size))                ! make our seed that same size
+	call system_clock(count = clock)         ! find the system time
+	seed=clock + 37*(/(i-1,i=1,seed_size)/)  ! create our seed using the clock
+	call random_seed(put=seed)               ! seed the random generator with our seed
+
+	deallocate(seed)
 
 end subroutine random_gen_seed
 
@@ -100,16 +120,19 @@ end subroutine random_gen_seed
 
 subroutine site_potentials(delta,E)
 
-  implicit none
-  real, intent(in) :: delta
-  real, intent(out) :: E(nsites)
-  real :: random
-  integer :: i ! counter
+	! assigns site potentials from uniform bounded distribution between -W/2 and W/2
 
-  do i=1,nsites
-     call random_number(random)              ! gives a random number between 0 and 1
-     E(i) = delta*(random - 0.5)          ! centers the random numbers about 0
-  end do
+  	implicit none
+
+	real, dimension(nsites), intent(out) :: E  ! site potentials
+  	real, intent(in) :: delta                  ! width of disorder
+  	real :: random                             ! random number
+  	integer :: i                               ! counter for loop
+
+ 	do i=1,4
+    	call random_number(random)           ! gives a random number between 0 and 1
+    	E(i) = delta*(random - 0.5)          ! centers the random numbers about 0 and then expands width from 1 to delta
+    end do
 
 end subroutine site_potentials
 
