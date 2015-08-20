@@ -65,35 +65,57 @@ echo "
 contains
 
 !************************************************************************************
-	subroutine make_filename(filename,t,U,mu,delta)
-		implicit none
-		character(len=50), intent(out) :: filename
-		character(len=10) :: mu_str, t_str, U_str, W_str, s_str
-		real, intent(in) :: t,U,mu,delta
-		write(mu_str,'(F4.1)') mu
-		write(t_str,'(I2)') nint(t)
-		write(W_str,'(I2)') nint(delta) 
-		write(U_str,'(I2)') nint(U)
-		write(s_str,'(I1)') nsites
-		write(filename,'(A)') trim(adjustl('data/a')) // trim(adjustl(s_str)) 
-		write(filename,'(A)') trim(adjustl(filename)) // '-dos+ipr_t' // trim(adjustl(t_str)) 
-		write(filename,'(A)') trim(adjustl(filename)) // 'U' // trim(adjustl(U_str)) 
-		write(filename,'(A)') trim(adjustl(filename)) // 'W' // trim(adjustl(W_str)) 
-		write(filename,'(A)') trim(adjustl(filename)) // 'mu' // trim(adjustl(mu_str)) // '.dat'
-	end subroutine make_filename
-	!------------------------------------------------------
-	subroutine random_gen_seed()
-	  implicit none
-	  integer :: seed_size, clock, i
-	  integer, allocatable, dimension(:) :: seed
-	  call random_seed(size=seed_size)
-	  allocate(seed(seed_size))
-	  call system_clock(count = clock)
-	  seed=clock + 37*(/(i-1,i=1,seed_size)/)
-	  call random_seed(put=seed)
-	  deallocate(seed)
-	end subroutine random_gen_seed
-	!------------------------------------------------------
+
+subroutine make_filename(filename,t,U,mu,delta)
+
+	! assigns a filename for the output file based on parameters of the simulation. Naming convention found in README in the folder data
+
+	implicit none
+
+	character(len=50), intent(out) :: filename                ! output data file name
+	character(len=10) :: mu_str, t_str, U_str, W_str, s_str   ! string to hold values of parameters
+	real, intent(in) :: t,U,mu,delta                          ! values of the parameters
+
+	!--------------Convert the parameters to strings--------------------
+	write(mu_str,'(F4.1)') mu 
+	write(t_str,'(I2)') nint(t)
+	write(W_str,'(I2)') nint(delta) 
+	write(U_str,'(I2)') nint(U)
+	write(s_str,'(I1)') nsites
+
+	!-------------Contruct the file name from strings-------------------
+	write(filename,'(A)') trim(adjustl('data/a')) // trim(adjustl(s_str)) 
+	write(filename,'(A)') trim(adjustl(filename)) // '-dos+ipr_t' // trim(adjustl(t_str)) 
+	write(filename,'(A)') trim(adjustl(filename)) // 'U' // trim(adjustl(U_str)) 
+	write(filename,'(A)') trim(adjustl(filename)) // 'W' // trim(adjustl(W_str)) 
+	write(filename,'(A)') trim(adjustl(filename)) // 'mu' // trim(adjustl(mu_str)) // '.dat'
+
+end subroutine make_filename
+
+!************************************************************************************
+
+subroutine random_gen_seed()
+
+	! seeds the randome number generator (used for assigning site potentials) with system clock
+
+	implicit none
+
+  	integer :: seed_size         ! the size of the random generators seed
+	integer :: clock             ! the system clock (used to seed random generator) 
+	integer :: i                 ! counter for loop
+	integer, allocatable, dimension(:) :: seed    ! will store our seed
+
+	call random_seed(size = seed_size)       ! find the size of the random generators seed
+	allocate(seed(seed_size))                ! make our seed that same size
+	call system_clock(count = clock)         ! find the system time
+	seed=clock + 37*(/(i-1,i=1,seed_size)/)  ! create our seed using the clock
+	call random_seed(put=seed)               ! seed the random generator with our seed
+
+	deallocate(seed)
+
+end subroutine random_gen_seed
+
+!************************************************************************************
 	subroutine site_potentials(delta,E)
 	  implicit none
 	  real, intent(in) :: delta
