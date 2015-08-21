@@ -5,23 +5,13 @@ program main
 ! P. Daley              15/07/18            created code 
 ! P. Daley              15/08/17            changed filenaming
 ! P. Daley              15/08/18            added comments
-!
-! This code solves the 2site problem with on-site interactions and hopping. The hamiltonian matrices are found by hand and entered into the program.
-! The matrices are solved using lapack. The wieght of peaks for the LDOS is found by multiplying the ground state vector by matrices representing PES and 
-! IPES from both cites and computed its inner product with each eigenstate. The location of the peaks is calculated by subtracting or adding (depending
-! if PES or IPES) the lowest grandpotential with the grandpotential of that eigenstate. The DOS and GIPR are calculated using the two LDOS with the 
-! formulas in J. Perera and R. Wortis's paper "Energy dependence of localization with interactons and disorder: The ...". The GIPR is also weighted with 
-! the equation found in the paper.
-!
-! The fock state basis used in order is (+ is up, - is down) :
-! 00,0+,+0,0-,-0,++,--,-+,+-,02,20,+2,2+,-2,2-,22
 
 	use routines
 
 	implicit none
 
 	!-------------------Input Parameters---------------------------------
-	integer, parameter :: npairs=100   	 ! size of the ensemble
+	integer, parameter :: npairs=10   	 ! size of the ensemble
 	real, parameter :: t = -1.0            ! nearest neighbour hoping 
 	real, parameter :: U = 4             ! the on site interactions
 	real, parameter :: delta=12.0          ! the width of the disorder
