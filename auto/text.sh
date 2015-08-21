@@ -1,6 +1,6 @@
 #!/bin/bash
 
-nsites=8
+nsites=4
 nstates="$(echo "$((4**$nsites))")"
 
 echo "module routines
@@ -135,35 +135,73 @@ end subroutine site_potentials
 	
 !************************************************************************************
 
-	subroutine num_sites()
+subroutine num_sites()
+
+	!    %----------------------------------------------------------------------------------------------%
+	!    | Creates and orders the fock state basis. As an example the order for 2 site system is:       |
+	!    |                                                                                              |
+	!    |                                                 i=                                           |
+	!    |                   | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 |   |
+	!    |   ----------------|---|---|---|---|---|---|---|---|---|----|----|----|----|----|----|----|   |
+	!    |   fock_states(1,i)| 0 | 0 | 0 | 0 | 1 | 2 | 1 | 2 | 1 | 2  | 1  | 2  | 3	 | 3  | 3  | 3  |   |
+	!    |   ----------------|---|---|---|---|---|---|---|---|---|----|----|----|----|----|----|----|   |
+	!    |   fock_states(2,i)| 0 | 1 | 2 | 3 | 0 | 0 | 1 | 1 | 2 | 2  | 3  | 3  | 0  | 1  | 2  | 3  |   |
+	!    |                                                                                              |
+	!    %----------------------------------------------------------------------------------------------%
+	!
+	!    * details of the order are not particularily important and specifics can be found by working through source code
+	!
+	!    It first looks at only on integer (up electrons) and orders them by ne in increasing order. Then uses this ordered set
+	!    of integers (variable is called order_states) to create the fock_states. The order in which each sub block of states with 
+	!	 same number of electrons shows how it uses the list.
+	!    
+	!    Example for nsites=4
+	!    	H00,H01,H02,H03,H04,H10,H11,H12,H13,H14,H20.......
+	!
+	!    It would move up by block of integers with n_up electrons (assigning them to fock_states(1,i)) then and cycle through the entire set
+	!    (assigning fock_states(2,i) while keeping n_up in same block. (See example in the box above)
 
 	implicit none
 
-	integer :: i,j, istate, isite
-	integer :: max_electrons
-	tot_states_up = 2**nsites
-	max_electrons = nsites
+	integer :: i, j, istate, isite  ! counters for loops
+	integer :: max_electrons        ! maximum amount of spin-up electrons (same as nsites)
 
+	tot_states_up = 2**nsites     ! total number of fock states with n_dn = 0
+	max_electrons = nsites 
+
+	! enter in intial variables before starting loops
 	block = 0  
     nstates_up = 0
     block(0) = 1
     nstates_up(0) = 1
 
+    ! contruct the block array
 	do ne = 1, max_electrons
-   		nstates_up(ne) = choose(nsites,ne)          ! number of spin-up fock states with ne electrons
-   		block(ne) = block(ne-1) + nstates_up(ne-1) ! block index updating
+   		nstates_up(ne) = choose(nsites,ne)          ! number of fock states with n_up=ne (n_dn=0). Choose function defined at bottom of module
+   		block(ne) = block(ne-1) + nstates_up(ne-1)  ! start of ne block is the ne-1 block plus amount of ne-1 states there are
 	end do
 
-	temp_block = block
+	temp_block = block                              ! temporary array that can be modified without destroying original block array
+ 	
+ 	! %-----------------------------------------------------------------------%
+ 	! |	Order intergers by number of ones (electrons) they have in binary     | 
+ 	! |                                                                       | 
+ 	! | Example for nsite=4:  0, 1,2,4,8, 3,5,6,9,10,12, 7,11,13,14, 15)      | 
+ 	! |                      |0||   1   ||      2      |     3     | 4 |      | 
+ 	! |                                                                       | 
+ 	! %-----------------------------------------------------------------------% 
+
 	do istate=0,tot_states_up-1
 		ne = 0
 		do isite=1,nsites
-			ne = ne + ibits(istate,isite-1,1)     ! count the number of electrons in that state
+			ne = ne + ibits(istate,isite-1,1)     ! count the number of one of that binary number (up electrons of the state)
 		end do 
-		states_order(temp_block(ne)) = istate
-		temp_block(ne) = temp_block(ne) + 1
+		states_order(temp_block(ne)) = istate     ! place it at the lowest index of the block with the same n_up
+		temp_block(ne) = temp_block(ne) + 1       ! raise the lowest index of that block by 1 (don't overwrite what you just put in)
 	end do
 
+	! Uses the ordered list (states_order) created in last loop to make the fock_states
+	
 	istate = 1
 	do ne=0,max_electrons
 		do j=1,tot_states_up
@@ -370,12 +408,30 @@ subroutine make_hamiltonian2(t)
 	!  |                                                                                |
 	!  |  Any terms in the Hamiltonians that are off the main diagonal should be added  |
 	!  |  here. Terms that don't depend on site potentials can also be added here.      |
+	!  |                                                                                |
+	!  |  The program loops over each submatrix and every state within them. It loops   |
+	!  |  over each site and checks if there is an up electron and if so it then checks |
+	!  |  which of it's neighbouring sites don't have one. It then removes the '1' from |
+	!  |  that site and adds it to a neighbouring one and counts the amount of electrons|
+	!  |  between the two sites (to get anticommutation). It then finds the indexs of   |
+	!  |  the original state and the new state and at a +/- t to that column/row of the |
+	!  |  submatrix. It then repeats the process for the down electrons.                |
 	!  %--------------------------------------------------------------------------------%
 		
 	implicit none
 
-	real, intent(in) :: t
-	integer :: istate,isite, inbr,new_state(2),phase, ne, i, trans_site(2), new_index,j,state_index,y,n_up,n_dn
+	real, intent(in) :: t                    ! the hopping integral
+	integer :: istate, isite, i, j, y        ! counters for loops
+	integer :: inbr                          ! site number of the neighbour
+	integer :: new_state(2)                  ! new state after a hopping
+	integer :: phase                         ! the number that keeps track of anti-commutations (+ or -)
+	integer :: ne                            ! counts the number of electrons (used to calculate the phase)
+	integer :: trans_site(2)                 ! holds the site number of the starting and ending site of a hopping (needed to find number of electrons)
+	integer :: new_index                     ! the column index of the new FS after the hopping
+	integer :: state_index                   ! the row index of the old FS before the hopping
+	integer :: n_up,n_dn                     ! the number of up ad down electrons (used to loop over each submatrix)
+
+	!------------------Zero the matrices------------------------
 	"
 
 for ((n_up=0;n_up<=nsites;n_up++)); do
@@ -390,35 +446,36 @@ for ((n_up=0;n_up<=nsites;n_up++)); do
 done
 
 echo "
-	call matrix_sizes()
-	do n_up = 0,nsites
-	do n_dn = 0,nsites
-	do istate = mblock(n_up,n_dn),mblock(n_up,n_dn) + msize(n_up,n_dn)-1
-		do isite = 1,nsites
-			if (ibits(fock_states(1,istate),isite-1,1) == 1) then
-				do y=1,size(neighbours,2)
-					new_state(1) = IBCLR(fock_states(1,istate),isite-1)
-					inbr = neighbours(isite,y)
-					if (ibits(new_state(1),inbr-1,1) == 0) then
-						new_state(2) = fock_states(2,istate)
-						ne = 0
-						trans_site(1) = inbr; trans_site(2) = isite
+	call matrix_sizes()            ! contruct the array that tells the sizes of the Hamiltonian submatrices
+
+	do n_up = 0,nsites             ! loop over all submatrices
+	do n_dn = 0,nsites             ! loop over all submatrices
+	do istate = mblock(n_up,n_dn),mblock(n_up,n_dn) + msize(n_up,n_dn)-1  ! loop over all the states in each submatrix
+		do isite = 1,nsites                                               ! loop over each site of the state
+			if (ibits(fock_states(1,istate),isite-1,1) == 1) then         ! check if there is a up electron on that site
+				do y=1,size(neighbours,2)                                 ! if so loop over all the sites that nieghbour it
+					new_state(1) = IBCLR(fock_states(1,istate),isite-1)   ! remove the up electron from current site
+					inbr = neighbours(isite,y)                            ! this the site number of the neighbour
+					if (ibits(new_state(1),inbr-1,1) == 0) then           ! check if the neighbour site is empty (no up electron)
+						new_state(2) = fock_states(2,istate)              ! the state after the hopping has same down component
+						ne = 0                                            ! set the electron counter to zero (need to count them for anti-commutations)
+						trans_site(1) = inbr; trans_site(2) = isite       ! the site it the elelectron started at and finished at
 						do i=MINVAL(trans_site),MAXVAL(trans_site)-1
-							ne = ne + ibits(new_state(1),i-1,1)     ! count the number of up electrons in that state
-							ne = ne + ibits(new_state(2),i-1,1)     ! count the number of down electrons in that state
+							ne = ne + ibits(new_state(1),i-1,1)           ! count the number of up electrons between start and finish site
+							ne = ne + ibits(new_state(2),i-1,1)           ! count the number of down electrons between start and finish site
 						end do
-						if (MOD(ne,2) == 0) then 
+						if (MOD(ne,2) == 0) then                          ! if even amount of electrons between then anticommutation combine to 1
 							phase = 1
 						else
-							phase = -1
+							phase = -1                                    ! if odd amount of electrons between then anticommutation combine to -1
 						end if
-						new_state(1) = ibset(new_state(1),inbr-1)
+						new_state(1) = ibset(new_state(1),inbr-1)         ! find the up component of the new fock state
 						do j=1,nstates
 							if(fock_states(1,j) == new_state(1) .and. fock_states(2,j) == new_state(2)) then
-							new_index = j
+								new_index = j                             ! search through the fock states to find the index of the new FS
 							end if
 						end do
-						state_index = istate + 1 - mblock(n_up,n_dn)
+						state_index = istate + 1 - mblock(n_up,n_dn)      ! find the row and column to add the 't' to the Hamiltonian matrix 
 						new_index = new_index + 1 - mblock(n_up,n_dn)"
 
 echo "						select case (n_up)"
@@ -437,7 +494,7 @@ echo "
 					end if
 				end do
 			end if
-			if (ibits(fock_states(2,istate),isite-1,1) == 1) then
+			if (ibits(fock_states(2,istate),isite-1,1) == 1) then         ! Repeat identical process for hoppping of down electrons
 				do y=1,size(neighbours,2)
 					new_state(2) = IBCLR(fock_states(2,istate),isite-1)
 					inbr = neighbours(isite,y)
@@ -490,21 +547,33 @@ end subroutine make_hamiltonian2
 
 subroutine solve_hamiltonian1(E,U,mu)
 
-	! this program makes the on diagonal terms and solves teh eigenenergies
+	!  %--------------------------------------------------------------------------------%
+	!  | This program makes the on diagonal terms and solves the lowest eigenvalue of   |
+	!  | each submatrix.                                                                |
+	!  |                                                                                |
+	!  | The routines loops over all the submatrices and then over each state then      |
+	!  | site. It counts the amount of up and down electrons on that site. It then adds |
+	!  | the site potential of that site to the corresponding diagonal term in the      |
+	!  | Hamiltonian matrix as many times as there are electrons. In addition, if there |
+	!  | are two electrons (up and down) on the site an additional 'U' term is added.   |
+	!  | The final step calls LAPACK to solve for the lowest eigenvalue of each         |
+	!  | submatrix.                                                                     |
+	!  %--------------------------------------------------------------------------------%
 
 	implicit none
 
-	integer :: n_up, n_dn,i,j,ne,isite,istate
-	real, intent(in) :: E(nsites)
-	real, intent(in) :: mu 
-	real, intent(in) :: U
-	real, allocatable, dimension(:) :: wtemp
-	real, allocatable, dimension(:,:) :: htemp, vtemp
+	integer :: n_up, n_dn,i,j,isite,istate                 ! counters for loops
+	integer :: ne                                          ! counts the number of electrons
+	real, intent(in) :: E(nsites)                          ! site potentials
+	real, intent(in) :: mu                                 ! on-site coulomb interactions (defined at top of main.f90)
+	real, intent(in) :: U                                  ! on-site coulomb interactions (defined at top of main.f90)
+	real, allocatable, dimension(:) :: wtemp               ! temporary matrix to hold the eigenvalues
+	real, allocatable, dimension(:,:) :: htemp, vtemp      ! temporary matrices to hold the hamiltonain and eigenvectors respectively
 
 	do n_up=0,nsites
 		do n_dn=0,nsites
 			
-			allocate(htemp(msize(n_up,n_dn),msize(n_up,n_dn)),wtemp(msize(n_up,n_dn)))
+			allocate(htemp(msize(n_up,n_dn),msize(n_up,n_dn)),wtemp(msize(n_up,n_dn)))  ! allocate temporary matrices of proper size
 			allocate(vtemp(msize(n_up,n_dn),msize(n_up,n_dn)))
 			"
 
@@ -522,36 +591,44 @@ echo "			end select"
 
 echo "
 			wtemp=0.0
-			do istate=1,msize(n_up,n_dn)
-				do isite=1,nsites
+			do istate=1,msize(n_up,n_dn)              ! loop over all the states of the matrix
+				do isite=1,nsites                     ! loop over all the site of each state
 					ne=0
-					ne = ne + IBITS(fock_states(1,istate+mblock(n_up,n_dn)-1),isite-1,1)
-					ne = ne + IBITS(fock_states(2,istate+mblock(n_up,n_dn)-1),isite-1,1)
-					htemp(istate,istate) = htemp(istate,istate) + ne*E(isite)
+					ne = ne + IBITS(fock_states(1,istate+mblock(n_up,n_dn)-1),isite-1,1)  ! check if up electron on that site of that state
+					ne = ne + IBITS(fock_states(2,istate+mblock(n_up,n_dn)-1),isite-1,1)  ! check if down electron on that site of that state
+					htemp(istate,istate) = htemp(istate,istate) + ne*E(isite)             ! add ne*(the site potential of that site)
 					if (ne == 2) then 
-						htemp(istate,istate) = htemp(istate,istate) + U
+						htemp(istate,istate) = htemp(istate,istate) + U                   ! if there is both an up and down electron add a U
 					end if
 				end do
 			end do
-			call ssyevr_lapack1(msize(n_up,n_dn),htemp,wtemp,vtemp)
-			e_ground(n_up,n_dn) = wtemp(1) - mu*(n_up+n_dn)  ! grand potentials
+			call ssyevr_lapack1(msize(n_up,n_dn),htemp,wtemp,vtemp)                       ! call the LAPACK routine
+			e_ground(n_up,n_dn) = wtemp(1) - mu*(n_up+n_dn)  ! grand potentials           ! record the smallest grand_potential (W(1) is smallest eigenvalue)
 			deallocate(htemp,wtemp,vtemp)
 		end do
 	end do
+
 end subroutine solve_hamiltonian1
 
 !************************************************************************************
 
 subroutine solve_hamiltonian2(E,U,mu,n_up,n_dn)
-	! this program makes the on diagonal terms and solves it
+
+	!  %--------------------------------------------------------------------------------%
+	!  |  This program is identical to solve_hamiltonian1 except it only solves one     |
+	!  |  matrix instead of looping over all of them and calls a different lapack       |
+	!  |  routine which solves all the eigenvalues and eigenvectors.                    |
+	!  %--------------------------------------------------------------------------------%
+
 	implicit none
-	integer :: i,j,ne,isite,istate
-	real, intent(in) :: E(nsites)
-		real, intent(in) :: mu 
-		real, intent(in) :: U
-		integer, intent(in) :: n_up,n_dn
-		real, allocatable, dimension(:) :: wtemp
-		real, allocatable, dimension(:,:) :: htemp, vtemp
+
+	integer :: i,j,ne,isite,istate                   ! conters for loops
+	real, intent(in) :: E(nsites)                    ! site potentials
+	real, intent(in) :: mu                           ! chemical potential
+	real, intent(in) :: U                            ! onsite coulomb interactions
+	integer, intent(in) :: n_up,n_dn                 ! number of up and down electrons
+	real, allocatable, dimension(:) :: wtemp
+	real, allocatable, dimension(:,:) :: htemp, vtemp
 			
 	allocate(htemp(msize(n_up,n_dn),msize(n_up,n_dn)),wtemp(msize(n_up,n_dn)))
 	allocate(vtemp(msize(n_up,n_dn),msize(n_up,n_dn)))
@@ -590,6 +667,7 @@ echo "
    		eigenvectors(i+mblock(n_up,n_dn)-1,1:msize(n_up,n_dn)) = vtemp(1:msize(n_up,n_dn),i)  ! eigenvectors
 	end do
 	deallocate(htemp,wtemp,vtemp)
+
 end subroutine solve_hamiltonian2
 
 !************************************************************************************
