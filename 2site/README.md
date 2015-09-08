@@ -11,6 +11,8 @@
 <p>To modify the input variables open main.f90 in a text editor. In the section labeled input parameters (line 25-33) modify values assigned to the variables. The description of each variable can be found in the comments beside it.
 <h4>Advanced</h4>
 <p>The compiller specified in the makefile is gfortran if you would like to use another compiller open the makefile in a text editor and set the variable <em>CC</em> to the compiller of your choice. To add flags to specify the optimization of the code, debugging or any other purposes append them to the CFLAGS variable in the makefile. Optimization -O0 is lowest and -O3 is highest. Currently (August 2015) the interacting case can only be run with optimization -O0 since adding optimization introduces errors.</p>
+<h4>Run Time</h4>
+<p>The run time on SHARCNET and on the mac desktop are almost identical. It runs 10 million pairs in approximately 5 minutes.</p>
 <p>The only library that needs to be linked is the LAPACK library (linear algebra package). If not already owned it can be downloaded <a href="http://www.netlib.org/lapack/#_lapack_version_3_5_0" target="_blank">here</a>.</p>
 <p> To modify other aspects of the program read through the section <a href="#structure">Structure of the Program</a> in order to find the location of the feauture you would like to change.</p>
 <h3>3. Data and Graphs</h3>
