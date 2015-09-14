@@ -11,10 +11,10 @@
 <p>To modify the input variables open main.f90 in a text editor. In the section labeled input parameters (line 25-33) modify values assigned to the variables. The description of each variable can be found in the comments beside it.
 <h4>Advanced</h4>
 <p>The compiller specified in the makefile is gfortran if you would like to use another compiller open the makefile in a text editor and set the variable <em>CC</em> to the compiller of your choice. To add flags to specify the optimization of the code, debugging or any other purposes append them to the CFLAGS variable in the makefile. Optimization -O0 is lowest and -O3 is highest. Currently (August 2015) the interacting case can only be run with optimization -O0 since adding optimization introduces errors.</p>
-<h4>Run Time</h4>
-<p>The run time on SHARCNET and on the mac desktop are almost identical. It runs 10 million pairs in approximately 5 minutes.</p>
 <p>The only library that needs to be linked is the LAPACK library (linear algebra package). If not already owned it can be downloaded <a href="http://www.netlib.org/lapack/#_lapack_version_3_5_0" target="_blank">here</a>.</p>
 <p> To modify other aspects of the program read through the section <a href="#structure">Structure of the Program</a> in order to find the location of the feauture you would like to change.</p>
+<h4>Run Time</h4>
+<p>The run time on SHARCNET and on the mac desktop are almost identical. It runs 10 million pairs in approximately 5 minutes.</p>
 <h3>3. Data and Graphs</h3>
 Previous data and graphs that have been created using this code can be found in the <em>data</em> directory. The graphs are stored as .agr files and can be opened using xmgrace. Some also have been saved in pdf format as well. The data files have names based on the parameters of the simulation that created them. The naming conventions of the files can be found in the README file of the <em>data</em> directory.</p> 
 <p>The subdirectory in <em>data</em> called <em>filling</em> containes data for simulations run away from half filling. There are also graphs that compare the DOS and GIPR for different fillings.</p>
