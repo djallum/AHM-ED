@@ -1,6 +1,6 @@
 #!/bin/bash
 
-nsites=4
+nsites=8
 nstates="$(echo "$((4**$nsites))")"
 
 echo "module routines
@@ -571,7 +571,7 @@ subroutine solve_hamiltonian1(E,U,mu)
 	real, allocatable, dimension(:,:) :: htemp, vtemp      ! temporary matrices to hold the hamiltonain and eigenvectors respectively
 
 	do n_up=0,nsites
-		do n_dn=0,nsites
+		do n_dn=n_up,nsites
 			
 			allocate(htemp(msize(n_up,n_dn),msize(n_up,n_dn)),wtemp(msize(n_up,n_dn)))  ! allocate temporary matrices of proper size
 			allocate(vtemp(msize(n_up,n_dn),msize(n_up,n_dn)))
