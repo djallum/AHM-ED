@@ -23,7 +23,7 @@ program main
 	implicit none
 
 	!-------------------Input Parameters---------------------------------
-	integer, parameter :: npairs = 10000000  ! size of the ensemble
+	integer, parameter :: npairs = 10  ! size of the ensemble
 	real, parameter :: t = -1                 ! nearest neighbour hoping 
 	real, parameter :: delta = 12.0           ! width of disorder for the site potentials 
   	real, parameter :: U = 4.0                ! on-site interactions
@@ -96,6 +96,7 @@ program main
 
 	    grand_potential_ground = minval(grand_potential)   ! find the lowest grand ensemble energy
 
+     write(*,*) "grand potentials", grand_potential(12),grand_potential(14)
 	    !-----find the corresponding eigenvector----------------
 
 	    location = minloc(grand_potential)          ! find the location of the lowest energy  

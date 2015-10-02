@@ -10,12 +10,12 @@ program main
 
 	implicit none
 
-	!-------------------Input Parameters---------------------------------
-	integer, parameter :: npairs=10   	 ! size of the ensemble
-	real, parameter :: t = -1.0            ! nearest neighbour hoping 
-	real, parameter :: U = 4             ! the on site interactions
-	real, parameter :: delta=12.0          ! the width of the disorder
-  	real, parameter :: mu = U/2            ! the chemical potential (U/2 is half filling)
+        !-------------------Input Parameters---------------------------------
+	integer, parameter :: npairs=10   	          ! size of the ensemble
+	real, parameter :: t = -1.0                   ! nearest neighbour hoping 
+	real, parameter :: U = 8                      ! the on site interactions
+	real, parameter :: delta=12.0                 ! the width of the disorder
+  	real, parameter :: mu = U/2                   ! the chemical potential (U/2 is half filling)
   	integer, parameter :: nbins = 300             ! number of bins for energy bining to get smooth curves
 	real, parameter :: frequency_max = 12         ! maximum energy considered in energy bining
 	real, parameter :: frequency_min = -12        ! lowest energy considered in energy bining

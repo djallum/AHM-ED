@@ -31,7 +31,7 @@ subroutine random_gen_seed()
   allocate(seed(seed_size))                ! make our seed that same size
   call system_clock(count = clock)         ! find the system time
   seed=clock + 37*(/(i-1,i=1,seed_size)/)  ! create our seed using the clock
-  seed=3
+  !seed=3
   call random_seed(put=seed)               ! seed the random generator with our seed
 
   deallocate(seed)
