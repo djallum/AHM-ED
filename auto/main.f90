@@ -10,13 +10,13 @@ program main
 
 	implicit none
 
-        !-------------------Input Parameters---------------------------------
-	integer, parameter :: npairs=10   	          ! size of the ensemble
-	real, parameter :: t = -1.0                   ! nearest neighbour hoping 
-	real, parameter :: U = 8                      ! the on site interactions
-	real, parameter :: delta=12.0                 ! the width of the disorder
-  	real, parameter :: mu = U/2                   ! the chemical potential (U/2 is half filling)
-  	integer, parameter :: nbins = 300             ! number of bins for energy bining to get smooth curves
+	!-------------------Input Parameters---------------------------------
+	integer, parameter :: npairs=1   	 ! size of the ensemble
+	real, parameter :: t = 0.0            ! nearest neighbour hoping 
+	real, parameter :: U = 0             ! the on site interactions
+	real, parameter :: delta=12.0          ! the width of the disorder
+  	real, parameter :: mu = U/2            ! the chemical potential (U/2 is half filling)
+  	integer, parameter :: nbins = 240             ! number of bins for energy bining to get smooth curves
 	real, parameter :: frequency_max = 12         ! maximum energy considered in energy bining
 	real, parameter :: frequency_min = -12        ! lowest energy considered in energy bining
 
@@ -66,10 +66,10 @@ program main
     	else                                                                                        ! means more then one version already exists
     		read(filename(LEN_TRIM(filename) - 4:LEN_TRIM(filename) - 4),'(I1)') version            ! find out the current version number
     		version = version + 1                                                                   ! increase the version by 1
-    		write(str_ver,'(I1)') version                                                           ! convert to a string
+    		write(str_ver,'(I2)') version                                                           ! convert to a string
     		write(filename,'(A)') trim(adjustl(filename(1:LEN_TRIM(filename) - 5))) // trim(adjustl(str_ver)) // ".dat" ! add new version number
     	end if
-    	if (file_count > 12) then          ! if tried this many times it may be due to seperate error or already 10 versions                                  
+    	if (file_count > 105) then          ! if tried this many times it may be due to seperate error or already 100 versions                                  
     		write(*,*) 'error opening output file. Error number:', error  ! print error message then
     		stop
 		end if
