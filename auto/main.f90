@@ -58,30 +58,30 @@ program main
 
 	file_count = 0
         15 continue
-        file_count = file_count + 1                                              ! add another time it has tried to open file                                                     
-        open(unit=10,file=filename, status='new', action='write',IOSTAT = error) ! open the file that DOS and GIPR will be printed to                                             
-        if (error/=0) then                                                       ! error means that file of that name already exists (add new version now)                        
-           if (filename(LEN_TRIM(filename) - 5:LEN_TRIM(filename) - 5) == '.') then                    ! check if only one version already exists                                 
-              write(filename,'(A)') trim(adjustl(filename(1:LEN_TRIM(filename) - 4))) // "_1.dat"     ! add _1 before .dat                                                        
-           else                                                                                        ! means more then one version already exists                               
-              if (version .lt. 10) then
-                read(filename(LEN_TRIM(filename) - 4:LEN_TRIM(filename) - 4),'(I1)') version            ! find out the current version number                                     
+        file_count = file_count + 1                                              ! add another time it has tried to open file                                                    
+        open(unit=10,file=filename, status='new', action='write',IOSTAT = error) ! open the file that DOS and GIPR will be printed to                                            
+        if (error/=0) then                                                       ! error means that file of that name already exists (add new version now)                       
+           if (filename(LEN_TRIM(filename) - 5:LEN_TRIM(filename) - 5) == '.') then                    ! check if only one version already exists                                
+              write(filename,'(A)') trim(adjustl(filename(1:LEN_TRIM(filename) - 4))) // "_1.dat"     ! add _1 before .dat                                                       
+           else                                                                                        ! means more then one version already exists                     
+                if (version .lt. 10) then
+                read(filename(LEN_TRIM(filename) - 4:LEN_TRIM(filename) - 4),'(I1)') version            ! find out the current version number                                    
               else
-                read(filename(LEN_TRIM(filename) - 5:LEN_TRIM(filename) - 4),'(I2)') version            ! find out the current version number (two digits)                        
+                read(filename(LEN_TRIM(filename) - 5:LEN_TRIM(filename) - 4),'(I2)') version            ! find out the current version number (two digits)                       
               end if
-              version = version + 1                                                                   ! increase the version by 1                                                 
-              write(str_ver,'(I2)') version                                                           ! convert to a string                                                       
+              version = version + 1                                                                   ! increase the version by 1                                                
+              write(str_ver,'(I2)') version                                                           ! convert to a string                                                      
               if (version .lt. 11) then
-                 write(filename,'(A)') trim(adjustl(filename(1:LEN_TRIM(filename) - 5))) // trim(adjustl(str_ver)) // ".dat" ! add new version number                             
+                 write(filename,'(A)') trim(adjustl(filename(1:LEN_TRIM(filename) - 5))) // trim(adjustl(str_ver)) // ".dat" ! add new version number                            
               else
-                 write(filename,'(A)') trim(adjustl(filename(1:LEN_TRIM(filename) - 6))) // trim(adjustl(str_ver)) // ".dat" ! add new version number                             
+                 write(filename,'(A)') trim(adjustl(filename(1:LEN_TRIM(filename) - 6))) // trim(adjustl(str_ver)) // ".dat" ! add new version number                            
               end if
            end if
-           if (file_count > 105) then          ! if tried this many times it may be due to seperate error or already 100 versions                                                 
-              write(*,*) 'error opening output file. Error number:', error  ! print error message then                                                                            
+           if (file_count > 105) then          ! if tried this many times it may be due to seperate error or already 100 versions                                                
+              write(*,*) 'error opening output file. Error number:', error  ! print error message then                                                                           
               stop
            end if
-           go to 15                                                          ! try again with updated file name                                                                   
+           go to 15                                                          ! try again with updated file name                                                                  
         end if
 
   	!------------------Writing info to data file---------------------------
