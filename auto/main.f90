@@ -5,61 +5,62 @@ program main
 ! P. Daley              15/07/18            created code 
 ! P. Daley              15/08/17            changed filenaming
 ! P. Daley              15/08/18            added comments
+! P. Daley              15/11/12            fixed edges of energy range
 
-	use routines
+  use routines
 
-	implicit none
+  implicit none
 
-	!-------------------Input Parameters---------------------------------
-	integer, parameter :: npairs=1   	 ! size of the ensemble
-	real, parameter :: t = 0.0            ! nearest neighbour hoping 
-	real, parameter :: U = 0             ! the on site interactions
-	real, parameter :: delta=12.0          ! the width of the disorder
-  	real, parameter :: mu = U/2            ! the chemical potential (U/2 is half filling)
-  	integer, parameter :: nbins = 240             ! number of bins for energy bining to get smooth curves
-	real, parameter :: frequency_max = 12         ! maximum energy considered in energy bining
-	real, parameter :: frequency_min = -12        ! lowest energy considered in energy bining
+  !-------------------Input Parameters---------------------------------
+  integer, parameter :: npairs=10000    ! size of the ensemble
+  real, parameter :: t = -1.0              ! nearest neighbour hoping 
+  real, parameter :: U = 8                 ! the on site interactions
+  real, parameter :: delta=12.0            ! the width of the disorder
+  real, parameter :: mu = U/2              ! the chemical potential (U/2 is half filling)
+  integer, parameter :: nbins = 500        ! number of bins for energy bining to get smooth curves
+  real, parameter :: frequency_max = 12    ! maximum energy considered in energy bining
+  real, parameter :: frequency_min = -12   ! lowest energy considered in energy bining
 
-  	!-------------------Dependent Variables------------------------------
-  	integer :: pair, i, j                        ! counters for loops
-  	integer :: bin                               ! index for the bin number the peak goes in DOS
-  	integer :: error                             ! variable for error message when opening file
-  	integer :: n_up, n_dn                        ! counters for loops (number of up or down electrons)
-  	integer :: g_up,g_dn                         ! number of electrons in the many-body ground state
-  	integer :: min_up, min_dn, max_up, max_dn    ! max/min number of electrons that a many-body eigenstate that can be transitioned to can have
-  	integer :: low, high                         ! range in array grand_potentials of states with a specified n_up, n_dn electrons
-  	integer :: groundloc(2)                      ! stores the location in array e_ground of minimum energy (this will find g_up, g_dn)
-  	integer :: location(1)                       ! stores the location in the grand_potential array of the lowest energy
-  	integer :: version                           ! the version number for the data file (multiple simulations with same parameters)
- 	integer :: file_count                        ! counts amount of times the program has tried to open output file (gives error if > 12)
-  	real :: E(nsites)                            ! array to hold the site potentials
-  	real, dimension(nstates) :: MBGvec           ! many-body ground state vector (MBG) written in fock basis (MBGvec(i) is coefficient of fock state "i")
-  	real, dimension(nsites,nstates) :: PESdn_MBG, PESup_MBG   ! MBG after a down or up photo emmision (PE) respectively (PESdn_MBG(i,:) is  c_{i,dn}|Psi0> )
-  	real, dimension(nsites,nstates) :: IPESdn_MBG, IPESup_MBG ! MBG after a down or up inverse photo emmision respectively (IPESdn_MBG(i,:) is  c^{dagger}_{i,dn}|Psi0> )
-	real, dimension(nsites,2*nstates,2) :: LDOS      ! local density of states (LDOS(i,:) is LDOS of site i)
-	real :: inner_prod_up, inner_prod_dn             ! inner products used when calculating weight of LDOS contributions (<Psi|PESdn_MBG> or <Psi|IPESdn_MBG>)
-	real :: IPR(2*nstates)                               ! generalized inverse participation ratio before being ensemble averaged
-	real :: frequency_delta                              ! step size between different energy bins for DOS and GIPR
-	real, dimension(nbins,2) :: DOS=0                          ! array that stores the DOS (DOS(i,1) is energy of bin i and DOS(i,2) is the weight of it)
-	real, dimension(nbins) :: GIPR_num=0, GIPR_den=0, GIPR=0   ! arrays that store the numerator and denominator and the ensemble averaged GIPR
-	real :: dos_sum                                      ! sums the entire DOS so that area under it can be normalized to 1
-	real :: half_sum                                     ! sums DOS from -W/2 to 0 to find the filling
- 	character(len=50) :: filename                        ! variable that stores the output filename
- 	character(len=50) :: str_npairs, str_nbins           ! strings for information at top of output file
- 	character(len=50) :: str_ver                         ! string for version number of output file
+  !-------------------Dependent Variables------------------------------
+  integer :: pair, i, j                        ! counters for loops
+  integer :: bin                               ! index for the bin number the peak goes in DOS
+  integer :: error                             ! variable for error message when opening file
+  integer :: n_up, n_dn                        ! counters for loops (number of up or down electrons)
+  integer :: g_up,g_dn                         ! number of electrons in the many-body ground state
+  integer :: min_up, min_dn, max_up, max_dn    ! max/min number of electrons that a many-body eigenstate that can be transitioned to can have
+  integer :: low, high                         ! range in array grand_potentials of states with a specified n_up, n_dn electrons
+  integer :: groundloc(2)                      ! stores the location in array e_ground of minimum energy (this will find g_up, g_dn)
+  integer :: location(1)                       ! stores the location in the grand_potential array of the lowest energy
+  integer :: version                           ! the version number for the data file (multiple simulations with same parameters)
+  integer :: file_count                        ! counts amount of times the program has tried to open output file (gives error if > 12)
+  real :: E(nsites)                            ! array to hold the site potentials
+  real, dimension(nstates) :: MBGvec           ! many-body ground state vector (MBG) written in fock basis (MBGvec(i) is coefficient of fock state "i")
+  real, dimension(nsites,nstates) :: PESdn_MBG, PESup_MBG   ! MBG after a down or up photo emmision (PE) respectively (PESdn_MBG(i,:) is  c_{i,dn}|Psi0> )
+  real, dimension(nsites,nstates) :: IPESdn_MBG, IPESup_MBG ! MBG after a down or up inverse photo emmision respectively (IPESdn_MBG(i,:) is  c^{dagger}_{i,dn}|Psi0> )
+  real, dimension(nsites,2*nstates,2) :: LDOS      ! local density of states (LDOS(i,:) is LDOS of site i)
+  real :: inner_prod_up, inner_prod_dn             ! inner products used when calculating weight of LDOS contributions (<Psi|PESdn_MBG> or <Psi|IPESdn_MBG>)
+  real :: IPR(2*nstates)                               ! generalized inverse participation ratio before being ensemble averaged
+  real :: frequency_delta                              ! step size between different energy bins for DOS and GIPR
+  real, dimension(nbins,2) :: DOS=0                          ! array that stores the DOS (DOS(i,1) is energy of bin i and DOS(i,2) is the weight of it)
+  real, dimension(nbins) :: GIPR_num=0, GIPR_den=0, GIPR=0   ! arrays that store the numerator and denominator and the ensemble averaged GIPR
+  real :: dos_sum                                      ! sums the entire DOS so that area under it can be normalized to 1
+  real :: half_sum                                     ! sums DOS from -W/2 to 0 to find the filling
+  character(len=50) :: filename                        ! variable that stores the output filename
+  character(len=50) :: str_npairs, str_nbins           ! strings for information at top of output file
+  character(len=50) :: str_ver                         ! string for version number of output file
 
-  	!************************ Preparations for the main loop **********************************
+  !************************ Preparations for the main loop **********************************
 
-	frequency_delta = (frequency_max - frequency_min)/nbins   ! calculating the step size between bins for the energy bining process
+  frequency_delta = (frequency_max - frequency_min)/nbins   ! calculating the step size between bins for the energy bining process
 
-	!-----------------------Assigning filename----------------------------
+  !-----------------------Assigning filename----------------------------
 
-	call make_filename(filename,t,U,mu,delta)          ! assigns filename based on the parameters of the simulation
-
-	file_count = 0
-        15 continue
-        file_count = file_count + 1                                              ! add another time it has tried to open file                                                    
-        open(unit=10,file=filename, status='new', action='write',IOSTAT = error) ! open the file that DOS and GIPR will be printed to                                            
+  call make_filename(filename,t,U,mu,delta)          ! assigns filename based on the parameters of the simulation
+  
+  file_count = 0
+  15 continue
+  file_count = file_count + 1                                              ! add another time it has tried to open file                                                    
+  open(unit=10,file=filename, status='new', action='write',IOSTAT = error) ! open the file that DOS and GIPR will be printed to                                            
         if (error/=0) then                                                       ! error means that file of that name already exists (add new version now)                       
            if (filename(LEN_TRIM(filename) - 5:LEN_TRIM(filename) - 5) == '.') then                    ! check if only one version already exists                                
               write(filename,'(A)') trim(adjustl(filename(1:LEN_TRIM(filename) - 4))) // "_1.dat"     ! add _1 before .dat                                                       
@@ -118,7 +119,7 @@ program main
     	end if
 
     	!---------------Set variables to zero--------------------
-		MBGvec=0.0
+	MBGvec=0.0
     	grand_potential_ground = 0.0
     	LDOS = 0.0
     	PESdn_MBG=0.0; PESup_MBG=0.0; IPESdn_MBG=0.0; IPESup_MBG=0.0
@@ -226,6 +227,9 @@ program main
 	    !---------------------------------Energy binning for DOS and GIPR-----------------------------------------------
 
 	    do i=1,2*nstates
+               if (LDOS(2,i,1) > frequency_max .or. LDOS(2,i,1) < frequency_min) then
+                  cycle
+               end if
 	       bin = floor(LDOS(2,i,1)/frequency_delta) + nbins/2  +1               ! find the bin number for energy bining
 	       DOS(bin,2) = DOS(bin,2) + (SUM(LDOS(:,i,2)))/real(nsites)            ! add the contribution (calculated for LDOS)
 	        if (SUM(LDOS(:,i,2)) /= 0) then                                     ! if LDOS is zero no GIPR contribution
